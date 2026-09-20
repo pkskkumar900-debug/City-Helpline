@@ -55,7 +55,10 @@ export default function AddListing() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentUser || !userProfile) return;
+    if (!currentUser || !userProfile) {
+      setError('User profile not found. Please log in again.');
+      return;
+    }
     
     if (!category) {
       setError('Please select a category');
@@ -93,7 +96,7 @@ export default function AddListing() {
         status: 'pending', // Default status
         featured: false,
         authorId: currentUser.uid,
-        authorName: userProfile.name,
+        authorName: userProfile.name || 'Unknown User',
         createdAt: Date.now(),
       };
 

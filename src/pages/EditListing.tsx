@@ -90,7 +90,10 @@ export default function EditListing() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentUser || !userProfile || !id) return;
+    if (!currentUser || !userProfile || !id) {
+      setError('User profile or listing ID not found.');
+      return;
+    }
     
     if (!category) {
       setError('Please select a category');
