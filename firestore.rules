@@ -86,6 +86,26 @@ service cloud.firestore {
              (data.createdAt is number || data.createdAt is timestamp);
     }
 
+    function isValidMarketplaceItem(data) {
+      return hasOnlyAllowedFields(['title', 'description', 'price', 'originalPrice', 'category', 'condition', 'city', 'area', 'images', 'sellerId', 'sellerName', 'sellerPhone', 'whatsappNumber', 'status', 'featured', 'createdAt']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 150 &&
+             data.description is string && data.description.size() > 0 && data.description.size() < 2500 &&
+             data.price is number && data.price >= 0 &&
+             (!('originalPrice' in data) || (data.originalPrice is number && data.originalPrice >= 0)) &&
+             data.category is string && data.category.size() > 0 && data.category.size() < 60 &&
+             data.condition in ['Like New', 'Good Condition', 'Fair / Usable'] &&
+             data.city is string && data.city.size() > 0 && data.city.size() < 100 &&
+             (!('area' in data) || (data.area is string && data.area.size() < 150)) &&
+             data.images is list && data.images.size() <= 8 &&
+             data.sellerId is string && data.sellerId.size() > 0 && data.sellerId.size() < 100 &&
+             data.sellerName is string && data.sellerName.size() > 0 && data.sellerName.size() < 100 &&
+             data.sellerPhone is string && data.sellerPhone.size() > 0 && data.sellerPhone.size() < 25 &&
+             (!('whatsappNumber' in data) || (data.whatsappNumber is string && data.whatsappNumber.size() < 25)) &&
+             data.status in ['available', 'sold'] &&
+             (!('featured' in data) || data.featured is bool) &&
+             (data.createdAt is number || data.createdAt is timestamp);
+    }
+
     // ===============================================================
     // Rules
     // ===============================================================
@@ -156,6 +176,24 @@ service cloud.firestore {
                     isOwner(resource.data.userId);
                     
       allow delete: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin());
+    }
+
+    match /marketplace_items/{itemId} {
+      allow read: if true;
+      
+      allow create: if isAuthenticated() && 
+                    isValidMarketplaceItem(request.resource.data) && 
+                    request.resource.data.sellerId == request.auth.uid &&
+                    request.resource.data.status == 'available' &&
+                    (request.resource.data.featured == false || !('featured' in request.resource.data) || isAdmin());
+                    
+      allow update: if isAuthenticated() && 
+                    isValidMarketplaceItem(request.resource.data) && 
+                    request.resource.data.sellerId == resource.data.sellerId &&
+                    request.resource.data.createdAt == resource.data.createdAt &&
+                    (isOwner(resource.data.sellerId) || isAdmin());
+                    
+      allow delete: if isAuthenticated() && (isOwner(resource.data.sellerId) || isAdmin());
     }
   }
 }

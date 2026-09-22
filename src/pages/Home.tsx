@@ -31,10 +31,17 @@ import { LiquidButton } from '../components/ui/LiquidButton';
 import { motion } from 'motion/react';
 import { ListingCard } from '../components/ListingCard';
 import { useLocationContext } from '../contexts/LocationContext';
+import { MarketplaceItem } from '../types';
+import { INITIAL_MARKETPLACE_ITEMS } from '../lib/marketplaceData';
+import { MarketplaceCard } from '../components/marketplace/MarketplaceCard';
+import { MarketplaceDetailModal } from '../components/marketplace/MarketplaceDetailModal';
+import { ShoppingBag } from 'lucide-react';
 
 export default function Home() {
   const { userLocation, isLoadingLocation, requestLiveLocation, openLocationModal } = useLocationContext();
   const [allListings, setAllListings] = useState<Listing[]>([]);
+  const [marketplaceItems, setMarketplaceItems] = useState<MarketplaceItem[]>(INITIAL_MARKETPLACE_ITEMS);
+  const [selectedMarketplaceItem, setSelectedMarketplaceItem] = useState<MarketplaceItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
@@ -63,9 +70,39 @@ export default function Home() {
     }
   };
 
+  const fetchMarketplace = async () => {
+    try {
+      const q = query(collection(db, 'marketplace_items'));
+      const snapshot = await Promise.race([
+        getDocs(q),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Marketplace fetch timeout')), 5000))
+      ]);
+      const firestoreItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MarketplaceItem));
+      if (firestoreItems.length > 0) {
+        const existingIds = new Set(firestoreItems.map(i => i.id));
+        const demoLeft = INITIAL_MARKETPLACE_ITEMS.filter(i => !existingIds.has(i.id));
+        setMarketplaceItems([...firestoreItems, ...demoLeft]);
+      }
+    } catch {
+      // offline or delayed: keep initial marketplace items
+    }
+  };
+
   useEffect(() => {
     fetchListings();
+    fetchMarketplace();
   }, []);
+
+  // Marketplace items prioritized by user's city
+  const showcasedMarketplaceItems = useMemo(() => {
+    if (!userLocation?.city) {
+      return marketplaceItems.slice(0, 4);
+    }
+    const targetCity = userLocation.city.toLowerCase().trim();
+    const inCity = marketplaceItems.filter(item => item.city?.toLowerCase().trim() === targetCity);
+    const outsideCity = marketplaceItems.filter(item => item.city?.toLowerCase().trim() !== targetCity);
+    return [...inCity, ...outsideCity].slice(0, 4);
+  }, [marketplaceItems, userLocation?.city]);
 
   // Compute hyper-local listings based on user's live or selected location
   const localListings = useMemo(() => {
@@ -896,6 +933,70 @@ export default function Home() {
           </>
         )}
       </section>
+
+      {/* 5. STUDENT MARKETPLACE (BUY & SELL SECOND-HAND) */}
+      <section className="relative py-14 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <LiquidGlassCard className="p-8 sm:p-12 mb-8" glowColor="rgba(0, 229, 255, 0.25)">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/30 text-cyan-300 text-xs font-bold uppercase tracking-wider mb-2">
+                <ShoppingBag className="w-3.5 h-3.5 text-[#00E5FF]" />
+                Student Marketplace • छात्र बाज़ार
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+                Buy & Sell Used Study Essentials
+              </h2>
+              <p className="text-gray-300 text-sm mt-1 max-w-xl">
+                Allen/Aakash study modules, coolers, study chairs, cycles, and mattress from seniors at up to 70% discount.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Link to="/sell-item">
+                <button
+                  type="button"
+                  className="px-4 py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-xs font-bold text-gray-200 hover:text-white transition-colors cursor-pointer"
+                >
+                  Sell an Item
+                </button>
+              </Link>
+              <Link 
+                to="/marketplace" 
+                className="inline-flex items-center gap-2 text-sm font-bold text-slate-950 bg-[#00E5FF] hover:bg-cyan-300 px-5 py-2.5 rounded-xl shadow-[0_0_20px_rgba(0,229,255,0.4)] transition-all group"
+              >
+                <span>Browse All</span>
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {showcasedMarketplaceItems.map(item => (
+              <MarketplaceCard
+                key={item.id}
+                item={item}
+                onOpenDetails={setSelectedMarketplaceItem}
+              />
+            ))}
+          </div>
+        </LiquidGlassCard>
+      </section>
+
+      {/* Modal for viewing marketplace item from Home */}
+      {selectedMarketplaceItem && (
+        <MarketplaceDetailModal
+          item={selectedMarketplaceItem}
+          onClose={() => setSelectedMarketplaceItem(null)}
+          onItemUpdated={updated => {
+            setMarketplaceItems(prev => prev.map(it => it.id === updated.id ? updated : it));
+            setSelectedMarketplaceItem(updated);
+          }}
+          onItemDeleted={deletedId => {
+            setMarketplaceItems(prev => prev.filter(it => it.id !== deletedId));
+            setSelectedMarketplaceItem(null);
+          }}
+        />
+      )}
 
       {/* 6. HOST / AMBASSADOR CTA LIQUID GLASS BANNER */}
       <section className="relative py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">

@@ -48,3 +48,19 @@ export const STATE_CITIES: Record<string, string[]> = {
 };
 
 export const ALL_CITIES = Object.values(STATE_CITIES).flat();
+
+export const MARKETPLACE_CATEGORIES = [
+  'Books & Notes',
+  'Study Furniture',
+  'Coolers & Fans',
+  'Cycles & Bikes',
+  'Electronics & Gadgets',
+  'Mattress & Bedding',
+  'Other Essentials'
+] as const;
+
+export const ITEM_CONDITIONS = [
+  'Like New',
+  'Good Condition',
+  'Fair / Usable'
+] as const;

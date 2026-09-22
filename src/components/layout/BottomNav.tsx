@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, List, User, ShieldCheck } from 'lucide-react';
+import { Home, Search, List, User, ShieldCheck, ShoppingBag } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useAuth } from '../../contexts/AuthContext';
 import { isSuperAdminEmail } from '../../types';
@@ -14,8 +14,9 @@ export function BottomNav() {
 
   const navItems = [
     { icon: Home, label: 'Home', path: '/' },
-    { icon: Search, label: 'Search', path: '/search' },
-    { icon: List, label: 'Listings', path: '/add-listing' },
+    { icon: Search, label: 'Services', path: '/search' },
+    { icon: ShoppingBag, label: 'Market', path: '/marketplace' },
+    { icon: List, label: 'List', path: '/add-listing' },
     { icon: User, label: 'Profile', path: '/profile' },
   ];
 

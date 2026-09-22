@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { collection, query, where, getDocs, orderBy, getDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, getDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Listing } from '../types';
+import { Listing, MarketplaceItem } from '../types';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { User, LogOut, Settings, PlusCircle, Building2, MapPin, List, Star, ArrowLeft, Search } from 'lucide-react';
+import { User, LogOut, Settings, PlusCircle, Building2, MapPin, List, Star, ArrowLeft, Search, ShoppingBag, Trash2, CheckCircle, Tag } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import AccountSettings from '../components/AccountSettings';
 import { useLocationContext } from '../contexts/LocationContext';
@@ -15,8 +15,9 @@ export default function Profile() {
   const { userLocation, openLocationModal } = useLocationContext();
   const [myListings, setMyListings] = useState<Listing[]>([]);
   const [savedListings, setSavedListings] = useState<Listing[]>([]);
+  const [myMarketplaceItems, setMyMarketplaceItems] = useState<MarketplaceItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'listings' | 'saved' | 'settings'>('listings');
+  const [activeTab, setActiveTab] = useState<'listings' | 'saved' | 'marketplace' | 'settings'>('listings');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,6 +34,20 @@ export default function Profile() {
         const snapshotMy = await getDocs(qMy);
         const dataMy = snapshotMy.docs.map(doc => ({ id: doc.id, ...doc.data() } as Listing));
         setMyListings(dataMy);
+
+        // Fetch My Marketplace Items
+        try {
+          const qMarket = query(
+            collection(db, 'marketplace_items'),
+            where('sellerId', '==', currentUser.uid)
+          );
+          const snapMarket = await getDocs(qMarket);
+          const marketData = snapMarket.docs.map(doc => ({ id: doc.id, ...doc.data() } as MarketplaceItem));
+          marketData.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+          setMyMarketplaceItems(marketData);
+        } catch (mErr) {
+          console.warn('Could not load user marketplace items:', mErr);
+        }
 
         // Fetch Saved Listings
         if (userProfile?.savedListings && userProfile.savedListings.length > 0) {
@@ -65,6 +80,26 @@ export default function Profile() {
 
     fetchListings();
   }, [currentUser, userProfile?.savedListings]);
+
+  const toggleMarketplaceStatus = async (item: MarketplaceItem) => {
+    const newStatus = item.status === 'available' ? 'sold' : 'available';
+    try {
+      await updateDoc(doc(db, 'marketplace_items', item.id), { status: newStatus });
+      setMyMarketplaceItems(prev => prev.map(i => i.id === item.id ? { ...i, status: newStatus } : i));
+    } catch (err) {
+      console.error('Failed to update item status:', err);
+    }
+  };
+
+  const deleteMarketplaceItem = async (itemId: string) => {
+    if (!window.confirm('Are you sure you want to remove this item from the marketplace?')) return;
+    try {
+      await deleteDoc(doc(db, 'marketplace_items', itemId));
+      setMyMarketplaceItems(prev => prev.filter(i => i.id !== itemId));
+    } catch (err) {
+      console.error('Failed to delete item:', err);
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -155,6 +190,12 @@ export default function Profile() {
                     <span className="font-semibold">Add New Listing</span>
                   </Link>
                 )}
+                <Link to="/sell-item" className="group flex items-center gap-4 p-4 rounded-2xl hover:bg-[rgba(255,255,255,0.06)] text-gray-400 hover:text-white transition-all duration-300">
+                  <div className="p-2 rounded-xl bg-cyan-400/10 text-cyan-300 group-hover:bg-[#00E5FF] group-hover:text-black transition-colors shadow-[0_0_10px_rgba(0,229,255,0.2)]">
+                    <ShoppingBag className="h-5 w-5" />
+                  </div>
+                  <span className="font-semibold">Sell Student Item</span>
+                </Link>
                 {userProfile?.role === 'contributor' && (
                   <button 
                     onClick={() => setActiveTab('listings')}
@@ -166,6 +207,22 @@ export default function Profile() {
                     <span className="font-semibold">My Listings</span>
                   </button>
                 )}
+                <button 
+                  onClick={() => setActiveTab('marketplace')}
+                  className={`w-full group flex items-center justify-between p-4 rounded-2xl transition-all duration-300 ${activeTab === 'marketplace' ? 'bg-[rgba(0,229,255,0.1)] text-white border border-[#00E5FF]/20 shadow-[0_0_15px_rgba(0,229,255,0.1)]' : 'hover:bg-[rgba(255,255,255,0.06)] text-gray-400 hover:text-white'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`p-2 rounded-xl transition-colors ${activeTab === 'marketplace' ? 'bg-[#00E5FF] text-black shadow-[0_0_10px_rgba(0,229,255,0.5)]' : 'bg-[rgba(255,255,255,0.06)] text-gray-400 group-hover:bg-[rgba(255,255,255,0.1)] group-hover:text-white'}`}>
+                      <ShoppingBag className="h-5 w-5" />
+                    </div>
+                    <span className="font-semibold">Marketplace Ads</span>
+                  </div>
+                  {myMarketplaceItems.length > 0 && (
+                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#00E5FF]/20 text-[#00E5FF]">
+                      {myMarketplaceItems.length}
+                    </span>
+                  )}
+                </button>
                 <button 
                   onClick={() => setActiveTab('saved')}
                   className={`w-full group flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 ${activeTab === 'saved' ? 'bg-[rgba(0,229,255,0.1)] text-white border border-[#00E5FF]/20 shadow-[0_0_15px_rgba(0,229,255,0.1)]' : 'hover:bg-[rgba(255,255,255,0.06)] text-gray-400 hover:text-white'}`}
@@ -202,6 +259,126 @@ export default function Profile() {
         <div className="lg:col-span-2">
           {activeTab === 'settings' ? (
             <AccountSettings />
+          ) : activeTab === 'marketplace' ? (
+            <>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+                <div>
+                  <h2 className="text-3xl font-bold text-white tracking-tight">My Marketplace Ads</h2>
+                  <p className="text-gray-400 text-sm mt-1">Manage items you are selling to students</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="bg-[#00E5FF]/10 text-[#00E5FF] py-1.5 px-4 rounded-full text-sm font-semibold border border-[#00E5FF]/20 shadow-[0_0_15px_rgba(0,229,255,0.1)]">
+                    {myMarketplaceItems.length} Items
+                  </span>
+                  <Link
+                    to="/sell-item"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#00E5FF] hover:bg-cyan-300 text-slate-950 text-xs font-bold transition-all shadow-[0_0_15px_rgba(0,229,255,0.4)]"
+                  >
+                    <PlusCircle className="w-4 h-4" />
+                    <span>Sell Item</span>
+                  </Link>
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="space-y-6">
+                  {[1, 2].map(i => (
+                    <div key={i} className="glass-card rounded-3xl h-36 animate-pulse bg-white/[0.05] border border-white/10" />
+                  ))}
+                </div>
+              ) : myMarketplaceItems.length > 0 ? (
+                <div className="space-y-4">
+                  {myMarketplaceItems.map((item) => (
+                    <GlassCard
+                      key={item.id}
+                      className="p-5 flex flex-col sm:flex-row gap-5 items-start sm:items-center justify-between hover:border-white/20 transition-all"
+                      intensity="low"
+                    >
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white/[0.06] border border-white/10 shrink-0">
+                          {item.images && item.images.length > 0 ? (
+                            <img src={item.images[0]} alt={item.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-500">
+                              <ShoppingBag className="w-8 h-8" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/[0.06] text-gray-300 border border-white/10">
+                              {item.category}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              item.status === 'available'
+                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                                : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                            }`}>
+                              {item.status === 'available' ? 'Available' : 'Sold'}
+                            </span>
+                          </div>
+                          <h4 className="text-base font-bold text-white truncate max-w-sm">
+                            {item.title}
+                          </h4>
+                          <p className="text-sm font-black text-[#00E5FF] mt-0.5">
+                            ₹{item.price.toLocaleString('en-IN')}
+                            {item.originalPrice && (
+                              <span className="text-xs text-gray-500 line-through font-normal ml-2">
+                                ₹{item.originalPrice.toLocaleString('en-IN')}
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
+                            <MapPin className="w-3 h-3 text-[#00E5FF]" />
+                            <span>{item.city}{item.area ? ` • ${item.area}` : ''}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end pt-3 sm:pt-0 border-t sm:border-t-0 border-white/10">
+                        <button
+                          type="button"
+                          onClick={() => toggleMarketplaceStatus(item)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            item.status === 'available'
+                              ? 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30'
+                              : 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30'
+                          }`}
+                        >
+                          {item.status === 'available' ? 'Mark Sold' : 'Mark Available'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteMarketplaceItem(item.id)}
+                          className="p-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 transition-all cursor-pointer"
+                          title="Delete ad"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </GlassCard>
+                  ))}
+                </div>
+              ) : (
+                <GlassCard className="p-14 text-center border-dashed border-2 border-white/10" intensity="low">
+                  <div className="w-16 h-16 rounded-2xl bg-cyan-400/10 border border-cyan-400/30 flex items-center justify-center text-[#00E5FF] mx-auto mb-4">
+                    <ShoppingBag className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">No Marketplace Ads Yet</h3>
+                  <p className="text-gray-400 text-sm max-w-md mx-auto mb-6">
+                    Have Allen/Aakash books, study table, cooler, cycle or mattress you don't need? Sell them to students and help them save money!
+                  </p>
+                  <Link
+                    to="/sell-item"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#00E5FF] hover:bg-cyan-300 text-slate-950 text-sm font-bold shadow-[0_0_20px_rgba(0,229,255,0.4)] transition-all"
+                  >
+                    <PlusCircle className="w-4 h-4" />
+                    <span>Post First Item for Sale</span>
+                  </Link>
+                </GlassCard>
+              )}
+            </>
           ) : activeTab === 'saved' ? (
             <>
               <div className="flex items-center justify-between mb-8">

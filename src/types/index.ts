@@ -70,3 +70,36 @@ export interface Review {
   comment: string;
   createdAt: number;
 }
+
+export type MarketplaceCategory = 
+  | 'Books & Notes' 
+  | 'Study Furniture' 
+  | 'Coolers & Fans' 
+  | 'Cycles & Bikes' 
+  | 'Electronics & Gadgets' 
+  | 'Mattress & Bedding' 
+  | 'Other Essentials';
+
+export type ItemCondition = 'Like New' | 'Good Condition' | 'Fair / Usable';
+export type ItemStatus = 'available' | 'sold';
+
+export interface MarketplaceItem {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  originalPrice?: number;
+  category: MarketplaceCategory;
+  condition: ItemCondition;
+  city: string;
+  area?: string;
+  images: string[];
+  sellerId: string;
+  sellerName: string;
+  sellerPhone: string;
+  whatsappNumber?: string;
+  status: ItemStatus;
+  createdAt: number;
+  featured?: boolean;
+}
+

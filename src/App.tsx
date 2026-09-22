@@ -23,6 +23,8 @@ import ListingDetails from './pages/ListingDetails';
 import AdminDashboard from './pages/AdminDashboard';
 import Search from './pages/Search';
 import Profile from './pages/Profile';
+import Marketplace from './pages/Marketplace';
+import SellItem from './pages/SellItem';
 
 function AppLayout() {
   const { isLocationModalOpen, closeLocationModal } = useLocationContext();
@@ -37,11 +39,20 @@ function AppLayout() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/search" element={<Search />} />
+          <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/login" element={<Auth />} />
           <Route path="/signup" element={<Auth />} />
           <Route path="/listing/:id" element={<ListingDetails />} />
           
           {/* Protected Routes */}
+          <Route 
+            path="/sell-item" 
+            element={
+              <ProtectedRoute>
+                <SellItem />
+              </ProtectedRoute>
+            } 
+          />
           <Route 
             path="/profile" 
             element={

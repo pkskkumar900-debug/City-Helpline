@@ -58,6 +58,30 @@
         "createdAt": { "type": "number" }
       },
       "required": ["listingId", "userId", "userName", "rating", "comment", "createdAt"]
+    },
+    "MarketplaceItem": {
+      "title": "MarketplaceItem",
+      "description": "Student secondhand marketplace items (books, coolers, cycles, furniture)",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "originalPrice": { "type": "number" },
+        "category": { "type": "string" },
+        "condition": { "type": "string" },
+        "city": { "type": "string" },
+        "area": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "sellerId": { "type": "string" },
+        "sellerName": { "type": "string" },
+        "sellerPhone": { "type": "string" },
+        "whatsappNumber": { "type": "string" },
+        "status": { "type": "string", "enum": ["available", "sold"] },
+        "createdAt": { "type": "number" },
+        "featured": { "type": "boolean" }
+      },
+      "required": ["title", "description", "price", "category", "condition", "city", "images", "sellerId", "sellerName", "sellerPhone", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -72,6 +96,10 @@
     "/reviews/{reviewId}": {
       "schema": { "$ref": "#/entities/Review" },
       "description": "Reviews"
+    },
+    "/marketplace_items/{itemId}": {
+      "schema": { "$ref": "#/entities/MarketplaceItem" },
+      "description": "Student marketplace items"
     }
   }
 }

@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Building2, LogOut, PlusCircle, User, ShieldCheck, Search, Home } from 'lucide-react';
+import { Building2, LogOut, PlusCircle, User, ShieldCheck, Search, Home, ShoppingBag } from 'lucide-react';
 import { LiquidButton } from '../ui/LiquidButton';
 import { isSuperAdminEmail } from '../../types';
 import { NavbarLocationButton } from '../location/NavbarLocationButton';
@@ -39,30 +39,40 @@ export function Navbar() {
             <NavbarLocationButton />
           </div>
           
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-5">
             <Link
               to="/"
-              className={`flex items-center gap-2 text-sm font-medium transition-colors ${isActive('/') ? 'text-[#00E5FF]' : 'text-gray-400 hover:text-white'}`}
+              className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${isActive('/') ? 'text-[#00E5FF]' : 'text-gray-400 hover:text-white'}`}
             >
-              <Home className="h-5 w-5" />
-              <span className="hidden sm:inline">Home</span>
+              <Home className="h-4 w-4" />
+              <span>Home</span>
             </Link>
             <Link
               to="/search"
-              className={`flex items-center gap-2 text-sm font-medium transition-colors ${isActive('/search') ? 'text-[#00E5FF]' : 'text-gray-400 hover:text-white'}`}
+              className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${isActive('/search') ? 'text-[#00E5FF]' : 'text-gray-400 hover:text-white'}`}
             >
-              <Search className="h-5 w-5" />
-              <span className="hidden sm:inline">Search</span>
+              <Search className="h-4 w-4" />
+              <span>Services</span>
+            </Link>
+            <Link
+              to="/marketplace"
+              className={`flex items-center gap-1.5 text-sm font-medium transition-colors relative ${isActive('/marketplace') ? 'text-[#00E5FF]' : 'text-gray-400 hover:text-white'}`}
+            >
+              <ShoppingBag className="h-4 w-4 text-[#00E5FF]" />
+              <span>Marketplace</span>
+              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-gradient-to-r from-rose-500 to-amber-500 text-white uppercase tracking-wider shadow-sm">
+                New
+              </span>
             </Link>
 
             {currentUser ? (
               <>
                 <Link
                   to="/add-listing"
-                  className={`flex items-center gap-2 text-sm font-medium transition-colors ${isActive('/add-listing') ? 'text-[#00E5FF]' : 'text-gray-400 hover:text-white'}`}
+                  className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${isActive('/add-listing') ? 'text-[#00E5FF]' : 'text-gray-400 hover:text-white'}`}
                 >
-                  <PlusCircle className="h-5 w-5" />
-                  <span className="hidden sm:inline">Add Listing</span>
+                  <PlusCircle className="h-4 w-4" />
+                  <span>List Service</span>
                 </Link>
                 
                 {isAdmin && (
