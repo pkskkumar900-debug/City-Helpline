@@ -7,6 +7,19 @@ export function isSuperAdminEmail(email?: string | null): boolean {
   return ADMIN_EMAILS.includes(email.toLowerCase().trim());
 }
 
+export interface UserLocation {
+  city: string;
+  state?: string;
+  district?: string;
+  area?: string;
+  pincode?: string;
+  latitude?: number;
+  longitude?: number;
+  formattedAddress?: string;
+  isLiveDetected: boolean;
+  updatedAt: number;
+}
+
 export interface UserProfile {
   uid: string;
   name: string;
@@ -21,6 +34,9 @@ export interface UserProfile {
   businessType?: string;
   city?: string;
   address?: string;
+  pincode?: string;
+  latitude?: number;
+  longitude?: number;
   banned?: boolean;
 }
 

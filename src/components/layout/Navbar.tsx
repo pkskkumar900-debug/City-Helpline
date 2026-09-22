@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Building2, LogOut, PlusCircle, User, ShieldCheck, Search, Home } from 'lucide-react';
 import { LiquidButton } from '../ui/LiquidButton';
 import { isSuperAdminEmail } from '../../types';
+import { NavbarLocationButton } from '../location/NavbarLocationButton';
 
 export function Navbar() {
   const { currentUser, userProfile, logout } = useAuth();
@@ -22,8 +23,8 @@ export function Navbar() {
     <nav className="sticky top-0 z-50 glass-nav">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center gap-2.5 group">
+          <div className="flex items-center gap-3 sm:gap-5">
+            <Link to="/" className="flex items-center gap-2.5 group shrink-0">
               <div className="p-2 rounded-xl bg-[rgba(255,255,255,0.06)] border border-white/10 group-hover:border-[#00E5FF]/50 transition-colors shadow-[0_0_15px_rgba(0,229,255,0.1)] group-hover:shadow-[0_0_20px_rgba(0,229,255,0.3)]">
                 <Building2 className="h-6 w-6 text-[#00E5FF]" />
               </div>
@@ -33,6 +34,9 @@ export function Navbar() {
                 BETA
               </span>
             </Link>
+
+            {/* Amazon / Flipkart style Location selector button */}
+            <NavbarLocationButton />
           </div>
           
           <div className="hidden md:flex items-center gap-6">

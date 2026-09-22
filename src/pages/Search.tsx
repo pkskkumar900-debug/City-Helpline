@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { collection, query, getDocs, orderBy, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Listing } from '../types';
-import { Search as SearchIcon, MapPin, Tag, Sparkles, X, Droplets } from 'lucide-react';
+import { Search as SearchIcon, MapPin, Tag, Sparkles, X, Droplets, Navigation, Loader2, CheckCircle2 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { CATEGORIES, STATE_CITIES } from '../lib/constants';
@@ -13,18 +13,29 @@ import { GlassCard } from '../components/ui/GlassCard';
 import { LiquidGlassCard } from '../components/ui/LiquidGlassCard';
 import { LiquidButton } from '../components/ui/LiquidButton';
 import { ListingCard } from '../components/ListingCard';
+import { useLocationContext } from '../contexts/LocationContext';
 
 export default function Search() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
+  const { userLocation, openLocationModal, requestLiveLocation, isLoadingLocation } = useLocationContext();
+
   const initialQuery = location.state?.query || '';
   const initialCategory = location.state?.category || '';
-  const initialCity = location.state?.city || '';
+  const initialCity = location.state?.city || userLocation?.city || '';
+
   const [searchTerm, setSearchTerm] = useState(initialQuery);
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedCity, setSelectedCity] = useState(initialCity);
   const [activeDropdown, setActiveDropdown] = useState<'category' | 'city' | null>(null);
+
+  // If userLocation updates and user hasn't explicitly chosen another city or cleared it initially
+  useEffect(() => {
+    if (!location.state?.city && userLocation?.city && !selectedCity) {
+      setSelectedCity(userLocation.city);
+    }
+  }, [userLocation?.city, location.state?.city]);
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -90,6 +101,72 @@ export default function Search() {
                 <span className="w-2 h-2 rounded-full bg-[#00E5FF] shadow-[0_0_8px_#00E5FF]" />
                 {filteredListings.length} {filteredListings.length === 1 ? 'Place Found' : 'Places Found'}
               </span>
+            </div>
+          </div>
+
+          {/* Amazon / Flipkart style Location bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3 mb-5 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-md">
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="flex items-center gap-1.5 font-bold text-gray-300">
+                <MapPin className="w-3.5 h-3.5 text-[#00E5FF]" />
+                Location:
+              </span>
+              {selectedCity ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#00E5FF]/15 border border-[#00E5FF]/40 text-[#00E5FF] font-bold">
+                  {selectedCity}
+                  {userLocation?.city === selectedCity && userLocation.isLiveDetected && (
+                    <span className="flex items-center gap-0.5 text-[10px] text-emerald-400 bg-emerald-500/20 px-1.5 py-0.5 rounded-full border border-emerald-500/30">
+                      <Navigation className="w-2.5 h-2.5" /> GPS
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCity('')}
+                    className="hover:bg-cyan-500/20 rounded-full p-0.5 text-cyan-300 hover:text-white transition-colors cursor-pointer"
+                    title="Clear city filter (Show all cities)"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ) : (
+                <span className="text-gray-400 font-medium">All Cities (Nationwide)</span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 text-xs">
+              {userLocation?.city && userLocation.city !== selectedCity ? (
+                <button
+                  type="button"
+                  onClick={() => setSelectedCity(userLocation.city)}
+                  className="px-2.5 py-1 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-gray-200 hover:text-white font-medium flex items-center gap-1 transition-all cursor-pointer"
+                >
+                  <Navigation className="w-3 h-3 text-[#00E5FF]" />
+                  <span>Show My City ({userLocation.city})</span>
+                </button>
+              ) : !userLocation ? (
+                <button
+                  type="button"
+                  onClick={() => requestLiveLocation(false)}
+                  disabled={isLoadingLocation}
+                  className="px-2.5 py-1 rounded-xl bg-[#00E5FF]/15 hover:bg-[#00E5FF]/25 border border-[#00E5FF]/30 text-[#00E5FF] font-medium flex items-center gap-1 transition-all cursor-pointer"
+                >
+                  {isLoadingLocation ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Navigation className="w-3 h-3" />
+                  )}
+                  <span>Detect GPS Location</span>
+                </button>
+              ) : null}
+
+              <button
+                type="button"
+                onClick={openLocationModal}
+                className="px-2.5 py-1 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-cyan-300 hover:text-white font-semibold flex items-center gap-1 transition-all cursor-pointer"
+              >
+                <MapPin className="w-3 h-3" />
+                <span>{selectedCity ? 'Change City' : 'Choose City'}</span>
+              </button>
             </div>
           </div>
           
@@ -242,9 +319,24 @@ export default function Search() {
                   </div>
                 </div>
               </div>
-              <h3 className="text-3xl font-extrabold text-white mb-4 tracking-tight">No results found</h3>
-              <p className="text-gray-400 max-w-md mx-auto text-lg leading-relaxed">We couldn't find any listings matching your search criteria. Try adjusting your filters or search terms.</p>
-              <div className="mt-10">
+              <h3 className="text-3xl font-extrabold text-white mb-4 tracking-tight">
+                {selectedCity ? `No results found in ${selectedCity}` : 'No results found'}
+              </h3>
+              <p className="text-gray-400 max-w-md mx-auto text-lg leading-relaxed">
+                {selectedCity 
+                  ? `There are currently no listings matching your criteria in ${selectedCity}. Try clearing the city filter to browse across other hubs.`
+                  : "We couldn't find any listings matching your search criteria. Try adjusting your filters or search terms."}
+              </p>
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                {selectedCity && (
+                  <LiquidButton 
+                    onClick={() => setSelectedCity('')}
+                    variant="primary"
+                    className="px-6 py-2.5 text-xs font-bold"
+                  >
+                    View Places Across All Cities
+                  </LiquidButton>
+                )}
                 <LiquidButton 
                   onClick={() => {
                     setSearchTerm('');
@@ -252,6 +344,7 @@ export default function Search() {
                     setSelectedCity('');
                   }}
                   variant="secondary"
+                  className="px-6 py-2.5 text-xs font-bold"
                 >
                   Clear All Filters
                 </LiquidButton>

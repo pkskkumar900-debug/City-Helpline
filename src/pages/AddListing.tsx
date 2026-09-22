@@ -9,9 +9,11 @@ import { UploadCloud, X, ArrowLeft, Tag, MapPin } from 'lucide-react';
 import { motion } from 'motion/react';
 import { CATEGORIES, STATE_CITIES } from '../lib/constants';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
+import { useLocationContext } from '../contexts/LocationContext';
 
 export default function AddListing() {
   const { currentUser, userProfile } = useAuth();
+  const { userLocation } = useLocationContext();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -19,7 +21,7 @@ export default function AddListing() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('PG');
-  const [city, setCity] = useState('');
+  const [city, setCity] = useState(userLocation?.city || '');
   const [address, setAddress] = useState('');
   const [price, setPrice] = useState('');
   const [contact, setContact] = useState('');

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -21,6 +21,8 @@ import {
   ChevronRight,
   TrendingUp,
   HeartHandshake,
+  Navigation,
+  Loader2,
   X
 } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
@@ -28,10 +30,11 @@ import { LiquidGlassCard } from '../components/ui/LiquidGlassCard';
 import { LiquidButton } from '../components/ui/LiquidButton';
 import { motion } from 'motion/react';
 import { ListingCard } from '../components/ListingCard';
+import { useLocationContext } from '../contexts/LocationContext';
 
 export default function Home() {
-  const [featuredListings, setFeaturedListings] = useState<Listing[]>([]);
-  const [recentListings, setRecentListings] = useState<Listing[]>([]);
+  const { userLocation, isLoadingLocation, requestLiveLocation, openLocationModal } = useLocationContext();
+  const [allListings, setAllListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
@@ -52,10 +55,7 @@ export default function Home() {
       
       // Sort client-side by createdAt descending
       allApproved.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-      const featured = allApproved.filter(l => l.featured).slice(0, 3);
-      setFeaturedListings(featured.length > 0 ? featured : allApproved.slice(0, 3));
-      setRecentListings(allApproved.slice(0, 6));
+      setAllListings(allApproved);
     } catch (error) {
       console.warn("Notice: Initial listing fetch delayed or offline:", error);
     } finally {
@@ -67,16 +67,47 @@ export default function Home() {
     fetchListings();
   }, []);
 
+  // Compute hyper-local listings based on user's live or selected location
+  const localListings = useMemo(() => {
+    if (!userLocation?.city) return [];
+    return allListings.filter(l => l.city?.toLowerCase().trim() === userLocation.city.toLowerCase().trim());
+  }, [allListings, userLocation?.city]);
+
+  // Featured places: prioritize places from user's city if available
+  const featuredListings = useMemo(() => {
+    if (!userLocation?.city) {
+      const feat = allListings.filter(l => l.featured);
+      return feat.length > 0 ? feat.slice(0, 3) : allListings.slice(0, 3);
+    }
+    const localFeat = allListings.filter(l => l.featured && l.city?.toLowerCase().trim() === userLocation.city.toLowerCase().trim());
+    const otherFeat = allListings.filter(l => l.featured && l.city?.toLowerCase().trim() !== userLocation.city.toLowerCase().trim());
+    const combined = [...localFeat, ...otherFeat];
+    return combined.length > 0 ? combined.slice(0, 3) : allListings.slice(0, 3);
+  }, [allListings, userLocation?.city]);
+
+  // Recently added: prioritize user's city
+  const recentListings = useMemo(() => {
+    if (!userLocation?.city) return allListings.slice(0, 6);
+    const local = allListings.filter(l => l.city?.toLowerCase().trim() === userLocation.city.toLowerCase().trim());
+    const others = allListings.filter(l => l.city?.toLowerCase().trim() !== userLocation.city.toLowerCase().trim());
+    return [...local, ...others].slice(0, 6);
+  }, [allListings, userLocation?.city]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate('/search', { 
         state: { 
-          query: searchQuery.trim()
+          query: searchQuery.trim(),
+          city: userLocation?.city || ''
         } 
       });
     } else {
-      navigate('/search');
+      navigate('/search', {
+        state: {
+          city: userLocation?.city || ''
+        }
+      });
     }
   };
 
@@ -227,7 +258,7 @@ export default function Home() {
                   <Search className="h-5 w-5 text-[#00E5FF] mr-3 shrink-0" />
                   <input
                     type="text"
-                    placeholder="Search PG, hostel, library, coaching, area..."
+                    placeholder={userLocation?.city ? `Search PGs, libraries, coaching in ${userLocation.city}...` : "Search PG, hostel, library, coaching, area..."}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full bg-transparent border-none text-white placeholder-gray-400 text-sm sm:text-base focus:outline-none focus:ring-0 font-medium py-1"
@@ -433,7 +464,7 @@ export default function Home() {
               >
                 <Link
                   to="/search"
-                  state={{ category: cat.name }}
+                  state={{ category: cat.name, city: userLocation?.city || '' }}
                   className="block h-full group"
                 >
                   <div className="relative h-full rounded-[28px] overflow-hidden border border-white/15 bg-white/[0.04] backdrop-blur-xl shadow-[0_15px_35px_rgba(0,0,0,0.4)] group-hover:border-[#00E5FF]/50 group-hover:shadow-[0_20px_40px_rgba(0,229,255,0.18)] transition-all duration-500 flex flex-col justify-between">
@@ -627,6 +658,142 @@ export default function Home() {
           </div>
         ) : (
           <>
+            {/* Hyper-Local Services Section (Amazon / Flipkart style based on live/selected location) */}
+            <div className="mb-24">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
+                <div>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00E5FF]/10 border border-[#00E5FF]/30 text-[#00E5FF] text-xs font-bold uppercase tracking-wider mb-2 shadow-[0_0_12px_rgba(0,229,255,0.2)]">
+                    <MapPin className="h-3.5 w-3.5 text-[#00E5FF]" />
+                    {userLocation?.city ? `In Your City: ${userLocation.city}` : 'Hyper-Local Services'}
+                  </div>
+                  <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight flex items-center gap-3">
+                    <span>{userLocation?.city ? `Services in ${userLocation.city}` : 'Services Near You'}</span>
+                    {userLocation?.isLiveDetected && (
+                      <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                        <Navigation className="w-3 h-3 text-emerald-400" /> Live GPS Active
+                      </span>
+                    )}
+                  </h2>
+                  <p className="text-gray-400 text-sm mt-1">
+                    {userLocation?.city 
+                      ? `Verified PGs, silent study halls, and dining facilities directly serving ${userLocation.city}`
+                      : 'Enable device location or choose a city to filter services to your exact area'}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={openLocationModal}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-300 hover:text-white bg-white/[0.05] hover:bg-white/[0.1] px-4 py-2.5 rounded-xl border border-white/10 transition-colors cursor-pointer"
+                  >
+                    <MapPin className="w-3.5 h-3.5 text-[#00E5FF]" />
+                    {userLocation ? 'Change City' : 'Select City'}
+                  </button>
+
+                  {userLocation?.city && (
+                    <Link
+                      to="/search"
+                      state={{ city: userLocation.city }}
+                      className="inline-flex items-center gap-2 text-sm font-bold text-[#00E5FF] hover:text-white transition-colors bg-white/[0.05] hover:bg-white/[0.1] px-5 py-2.5 rounded-2xl border border-white/15 backdrop-blur-xl shadow-lg group"
+                    >
+                      View All in {userLocation.city} <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  )}
+                </div>
+              </div>
+
+              {userLocation?.city ? (
+                localListings.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {localListings.slice(0, 6).map((listing, index) => (
+                      <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                        key={listing.id}
+                        className="h-full"
+                      >
+                        <ListingCard listing={listing} />
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <GlassCard className="p-10 text-center border border-white/10 relative overflow-hidden" intensity="low">
+                    <div className="relative z-10 flex flex-col items-center justify-center max-w-lg mx-auto">
+                      <div className="w-16 h-16 rounded-2xl bg-[#00E5FF]/10 border border-[#00E5FF]/30 flex items-center justify-center text-[#00E5FF] mb-4 shadow-[0_0_20px_rgba(0,229,255,0.2)]">
+                        <MapPin className="w-8 h-8" />
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-2">
+                        No direct listings registered in {userLocation.city} yet
+                      </h3>
+                      <p className="text-gray-400 text-sm leading-relaxed mb-6">
+                        City Helpline is expanding fast! Showing verified student services across India's premier hubs (Kota, Delhi, Patna, etc.), or switch to another city.
+                      </p>
+                      <div className="flex flex-wrap items-center justify-center gap-3">
+                        <button
+                          type="button"
+                          onClick={openLocationModal}
+                          className="px-5 py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 text-xs font-semibold text-white transition-all cursor-pointer"
+                        >
+                          Switch City
+                        </button>
+                        <LiquidButton
+                          onClick={() => navigate('/add-listing')}
+                          className="px-5 py-2.5 text-xs font-bold"
+                        >
+                          Add Listing in {userLocation.city}
+                        </LiquidButton>
+                      </div>
+                    </div>
+                  </GlassCard>
+                )
+              ) : (
+                <div className="p-8 rounded-3xl bg-gradient-to-r from-blue-950/40 via-slate-900/60 to-purple-950/40 border border-white/15 backdrop-blur-xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+                  <div className="flex items-center gap-4 text-left">
+                    <div className="w-14 h-14 rounded-2xl bg-[#00E5FF]/15 border border-[#00E5FF]/30 flex items-center justify-center text-[#00E5FF] shrink-0 shadow-[0_0_20px_rgba(0,229,255,0.25)]">
+                      <Navigation className="w-7 h-7" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold text-white">Find student services near your exact location</h4>
+                      <p className="text-sm text-gray-300 mt-0.5">
+                        Allow GPS location permission to instantly view PGs, hostels, libraries, and mess facilities near you.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0 w-full md:w-auto">
+                    <LiquidButton
+                      onClick={() => requestLiveLocation(false)}
+                      disabled={isLoadingLocation}
+                      className="w-full md:w-auto px-6 py-3 text-xs font-bold flex items-center justify-center gap-2"
+                    >
+                      {isLoadingLocation ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Detecting GPS...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Navigation className="w-4 h-4" />
+                          <span>Use Live Location</span>
+                        </>
+                      )}
+                    </LiquidButton>
+
+                    <button
+                      type="button"
+                      onClick={openLocationModal}
+                      className="w-full md:w-auto px-5 py-3 rounded-2xl bg-white/[0.08] hover:bg-white/[0.15] border border-white/15 text-xs font-bold text-white transition-all text-center cursor-pointer"
+                    >
+                      Select City
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Featured Section */}
             {featuredListings.length > 0 && (
               <div className="mb-24">

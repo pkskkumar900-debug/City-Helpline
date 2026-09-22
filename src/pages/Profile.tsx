@@ -8,9 +8,11 @@ import { motion } from 'motion/react';
 import { User, LogOut, Settings, PlusCircle, Building2, MapPin, List, Star, ArrowLeft, Search } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import AccountSettings from '../components/AccountSettings';
+import { useLocationContext } from '../contexts/LocationContext';
 
 export default function Profile() {
   const { currentUser, userProfile, logout } = useAuth();
+  const { userLocation, openLocationModal } = useLocationContext();
   const [myListings, setMyListings] = useState<Listing[]>([]);
   const [savedListings, setSavedListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,6 +121,28 @@ export default function Profile() {
                 <p className="text-gray-400 font-medium">{userProfile?.email}</p>
                 <div className="mt-4 px-4 py-1.5 bg-[#00E5FF]/10 rounded-full text-sm font-semibold text-[#00E5FF] border border-[#00E5FF]/20 shadow-[0_0_15px_rgba(0,229,255,0.15)]">
                   {userProfile?.role === 'admin' ? 'Administrator' : 'User'}
+                </div>
+
+                {/* Location Display & Switcher */}
+                <div className="mt-5 w-full p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-between text-left shadow-sm">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-[#00E5FF]/15 text-[#00E5FF] flex items-center justify-center shrink-0">
+                      <MapPin className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase font-bold text-gray-400">Current Location</p>
+                      <p className="text-xs font-bold text-white">
+                        {userLocation ? `${userLocation.city}${userLocation.state ? `, ${userLocation.state}` : ''}` : 'Not detected'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={openLocationModal}
+                    className="text-xs font-bold text-[#00E5FF] hover:underline px-2 py-1 cursor-pointer"
+                  >
+                    Change
+                  </button>
                 </div>
               </div>
 
