@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { auth, googleProvider, githubProvider, db } from '../lib/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, fetchSignInMethodsForEmail, linkWithPopup, GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { Role } from '../types';
+import { Role, isSuperAdminEmail } from '../types';
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'motion/react';
 import { LogIn, UserPlus, Eye, EyeOff, Mail, Lock, User, AlertCircle, Phone, Building2, MapPin, Briefcase, Github, ChevronRight } from 'lucide-react';
 import { CATEGORIES, STATE_CITIES } from '../lib/constants';
@@ -153,7 +153,7 @@ export default function Auth() {
         uid: user.uid,
         name,
         email,
-        role: email === 'pkskkumar900@gmail.com' ? 'admin' : role,
+        role: isSuperAdminEmail(email) ? 'admin' : role,
         banned: false,
         createdAt: serverTimestamp(),
         lastLogin: serverTimestamp(),
@@ -401,7 +401,7 @@ export default function Auth() {
         name: pendingUser.displayName || 'User',
         email: pendingUser.email,
         photoURL: pendingUser.photoURL || '',
-        role: selectedRole,
+        role: isSuperAdminEmail(pendingUser.email) ? 'admin' : selectedRole,
         banned: false,
         createdAt: serverTimestamp(),
         lastLogin: serverTimestamp(),

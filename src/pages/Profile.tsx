@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, getDoc, doc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Listing } from '../types';
 import { Link, useNavigate } from 'react-router-dom';
@@ -34,13 +34,23 @@ export default function Profile() {
 
         // Fetch Saved Listings
         if (userProfile?.savedListings && userProfile.savedListings.length > 0) {
-          // Firestore 'in' query supports max 10 items. For simplicity, we'll fetch all and filter client-side if > 10,
-          // or just fetch the ones we need. Since this is a demo, we'll fetch all listings and filter.
-          const qAll = query(collection(db, 'listings'));
-          const snapshotAll = await getDocs(qAll);
-          const dataAll = snapshotAll.docs.map(doc => ({ id: doc.id, ...doc.data() } as Listing));
-          const saved = dataAll.filter(listing => userProfile.savedListings?.includes(listing.id));
-          setSavedListings(saved);
+          const savedDocs = await Promise.all(
+            userProfile.savedListings.map(async (savedId) => {
+              try {
+                const docSnap = await getDoc(doc(db, 'listings', savedId));
+                if (docSnap.exists()) {
+                  const data = { id: docSnap.id, ...docSnap.data() } as Listing;
+                  if (data.status === 'approved' || data.authorId === currentUser.uid) {
+                    return data;
+                  }
+                }
+              } catch (e) {
+                console.warn(`Could not load saved listing ${savedId}:`, e);
+              }
+              return null;
+            })
+          );
+          setSavedListings(savedDocs.filter((l): l is Listing => l !== null));
         } else {
           setSavedListings([]);
         }

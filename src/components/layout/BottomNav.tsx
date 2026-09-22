@@ -2,13 +2,14 @@ import { Link, useLocation } from 'react-router-dom';
 import { Home, Search, List, User, ShieldCheck } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useAuth } from '../../contexts/AuthContext';
+import { isSuperAdminEmail } from '../../types';
 
 export function BottomNav() {
   const location = useLocation();
   const path = location.pathname;
   const { currentUser, userProfile } = useAuth();
   
-  const isDefaultAdmin = currentUser?.email === 'pkskkumar900@gmail.com';
+  const isDefaultAdmin = isSuperAdminEmail(currentUser?.email);
   const isAdmin = userProfile?.role === 'admin' || isDefaultAdmin;
 
   const navItems = [

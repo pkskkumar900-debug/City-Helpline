@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Role } from '../../types';
+import { Role, isSuperAdminEmail } from '../../types';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -20,8 +20,8 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   if (allowedRoles && userProfile && !allowedRoles.includes(userProfile.role)) {
-    // Check if it's the default admin email
-    if (currentUser?.email === 'pkskkumar900@gmail.com' && allowedRoles.includes('admin')) {
+    // Check if it's a default admin email
+    if (isSuperAdminEmail(currentUser?.email) && allowedRoles.includes('admin')) {
       return <>{children}</>;
     }
     return <Navigate to="/" />;

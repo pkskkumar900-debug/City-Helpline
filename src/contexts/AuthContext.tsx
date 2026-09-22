@@ -24,7 +24,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let unsubscribeProfile: () => void;
 
+    // Safety fallback: Never keep the app completely unmounted/blocked for more than 2.5 seconds
+    const safetyTimeout = setTimeout(() => {
+      setLoading(false);
+    }, 2500);
+
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      clearTimeout(safetyTimeout);
       setCurrentUser(user);
       if (user) {
         const docRef = doc(db, 'users', user.uid);
@@ -46,9 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           setLoading(false);
         }, (error) => {
-          console.error("Error fetching user profile:", error);
-          setUserProfile(null);
-          localStorage.removeItem('userProfile');
+          console.warn("Notice: user profile sync in offline/delayed mode:", error);
           setLoading(false);
         });
       } else {
@@ -62,6 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => {
+      clearTimeout(safetyTimeout);
       unsubscribeAuth();
       if (unsubscribeProfile) {
         unsubscribeProfile();

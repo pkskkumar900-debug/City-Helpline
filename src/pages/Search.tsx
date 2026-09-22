@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import { collection, query, getDocs, orderBy, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Listing } from '../types';
-import { Search as SearchIcon, MapPin, Tag } from 'lucide-react';
+import { Search as SearchIcon, MapPin, Tag, Sparkles, X, Droplets } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { CATEGORIES, STATE_CITIES } from '../lib/constants';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
+import { CategorySelect } from '../components/ui/CategorySelect';
+import { LocationSelect } from '../components/ui/LocationSelect';
 import { GlassCard } from '../components/ui/GlassCard';
+import { LiquidGlassCard } from '../components/ui/LiquidGlassCard';
 import { LiquidButton } from '../components/ui/LiquidButton';
 import { ListingCard } from '../components/ListingCard';
 
@@ -17,23 +20,28 @@ export default function Search() {
   const location = useLocation();
   const initialQuery = location.state?.query || '';
   const initialCategory = location.state?.category || '';
+  const initialCity = location.state?.city || '';
   const [searchTerm, setSearchTerm] = useState(initialQuery);
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
-  const [selectedCity, setSelectedCity] = useState('');
+  const [selectedCity, setSelectedCity] = useState(initialCity);
+  const [activeDropdown, setActiveDropdown] = useState<'category' | 'city' | null>(null);
 
   useEffect(() => {
     const fetchListings = async () => {
       try {
         const q = query(
           collection(db, 'listings'), 
-          where('status', '==', 'approved'),
-          orderBy('createdAt', 'desc')
+          where('status', '==', 'approved')
         );
-        const snapshot = await getDocs(q);
+        const snapshot = await Promise.race([
+          getDocs(q),
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Fetch timeout')), 5000))
+        ]);
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Listing));
+        data.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         setListings(data);
       } catch (error) {
-        console.error('Error fetching listings:', error);
+        console.warn('Notice: Search listings fetch delayed or offline:', error);
       } finally {
         setLoading(false);
       }
@@ -63,74 +71,133 @@ export default function Search() {
       animate={{ opacity: 1, y: 0 }}
       className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mb-16 md:mb-0"
     >
-      <GlassCard className="p-8 mb-10 relative overflow-hidden" intensity="low">
-        {/* Decorative Background Elements */}
-        <div className="absolute -top-24 -right-24 w-64 h-64 bg-[#00E5FF]/20 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-[#8A2BE2]/20 rounded-full blur-3xl pointer-events-none"></div>
-
+      <LiquidGlassCard className="p-8 md:p-10 mb-10 relative z-30 overflow-visible" overflowVisible={true} glowColor="rgba(0, 229, 255, 0.3)">
         <div className="relative z-10">
-          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 mb-8 tracking-tight">Discover Services</h1>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/30 backdrop-blur-md text-[11px] font-semibold text-cyan-300 tracking-wider uppercase mb-3 shadow-[0_0_15px_rgba(0,229,255,0.2)]">
+                <Droplets className="w-3.5 h-3.5 text-[#00E5FF] animate-pulse" />
+                <span>Liquid Optical Filter • Live Directory</span>
+              </div>
+              <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+                Discover <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00E5FF] via-cyan-200 to-indigo-300">Services</span>
+              </h1>
+              <p className="text-gray-300/80 text-sm mt-1">Explore verified student accommodations, silent libraries, coaching & dining</p>
+            </div>
+
+            <div className="self-start sm:self-center">
+              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-white/[0.06] border border-white/15 backdrop-blur-xl text-xs font-semibold text-gray-200 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]">
+                <span className="w-2 h-2 rounded-full bg-[#00E5FF] shadow-[0_0_8px_#00E5FF]" />
+                {filteredListings.length} {filteredListings.length === 1 ? 'Place Found' : 'Places Found'}
+              </span>
+            </div>
+          </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="relative group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-[#00E5FF] to-[#8A2BE2] rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
-              <div className="relative flex items-center bg-[rgba(255,255,255,0.05)] rounded-2xl border border-white/10 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] focus-within:bg-[rgba(255,255,255,0.08)] focus-within:shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition-all duration-300">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {/* Search Input Inset Glass Chamber */}
+            <div className="relative z-10 group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-[#00E5FF]/40 to-[#8A2BE2]/40 rounded-2xl blur-md opacity-30 group-focus-within:opacity-80 transition duration-500"></div>
+              <div className="relative flex items-center bg-[rgba(255,255,255,0.06)] rounded-2xl border border-white/20 backdrop-blur-2xl shadow-[inset_0_1.5px_1px_rgba(255,255,255,0.3),inset_0_-1px_1px_rgba(0,0,0,0.3)] focus-within:bg-[rgba(255,255,255,0.1)] focus-within:border-[#00E5FF]/60 transition-all duration-300">
                 <SearchIcon className="absolute left-4 h-5 w-5 text-gray-400 group-focus-within:text-[#00E5FF] transition-colors" />
                 <input
                   type="text"
                   placeholder="Search services, places, or keywords..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-transparent text-white placeholder-gray-500 focus:outline-none focus:ring-0 rounded-2xl"
+                  className="w-full pl-12 pr-10 py-4 bg-transparent text-white placeholder-gray-400 focus:outline-none focus:ring-0 rounded-2xl text-sm md:text-base font-medium"
                 />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-3 p-1 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
             
-            <div className="relative z-30 group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-[#00E5FF] to-[#8A2BE2] rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
-              <div className="relative bg-[rgba(255,255,255,0.05)] rounded-2xl border border-white/10 backdrop-blur-xl h-full shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] focus-within:bg-[rgba(255,255,255,0.08)] focus-within:shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition-all duration-300">
-                <SearchableSelect
-                  options={categoryOptions}
+            {/* Category Select Glass Chamber */}
+            <div className={`relative transition-all duration-300 ${activeDropdown === 'category' ? 'z-50' : activeDropdown === 'city' ? 'z-10' : 'z-20'} group`}>
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-[#00E5FF]/30 to-[#8A2BE2]/30 rounded-2xl blur-md opacity-20 group-focus-within:opacity-70 transition duration-500"></div>
+              <div className="relative bg-[rgba(255,255,255,0.06)] rounded-2xl border border-white/20 backdrop-blur-2xl h-full shadow-[inset_0_1.5px_1px_rgba(255,255,255,0.3),inset_0_-1px_1px_rgba(0,0,0,0.3)] focus-within:bg-[rgba(255,255,255,0.1)] focus-within:border-[#00E5FF]/60 transition-all duration-300">
+                <CategorySelect
                   value={selectedCategory}
-                  onChange={setSelectedCategory}
+                  onChange={(cat) => {
+                    setSelectedCategory(cat);
+                    setActiveDropdown(null);
+                  }}
                   placeholder="All Categories"
-                  icon={<Tag className="h-5 w-5 text-gray-400 group-focus-within:text-[#00E5FF] transition-colors" />}
+                  isOpen={activeDropdown === 'category'}
+                  onToggle={(open) => setActiveDropdown(open ? 'category' : null)}
                 />
               </div>
             </div>
             
-            <div className="relative z-20 group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-[#00E5FF] to-[#8A2BE2] rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
-              <div className="relative bg-[rgba(255,255,255,0.05)] rounded-2xl border border-white/10 backdrop-blur-xl h-full shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] focus-within:bg-[rgba(255,255,255,0.08)] focus-within:shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition-all duration-300">
-                <SearchableSelect
-                  options={cityOptions}
+            {/* City Select Glass Chamber */}
+            <div className={`relative transition-all duration-300 ${activeDropdown === 'city' ? 'z-50' : activeDropdown === 'category' ? 'z-10' : 'z-20'} group`}>
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-[#8A2BE2]/30 to-[#00E5FF]/30 rounded-2xl blur-md opacity-20 group-focus-within:opacity-70 transition duration-500"></div>
+              <div className="relative bg-[rgba(255,255,255,0.06)] rounded-2xl border border-white/20 backdrop-blur-2xl h-full shadow-[inset_0_1.5px_1px_rgba(255,255,255,0.3),inset_0_-1px_1px_rgba(0,0,0,0.3)] focus-within:bg-[rgba(255,255,255,0.1)] focus-within:border-purple-400/60 transition-all duration-300">
+                <LocationSelect
                   value={selectedCity}
-                  onChange={setSelectedCity}
+                  onChange={(ct) => {
+                    setSelectedCity(ct);
+                    setActiveDropdown(null);
+                  }}
                   placeholder="All Cities"
-                  icon={<MapPin className="h-5 w-5 text-gray-400 group-focus-within:text-[#00E5FF] transition-colors" />}
+                  isOpen={activeDropdown === 'city'}
+                  onToggle={(open) => setActiveDropdown(open ? 'city' : null)}
                 />
               </div>
             </div>
           </div>
 
-          {/* Quick Filter Chips */}
-          <div className="flex flex-wrap gap-3 mt-8">
-            {['PG', 'Hostel', 'Library', 'Coaching'].map((chip) => (
+          {/* Quick Filter Droplet Pills */}
+          <div className="flex flex-wrap items-center gap-3 mt-7 pt-6 border-t border-white/10">
+            <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 mr-1 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              Quick Filters:
+            </span>
+            {['PG', 'Hostel', 'Library', 'Mess', 'Coaching Institute', 'Study Room'].map((chip) => {
+              const active = selectedCategory === chip;
+              return (
+                <button
+                  key={chip}
+                  onClick={() => {
+                    setSelectedCategory(active ? '' : chip);
+                    setActiveDropdown(null);
+                  }}
+                  className={`relative group px-4 py-2 rounded-full text-xs font-semibold transition-all duration-300 border ${
+                    active
+                      ? 'bg-gradient-to-r from-[#00E5FF]/25 to-blue-500/25 text-[#00E5FF] border-[#00E5FF]/70 shadow-[0_0_20px_rgba(0,229,255,0.4),inset_0_1px_1px_rgba(255,255,255,0.5)] scale-105'
+                      : 'bg-white/[0.05] text-gray-300 border-white/15 hover:bg-white/[0.12] hover:border-white/30 hover:text-white hover:scale-102 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]'
+                  } backdrop-blur-xl`}
+                >
+                  <span className="relative z-10 flex items-center gap-1.5">
+                    {active && <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] animate-pulse" />}
+                    {chip}
+                  </span>
+                  {/* Subtle glass reflection highlight */}
+                  <span className="absolute top-0 inset-x-2 h-[1px] bg-white/40 rounded-full pointer-events-none" />
+                </button>
+              );
+            })}
+            {(searchTerm || selectedCategory || selectedCity) && (
               <button
-                key={chip}
-                onClick={() => setSelectedCategory(selectedCategory === chip ? '' : chip)}
-                className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 border ${
-                  selectedCategory === chip 
-                    ? 'bg-[rgba(0,229,255,0.2)] text-[#00E5FF] border-[#00E5FF]/50 shadow-[0_0_15px_rgba(0,229,255,0.3)]' 
-                    : 'bg-[rgba(255,255,255,0.06)] text-gray-400 border-white/10 hover:bg-[rgba(255,255,255,0.1)] hover:border-white/20 hover:text-white'
-                }`}
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedCategory('');
+                  setSelectedCity('');
+                  setActiveDropdown(null);
+                }}
+                className="ml-auto text-xs font-medium text-cyan-400 hover:text-cyan-300 underline underline-offset-4 transition-colors"
               >
-                {chip}
+                Reset filters
               </button>
-            ))}
+            )}
           </div>
         </div>
-      </GlassCard>
+      </LiquidGlassCard>
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

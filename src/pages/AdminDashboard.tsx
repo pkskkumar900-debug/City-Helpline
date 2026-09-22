@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { collection, query, getDocs, doc, updateDoc, deleteDoc, orderBy } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Listing, UserProfile } from '../types';
+import { Listing, UserProfile, isSuperAdminEmail } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
 
@@ -24,7 +24,7 @@ export default function AdminDashboard() {
   const [userSearch, setUserSearch] = useState('');
 
   const fetchData = async () => {
-    const isDefaultAdmin = currentUser?.email === 'pkskkumar900@gmail.com';
+    const isDefaultAdmin = isSuperAdminEmail(currentUser?.email);
     if (!currentUser || (userProfile?.role !== 'admin' && !isDefaultAdmin)) return;
 
     setLoading(true);
@@ -46,7 +46,7 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    if (currentUser && (userProfile?.role === 'admin' || currentUser.email === 'pkskkumar900@gmail.com')) {
+    if (currentUser && (userProfile?.role === 'admin' || isSuperAdminEmail(currentUser.email))) {
       fetchData();
     }
   }, [currentUser, userProfile]);
@@ -139,7 +139,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const isDefaultAdmin = currentUser?.email === 'pkskkumar900@gmail.com';
+  const isDefaultAdmin = isSuperAdminEmail(currentUser?.email);
   if (!currentUser || (userProfile?.role !== 'admin' && !isDefaultAdmin)) {
     return <Navigate to="/" />;
   }

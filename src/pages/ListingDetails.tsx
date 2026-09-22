@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { doc, getDoc, collection, query, where, getDocs, addDoc, orderBy, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { Listing, Review } from '../types';
+import { Listing, Review, isSuperAdminEmail } from '../types';
 import { MapPin, Phone, User, Star, Calendar, MessageCircle, ArrowLeft, Heart } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -32,7 +32,7 @@ export default function ListingDetails() {
           const data = { id: docSnap.id, ...docSnap.data() } as Listing;
           
           const isAuthor = currentUser && currentUser.uid === data.authorId;
-          const isAdmin = userProfile?.role === 'admin' || currentUser?.email === 'pkskkumar900@gmail.com';
+          const isAdmin = userProfile?.role === 'admin' || isSuperAdminEmail(currentUser?.email);
           
           if (data.status === 'approved' || isAuthor || isAdmin) {
             setListing(data);
@@ -46,11 +46,11 @@ export default function ListingDetails() {
         // Fetch Reviews
         const q = query(
           collection(db, 'reviews'),
-          where('listingId', '==', id),
-          orderBy('createdAt', 'desc')
+          where('listingId', '==', id)
         );
         const reviewSnap = await getDocs(q);
         const fetchedReviews = reviewSnap.docs.map(d => ({ id: d.id, ...d.data() })) as Review[];
+        fetchedReviews.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         setReviews(fetchedReviews);
       } catch (error: any) {
         console.error("Error fetching details:", error);

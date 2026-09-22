@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { db } from '../lib/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { uploadImage } from '../lib/storage';
-import { Listing } from '../types';
+import { Listing, isSuperAdminEmail } from '../types';
 import { UploadCloud, X, ArrowLeft, Tag, MapPin } from 'lucide-react';
 import { motion } from 'motion/react';
 import { CATEGORIES, STATE_CITIES } from '../lib/constants';
@@ -43,7 +43,7 @@ export default function EditListing() {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const data = docSnap.data() as Listing;
-          const isDefaultAdmin = currentUser?.email === 'pkskkumar900@gmail.com';
+          const isDefaultAdmin = isSuperAdminEmail(currentUser?.email);
           if (currentUser?.uid !== data.authorId && userProfile?.role !== 'admin' && !isDefaultAdmin) {
             navigate('/');
             return;

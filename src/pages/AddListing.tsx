@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { db } from '../lib/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 import { uploadImage } from '../lib/storage';
-import { Listing } from '../types';
+import { Listing, isSuperAdminEmail } from '../types';
 import { UploadCloud, X, ArrowLeft, Tag, MapPin } from 'lucide-react';
 import { motion } from 'motion/react';
 import { CATEGORIES, STATE_CITIES } from '../lib/constants';
@@ -27,7 +27,7 @@ export default function AddListing() {
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
 
   useEffect(() => {
-    if (userProfile && userProfile.role !== 'contributor' && userProfile.role !== 'admin' && currentUser?.email !== 'pkskkumar900@gmail.com') {
+    if (userProfile && userProfile.role !== 'contributor' && userProfile.role !== 'admin' && !isSuperAdminEmail(currentUser?.email)) {
       navigate('/');
     }
   }, [userProfile, currentUser, navigate]);

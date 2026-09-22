@@ -1,5 +1,12 @@
 export type Role = 'user' | 'contributor' | 'admin';
 
+export const ADMIN_EMAILS = ['pkskkumar900@gmail.com', 'kusprince.raj@gmail.com'];
+
+export function isSuperAdminEmail(email?: string | null): boolean {
+  if (!email) return false;
+  return ADMIN_EMAILS.includes(email.toLowerCase().trim());
+}
+
 export interface UserProfile {
   uid: string;
   name: string;
