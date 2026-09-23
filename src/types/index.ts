@@ -1,6 +1,6 @@
 export type Role = 'user' | 'contributor' | 'admin';
 
-export const ADMIN_EMAILS = ['pkskkumar900@gmail.com', 'kusprince.raj@gmail.com'];
+export const ADMIN_EMAILS = ['pkskkumar900@gmail.com', 'kusprince.raj@gmail.com', 'prkus82@gmail.com'];
 
 export function isSuperAdminEmail(email?: string | null): boolean {
   if (!email) return false;

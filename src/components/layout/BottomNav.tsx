@@ -48,6 +48,12 @@ export function BottomNav() {
             <Link
               key={item.path}
               to={item.path}
+              onClick={() => {
+                if (item.path === '/admin') {
+                  localStorage.setItem('admin_view_mode', 'admin');
+                  window.dispatchEvent(new Event('admin_mode_change'));
+                }
+              }}
               className="relative flex flex-col items-center justify-center w-16 h-full min-h-[44px] py-1 select-none active:scale-95 transition-transform"
             >
               {isActive && (

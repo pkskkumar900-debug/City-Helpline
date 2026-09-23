@@ -32,6 +32,7 @@ import { LiquidButton } from '../components/ui/LiquidButton';
 import { motion } from 'motion/react';
 import { ListingCard } from '../components/ListingCard';
 import { useLocationContext } from '../contexts/LocationContext';
+import { Footer } from '../components/layout/Footer';
 
 export default function Home() {
   const { userLocation, openLocationModal } = useLocationContext();
@@ -185,7 +186,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen pb-24 md:pb-16 bg-transparent text-white overflow-hidden">
+    <div className="min-h-screen bg-transparent text-white overflow-hidden">
       
       {/* Ambient Visual Background Effects */}
       <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
@@ -909,6 +910,9 @@ export default function Home() {
           </div>
         </LiquidGlassCard>
       </section>
+
+      {/* Footer - Exclusive to Home Page */}
+      <Footer />
     </div>
   );
 }

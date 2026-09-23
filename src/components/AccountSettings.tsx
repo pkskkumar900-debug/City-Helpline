@@ -5,7 +5,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { uploadImage } from '../lib/storage';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { motion } from 'motion/react';
-import { User, Camera, Moon, Sun, Monitor, Lock, Bell, Shield, FileText, Info, Mail, Code, ChevronRight, LogOut } from 'lucide-react';
+import { User, Camera, Moon, Sun, Monitor, Lock, Bell, Shield, FileText, Info, Mail, Code, ChevronRight, LogOut, Scale, ExternalLink, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function AccountSettings() {
@@ -352,115 +352,167 @@ export default function AccountSettings() {
 
       {/* Legal & Information */}
       <div className="glass-card rounded-xl p-6">
-        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-          <Info className="h-5 w-5 text-purple-400" />
-          Legal & Information
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <Scale className="h-5 w-5 text-[#00E5FF]" />
+            Legal, Privacy & Compliance
+          </h3>
+          <Link
+            to="/legal"
+            className="text-xs font-bold text-[#00E5FF] hover:underline flex items-center gap-1"
+          >
+            <span>Open Legal Center</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        {/* Quick Hub Ribbon */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+          <Link
+            to="/privacy"
+            className="p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 text-center transition-all group"
+          >
+            <Lock className="w-4 h-4 text-[#00E5FF] mx-auto mb-1 group-hover:scale-110 transition-transform" />
+            <span className="text-[11px] font-bold text-gray-200 block">Privacy Policy</span>
+          </Link>
+
+          <Link
+            to="/terms"
+            className="p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 text-center transition-all group"
+          >
+            <Scale className="w-4 h-4 text-[#8A2BE2] mx-auto mb-1 group-hover:scale-110 transition-transform" />
+            <span className="text-[11px] font-bold text-gray-200 block">Terms of Service</span>
+          </Link>
+
+          <Link
+            to="/safety"
+            className="p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 text-center transition-all group"
+          >
+            <ShieldAlert className="w-4 h-4 text-amber-400 mx-auto mb-1 group-hover:scale-110 transition-transform" />
+            <span className="text-[11px] font-bold text-gray-200 block">Safety & Scams</span>
+          </Link>
+
+          <Link
+            to="/legal?tab=grievance"
+            className="p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 text-center transition-all group"
+          >
+            <Mail className="w-4 h-4 text-emerald-400 mx-auto mb-1 group-hover:scale-110 transition-transform" />
+            <span className="text-[11px] font-bold text-gray-200 block">Grievance Officer</span>
+          </Link>
+        </div>
+
         <div className="space-y-4">
+          {/* Privacy Policy */}
           <details className="group bg-gray-800/30 rounded-xl border border-gray-700/50 overflow-hidden">
             <summary className="flex items-center justify-between p-4 cursor-pointer font-medium text-white">
               <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-gray-400" />
-                Privacy Policy
+                <Lock className="h-4 w-4 text-[#00E5FF]" />
+                Privacy & Personal Data Protection
               </div>
               <ChevronRight className="h-4 w-4 text-gray-400 group-open:rotate-90 transition-transform" />
             </summary>
-            <div className="p-4 pt-0 text-sm text-gray-400 border-t border-gray-700/50 mt-2 space-y-3">
-              <p className="font-medium text-white mt-2">Privacy Policy – City Helpline</p>
-              <p>City Helpline respects your privacy and is committed to protecting your personal information.</p>
+            <div className="p-4 pt-0 text-xs text-gray-300 border-t border-gray-700/50 mt-2 space-y-2.5 leading-relaxed">
+              <p className="font-bold text-white mt-2">Privacy Commitment – City Helpline (app.imprince.me)</p>
+              <p>
+                City Helpline is an educational student community network. We strictly comply with the Indian Information Technology Act, 2000 and Digital Personal Data Protection (DPDP) principles.
+              </p>
               
-              <p className="font-medium text-white">Information We Collect:</p>
-              <p>We may collect basic user information such as name, email address, and data submitted through listings.</p>
-              
-              <p className="font-medium text-white">How We Use Your Data:</p>
-              <ul className="list-disc pl-5 space-y-1">
-                <li>To provide and improve our services</li>
-                <li>To display user-submitted listings</li>
-                <li>To communicate important updates</li>
+              <p className="font-bold text-white">Data Protection & Non-Commercialization:</p>
+              <ul className="list-disc pl-5 space-y-1 text-gray-400">
+                <li>We do <strong className="text-white">NOT</strong> sell, rent, or trade student mobile numbers, emails, or personal profiles to private coaching brokers or ad networks.</li>
+                <li>Your credentials and profile are safely secured via Google Firebase Authentication with AES-256 cloud encryption.</li>
+                <li>Optional GPS city detection is only used locally to surface closest coaching zone PGs (Kota, Patna, Delhi, etc.) and is never tracked in the background.</li>
               </ul>
               
-              <p className="font-medium text-white">Data Protection:</p>
-              <p>We do not sell or share your personal data with third parties. Your data is securely stored using Firebase services.</p>
-              
-              <p className="font-medium text-white">User Responsibility:</p>
-              <p>Users are responsible for the accuracy of the information they submit.</p>
-              
-              <p className="font-medium text-white">Contact:</p>
-              <p>For any privacy-related queries, contact us at:<br/>
-              <a href="mailto:imprince.dev@gmail.com" className="text-blue-400 hover:underline">imprince.dev@gmail.com</a></p>
+              <div className="pt-2 flex items-center justify-between">
+                <span className="text-gray-400">Contact: <a href="mailto:support@imprince.me" className="text-[#00E5FF] hover:underline">support@imprince.me</a></span>
+                <Link to="/privacy" className="text-[#00E5FF] font-bold hover:underline flex items-center gap-1">
+                  Full Policy Document &rarr;
+                </Link>
+              </div>
             </div>
           </details>
 
+          {/* Terms & Conditions */}
           <details className="group bg-gray-800/30 rounded-xl border border-gray-700/50 overflow-hidden">
             <summary className="flex items-center justify-between p-4 cursor-pointer font-medium text-white">
               <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-gray-400" />
-                Terms & Conditions
+                <Scale className="h-4 w-4 text-[#8A2BE2]" />
+                Terms of Service & Zero Brokerage Policy
               </div>
               <ChevronRight className="h-4 w-4 text-gray-400 group-open:rotate-90 transition-transform" />
             </summary>
-            <div className="p-4 pt-0 text-sm text-gray-400 border-t border-gray-700/50 mt-2 space-y-3">
-              <p className="font-medium text-white mt-2">Terms & Conditions – City Helpline</p>
-              <p>By using City Helpline, you agree to the following terms:</p>
+            <div className="p-4 pt-0 text-xs text-gray-300 border-t border-gray-700/50 mt-2 space-y-2.5 leading-relaxed">
+              <p className="font-bold text-white mt-2">Information Intermediary Guidelines</p>
+              <p>
+                City Helpline operates as a zero-brokerage digital intermediary under Section 79 of the IT Act, 2000. We connect aspirants directly with property owners and peer students.
+              </p>
               
-              <p className="font-medium text-white">Usage:</p>
-              <p>This platform is intended for students to find and share local resources such as PGs, hostels, mess, libraries, and coaching centers.</p>
-              
-              <p className="font-medium text-white">User Content:</p>
-              <ul className="list-disc pl-5 space-y-1">
-                <li>Users can submit listings</li>
-                <li>All information must be accurate and genuine</li>
-                <li>Spam or fake data is strictly prohibited</li>
+              <p className="font-bold text-white">Key User Responsibilities:</p>
+              <ul className="list-disc pl-5 space-y-1 text-gray-400">
+                <li><strong className="text-white">Zero Brokerage:</strong> No student will ever be charged brokerage fees. Never transfer token money to unverified callers.</li>
+                <li><strong className="text-white">Physical Verification:</strong> Students must physically inspect rooms, check electricity sub-meters, and get written receipts before paying advance deposits.</li>
+                <li><strong className="text-white">Marketplace Items:</strong> Handover and inspection of second-hand study tables, coolers, and books must be performed in person.</li>
               </ul>
               
-              <p className="font-medium text-white">Admin Rights:</p>
-              <p>City Helpline reserves the right to remove or modify any content without prior notice.</p>
-              
-              <p className="font-medium text-white">Limitation of Liability:</p>
-              <p>We are not responsible for any loss or issues caused by third-party listings.</p>
-              
-              <p className="font-medium text-white">Account Policy:</p>
-              <p>Accounts may be suspended if any misuse or violation is detected.</p>
-              
-              <p className="font-medium text-white">Changes:</p>
-              <p>We may update these terms at any time without prior notice.</p>
-              
-              <p className="font-medium text-white">Contact:</p>
-              <p>For support, email:<br/>
-              <a href="mailto:imprince.dev@gmail.com" className="text-blue-400 hover:underline">imprince.dev@gmail.com</a></p>
+              <div className="pt-2 flex items-center justify-between">
+                <span className="text-gray-400">Law: Republic of India Jurisdiction</span>
+                <Link to="/terms" className="text-[#00E5FF] font-bold hover:underline flex items-center gap-1">
+                  Full Terms of Service &rarr;
+                </Link>
+              </div>
             </div>
           </details>
 
+          {/* Student Safety & Anti-Fraud */}
+          <details className="group bg-gray-800/30 rounded-xl border border-gray-700/50 overflow-hidden">
+            <summary className="flex items-center justify-between p-4 cursor-pointer font-medium text-white">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="h-4 w-4 text-amber-400" />
+                Student Safety, Tele-MANAS & Scam Warning
+              </div>
+              <ChevronRight className="h-4 w-4 text-gray-400 group-open:rotate-90 transition-transform" />
+            </summary>
+            <div className="p-4 pt-0 text-xs text-gray-300 border-t border-gray-700/50 mt-2 space-y-2.5 leading-relaxed">
+              <p className="font-bold text-white mt-2">Aspirant Welfare & Emergency Helpline</p>
+              <p>
+                Student mental wellbeing and physical security are our highest priorities.
+              </p>
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-200">
+                <strong className="block text-white mb-1">National 24/7 Toll-Free Emergency Numbers:</strong>
+                <p>Tele-MANAS Mental Health Counseling: <strong className="text-white font-mono">14416</strong></p>
+                <p>National Emergency Police/Ambulance: <strong className="text-white font-mono">112</strong></p>
+              </div>
+              <div className="pt-1 flex items-center justify-between">
+                <span className="text-gray-400">Never pay token advance without physical room visit</span>
+                <Link to="/safety" className="text-amber-300 font-bold hover:underline flex items-center gap-1">
+                  Safety Checklist &rarr;
+                </Link>
+              </div>
+            </div>
+          </details>
+
+          {/* About Platform & Developer */}
           <details className="group bg-gray-800/30 rounded-xl border border-gray-700/50 overflow-hidden">
             <summary className="flex items-center justify-between p-4 cursor-pointer font-medium text-white">
               <div className="flex items-center gap-2">
                 <Code className="h-4 w-4 text-gray-400" />
-                About Developer
+                About City Helpline & Founder
               </div>
               <ChevronRight className="h-4 w-4 text-gray-400 group-open:rotate-90 transition-transform" />
             </summary>
-            <div className="p-4 pt-0 text-sm text-gray-400 border-t border-gray-700/50 mt-2 space-y-3">
-              <p className="font-medium text-white mt-2">About the Developer</p>
-              <p>City Helpline is developed by Prince Kushwaha, an AI Developer and Professional Trader.</p>
-              <p>This platform is built to simplify student life by providing easy access to local resources and services.</p>
-              <p>Built with ❤️ in India</p>
-              <p>For support or collaboration:<br/>
-              Email: <a href="mailto:imprince.dev@gmail.com" className="text-blue-400 hover:underline">imprince.dev@gmail.com</a></p>
-            </div>
-          </details>
-
-          <details className="group bg-gray-800/30 rounded-xl border border-gray-700/50 overflow-hidden">
-            <summary className="flex items-center justify-between p-4 cursor-pointer font-medium text-white">
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-gray-400" />
-                Support Information
-              </div>
-              <ChevronRight className="h-4 w-4 text-gray-400 group-open:rotate-90 transition-transform" />
-            </summary>
-            <div className="p-4 pt-0 text-sm text-gray-400 border-t border-gray-700/50 mt-2 space-y-3">
-              <p className="font-medium text-white mt-2">Support Information</p>
-              <p>For support or collaboration:<br/>
-              Email: <a href="mailto:imprince.dev@gmail.com" className="text-blue-400 hover:underline">imprince.dev@gmail.com</a></p>
+            <div className="p-4 pt-0 text-xs text-gray-300 border-t border-gray-700/50 mt-2 space-y-2.5 leading-relaxed">
+              <p className="font-bold text-white mt-2">Mission & Founder Details</p>
+              <p>
+                City Helpline (<a href="https://app.imprince.me" target="_blank" rel="noopener noreferrer" className="text-[#00E5FF] hover:underline">app.imprince.me</a>) was created by Prince Raj (Prince Kushwaha) with a mission to eliminate broker exploitation for Indian aspirants relocating far from home for competitive exams.
+              </p>
+              <p className="text-gray-400">
+                Covering educational hubs in Kota, Patna, Delhi NCR, Sikar, Prayagraj, Indore, Bengaluru, Lucknow, and Jaipur.
+              </p>
+              <p className="text-gray-400">
+                Official Inquiries: <a href="mailto:support@imprince.me" className="text-[#00E5FF] hover:underline">support@imprince.me</a> | <a href="mailto:imprince.dev@gmail.com" className="text-[#00E5FF] hover:underline">imprince.dev@gmail.com</a>
+              </p>
+              <p className="text-[11px] text-gray-500 pt-1">Built with ❤️ in India for students.</p>
             </div>
           </details>
         </div>

@@ -86,10 +86,14 @@ export function Navbar() {
                 {isAdmin && (
                   <Link
                     to="/admin"
+                    onClick={() => {
+                      localStorage.setItem('admin_view_mode', 'admin');
+                      window.dispatchEvent(new Event('admin_mode_change'));
+                    }}
                     className={`flex items-center gap-2 text-sm font-medium transition-colors ${isActive('/admin') ? 'text-[#00E5FF]' : 'text-gray-400 hover:text-white'}`}
                   >
                     <ShieldCheck className="h-5 w-5" />
-                    <span className="hidden sm:inline">Admin</span>
+                    <span className="hidden sm:inline">Admin Console</span>
                   </Link>
                 )}
 
