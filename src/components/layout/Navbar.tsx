@@ -3,7 +3,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Building2, LogOut, PlusCircle, User, ShieldCheck, Search, Home, ShoppingBag, Calculator } from 'lucide-react';
 import { LiquidButton } from '../ui/LiquidButton';
 import { isSuperAdminEmail } from '../../types';
-import { NavbarLocationButton } from '../location/NavbarLocationButton';
 
 export function Navbar() {
   const { currentUser, userProfile, logout } = useAuth();
@@ -21,22 +20,19 @@ export function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 glass-nav">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center gap-3 sm:gap-5">
-            <Link to="/" className="flex items-center gap-2.5 group shrink-0">
-              <div className="p-2 rounded-xl bg-[rgba(255,255,255,0.06)] border border-white/10 group-hover:border-[#00E5FF]/50 transition-colors shadow-[0_0_15px_rgba(0,229,255,0.1)] group-hover:shadow-[0_0_20px_rgba(0,229,255,0.3)]">
-                <Building2 className="h-6 w-6 text-[#00E5FF]" />
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16 gap-2">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+            <Link to="/" className="flex items-center gap-2 sm:gap-2.5 group shrink-0">
+              <div className="p-1.5 sm:p-2 rounded-xl bg-[rgba(255,255,255,0.06)] border border-white/10 group-hover:border-[#00E5FF]/50 transition-colors shadow-[0_0_15px_rgba(0,229,255,0.1)] group-hover:shadow-[0_0_20px_rgba(0,229,255,0.3)]">
+                <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-[#00E5FF]" />
               </div>
-              <span className="text-xl font-bold text-white tracking-wide">City Helpline</span>
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded-full bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30 shadow-[0_0_12px_rgba(0,229,255,0.25)] select-none">
+              <span className="text-base sm:text-xl font-black text-white tracking-wide whitespace-nowrap">City Helpline</span>
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded-full bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30 shadow-[0_0_12px_rgba(0,229,255,0.25)] select-none">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] animate-pulse" />
                 BETA
               </span>
             </Link>
-
-            {/* Amazon / Flipkart style Location selector button */}
-            <NavbarLocationButton />
           </div>
           
           <div className="hidden md:flex items-center gap-5">
@@ -72,16 +68,21 @@ export function Navbar() {
               <span>Budget</span>
             </Link>
 
+            {/* Always visible List Service button on Desktop */}
+            <Link
+              to="/add-listing"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all text-xs font-bold ${
+                isActive('/add-listing')
+                  ? 'bg-[#00E5FF]/20 border-[#00E5FF] text-[#00E5FF] shadow-[0_0_12px_rgba(0,229,255,0.3)]'
+                  : 'bg-white/[0.05] border-white/15 text-white hover:border-[#00E5FF]/50 hover:bg-[#00E5FF]/10'
+              }`}
+            >
+              <PlusCircle className="h-4 w-4 text-[#00E5FF]" />
+              <span>+ List Service</span>
+            </Link>
+
             {currentUser ? (
               <>
-                <Link
-                  to="/add-listing"
-                  className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${isActive('/add-listing') ? 'text-[#00E5FF]' : 'text-gray-400 hover:text-white'}`}
-                >
-                  <PlusCircle className="h-4 w-4" />
-                  <span>List Service</span>
-                </Link>
-                
                 {isAdmin && (
                   <Link
                     to="/admin"
@@ -130,10 +131,18 @@ export function Navbar() {
 
           {/* Mobile Right Action */}
           <div className="flex md:hidden items-center gap-2">
+            <Link
+              to="/add-listing"
+              className="flex items-center gap-1 px-2.5 py-1 text-xs font-black rounded-xl bg-gradient-to-r from-[#00E5FF]/20 to-[#8A2BE2]/20 border border-[#00E5FF]/40 text-[#00E5FF] hover:brightness-110 active:scale-95 transition-all shadow-[0_0_10px_rgba(0,229,255,0.2)]"
+            >
+              <PlusCircle className="h-3.5 w-3.5" />
+              <span>+ List</span>
+            </Link>
+
             {currentUser ? (
               <Link 
                 to="/profile" 
-                className="p-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:border-[#00E5FF]/40 transition-colors"
+                className="p-1.5 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:border-[#00E5FF]/40 transition-colors"
                 title="Profile"
               >
                 <User className="h-5 w-5 text-[#00E5FF]" />

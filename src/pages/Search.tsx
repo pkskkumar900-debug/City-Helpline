@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { collection, query, getDocs, orderBy, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Listing } from '../types';
-import { Search as SearchIcon, MapPin, Tag, Sparkles, X, Droplets, Navigation, Loader2, CheckCircle2 } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { Search as SearchIcon, MapPin, Tag, Sparkles, X, Droplets, Navigation, Loader2, CheckCircle2, PlusCircle } from 'lucide-react';
+import { useLocation, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { CATEGORIES, STATE_CITIES } from '../lib/constants';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
@@ -348,6 +348,13 @@ export default function Search() {
                 >
                   Clear All Filters
                 </LiquidButton>
+                <Link
+                  to="/add-listing"
+                  className="px-5 py-2.5 text-xs font-bold rounded-2xl bg-cyan-400/10 hover:bg-cyan-400/20 border border-cyan-400/40 text-cyan-300 transition-all flex items-center gap-1.5 shadow-[0_0_15px_rgba(0,229,255,0.2)]"
+                >
+                  <PlusCircle className="w-4 h-4 text-[#00E5FF]" />
+                  <span>+ List Your PG / Service</span>
+                </Link>
               </div>
             </div>
           </GlassCard>

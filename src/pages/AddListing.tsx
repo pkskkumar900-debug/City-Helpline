@@ -28,11 +28,7 @@ export default function AddListing() {
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (userProfile && userProfile.role !== 'contributor' && userProfile.role !== 'admin' && !isSuperAdminEmail(currentUser?.email)) {
-      navigate('/');
-    }
-  }, [userProfile, currentUser, navigate]);
+  // Any authenticated user can submit listings for admin review
 
   const categoryOptions = CATEGORIES.map(cat => ({ value: cat, label: cat }));
   

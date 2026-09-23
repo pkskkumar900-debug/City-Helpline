@@ -34,8 +34,11 @@ export const BudgetChart: React.FC<BudgetChartProps> = ({
   return (
     <div className="flex flex-col md:flex-row items-center justify-between gap-8 py-4">
       {/* Donut graphic */}
-      <div className="relative shrink-0 flex items-center justify-center">
-        <svg width={size} height={size} className="transform -rotate-90">
+      <div className="relative shrink-0 flex items-center justify-center mx-auto">
+        <svg 
+          viewBox={`0 0 ${size} ${size}`} 
+          className="w-44 h-44 sm:w-52 sm:h-52 transform -rotate-90"
+        >
           {/* Background circle */}
           <circle
             cx={size / 2}

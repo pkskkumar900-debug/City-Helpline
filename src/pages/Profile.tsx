@@ -5,9 +5,10 @@ import { db } from '../lib/firebase';
 import { Listing, MarketplaceItem } from '../types';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { User, LogOut, Settings, PlusCircle, Building2, MapPin, List, Star, ArrowLeft, Search, ShoppingBag, Trash2, CheckCircle, Tag } from 'lucide-react';
+import { User, LogOut, Settings, PlusCircle, Building2, MapPin, List, Star, ArrowLeft, Search, ShoppingBag, Trash2, CheckCircle, Tag, Calculator } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import AccountSettings from '../components/AccountSettings';
+import { ProfileBudgetSection } from '../components/profile/ProfileBudgetSection';
 import { useLocationContext } from '../contexts/LocationContext';
 
 export default function Profile() {
@@ -17,7 +18,7 @@ export default function Profile() {
   const [savedListings, setSavedListings] = useState<Listing[]>([]);
   const [myMarketplaceItems, setMyMarketplaceItems] = useState<MarketplaceItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'listings' | 'saved' | 'marketplace' | 'settings'>('listings');
+  const [activeTab, setActiveTab] = useState<'listings' | 'saved' | 'marketplace' | 'budget' | 'settings'>('budget');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -182,14 +183,12 @@ export default function Profile() {
               </div>
 
               <div className="space-y-3 border-t border-white/10 pt-8 relative z-10">
-                {userProfile?.role === 'contributor' && (
-                  <Link to="/add-listing" className="group flex items-center gap-4 p-4 rounded-2xl hover:bg-[rgba(255,255,255,0.06)] text-gray-400 hover:text-white transition-all duration-300">
-                    <div className="p-2 rounded-xl bg-[#00E5FF]/10 text-[#00E5FF] group-hover:bg-[#00E5FF] group-hover:text-black transition-colors shadow-[0_0_10px_rgba(0,229,255,0.2)]">
-                      <PlusCircle className="h-5 w-5" />
-                    </div>
-                    <span className="font-semibold">Add New Listing</span>
-                  </Link>
-                )}
+                <Link to="/add-listing" className="group flex items-center gap-4 p-4 rounded-2xl hover:bg-[rgba(255,255,255,0.06)] text-gray-400 hover:text-white transition-all duration-300">
+                  <div className="p-2 rounded-xl bg-[#00E5FF]/10 text-[#00E5FF] group-hover:bg-[#00E5FF] group-hover:text-black transition-colors shadow-[0_0_10px_rgba(0,229,255,0.2)]">
+                    <PlusCircle className="h-5 w-5" />
+                  </div>
+                  <span className="font-semibold">Add New Listing (PG, Mess, Library)</span>
+                </Link>
                 <Link to="/sell-item" className="group flex items-center gap-4 p-4 rounded-2xl hover:bg-[rgba(255,255,255,0.06)] text-gray-400 hover:text-white transition-all duration-300">
                   <div className="p-2 rounded-xl bg-cyan-400/10 text-cyan-300 group-hover:bg-[#00E5FF] group-hover:text-black transition-colors shadow-[0_0_10px_rgba(0,229,255,0.2)]">
                     <ShoppingBag className="h-5 w-5" />
@@ -222,6 +221,20 @@ export default function Profile() {
                       {myMarketplaceItems.length}
                     </span>
                   )}
+                </button>
+                <button 
+                  onClick={() => setActiveTab('budget')}
+                  className={`w-full group flex items-center justify-between p-4 rounded-2xl transition-all duration-300 ${activeTab === 'budget' ? 'bg-[rgba(0,229,255,0.1)] text-white border border-[#00E5FF]/20 shadow-[0_0_15px_rgba(0,229,255,0.1)]' : 'hover:bg-[rgba(255,255,255,0.06)] text-gray-400 hover:text-white'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`p-2 rounded-xl transition-colors ${activeTab === 'budget' ? 'bg-[#00E5FF] text-black shadow-[0_0_10px_rgba(0,229,255,0.5)]' : 'bg-[rgba(255,255,255,0.06)] text-gray-400 group-hover:bg-[rgba(255,255,255,0.1)] group-hover:text-white'}`}>
+                      <Calculator className="h-5 w-5" />
+                    </div>
+                    <span className="font-semibold">Student Budget</span>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#00E5FF]/20 text-[#00E5FF]">
+                    Planner
+                  </span>
                 </button>
                 <button 
                   onClick={() => setActiveTab('saved')}
@@ -379,6 +392,8 @@ export default function Profile() {
                 </GlassCard>
               )}
             </>
+          ) : activeTab === 'budget' ? (
+            <ProfileBudgetSection />
           ) : activeTab === 'saved' ? (
             <>
               <div className="flex items-center justify-between mb-8">

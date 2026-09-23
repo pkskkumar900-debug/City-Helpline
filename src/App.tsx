@@ -8,6 +8,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { LocationProvider, useLocationContext } from './contexts/LocationContext';
 import { Navbar } from './components/layout/Navbar';
 import { BottomNav } from './components/layout/BottomNav';
+import { Footer } from './components/layout/Footer';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { LocationPromptBanner } from './components/location/LocationPromptBanner';
 import { LocationSelectorModal } from './components/location/LocationSelectorModal';
@@ -36,7 +37,7 @@ function AppLayout() {
       <Navbar />
       <LocationPromptBanner />
       <LocationSelectorModal isOpen={isLocationModalOpen} onClose={closeLocationModal} />
-      <main className="flex-grow pb-16 md:pb-0">
+      <main className="flex-grow pb-24 md:pb-0">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/search" element={<Search />} />
@@ -92,6 +93,7 @@ function AppLayout() {
           />
         </Routes>
       </main>
+      <Footer />
       <BottomNav />
     </div>
   );

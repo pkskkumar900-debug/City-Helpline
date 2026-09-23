@@ -353,17 +353,17 @@ export default function BudgetCalculator() {
       className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mb-20 md:mb-0"
     >
       {/* Top Banner Card */}
-      <LiquidGlassCard className="p-6 sm:p-10 mb-8 overflow-visible" glowColor="rgba(0, 229, 255, 0.25)">
+      <LiquidGlassCard className="p-4 sm:p-8 md:p-10 mb-8 overflow-visible" glowColor="rgba(0, 229, 255, 0.25)">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/30 backdrop-blur-md text-[11px] font-semibold text-cyan-300 tracking-wider uppercase mb-3 shadow-[0_0_15px_rgba(0,229,255,0.2)]">
               <Calculator className="w-3.5 h-3.5 text-[#00E5FF] animate-pulse" />
               <span>Student Budget Estimator • मासिक खर्च कैलकुलेटर</span>
             </div>
-            <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
               Plan Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00E5FF] via-cyan-200 to-indigo-300">Monthly Expenses</span>
             </h1>
-            <p className="text-gray-300 text-sm mt-2 max-w-2xl">
+            <p className="text-gray-300 text-xs sm:text-sm mt-2 max-w-2xl leading-relaxed">
               Type your own exact amounts manually or use guided options for room, mess, library pass, electricity, and custom expenses across Kota, Patna, Delhi, and other study hubs.
             </p>
           </div>
@@ -372,7 +372,7 @@ export default function BudgetCalculator() {
             <button
               type="button"
               onClick={() => setIsShareModalOpen(true)}
-              className="px-5 py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 text-white font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-sm"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
             >
               <Share2 className="w-4 h-4 text-[#00E5FF]" />
               <span>Share with Parents</span>
@@ -423,49 +423,65 @@ export default function BudgetCalculator() {
         
         {/* Left Column: Calculation Controls (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
-          <GlassCard className="p-6 sm:p-8 rounded-3xl" intensity="medium">
+          <GlassCard className="p-4 sm:p-8 rounded-3xl" intensity="medium">
             
+            {/* Mobile live total bar visible on phones & tablets */}
+            <div className="lg:hidden flex items-center justify-between p-3.5 rounded-2xl bg-cyan-500/10 border border-[#00E5FF]/30 mb-6 shadow-[0_0_15px_rgba(0,229,255,0.1)]">
+              <div>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Live Estimated Total</span>
+                <span className="text-xl font-black text-white">₹{totalCalculated.toLocaleString('en-IN')}<span className="text-xs text-cyan-300 font-semibold">/month</span></span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsShareModalOpen(true)}
+                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <Share2 className="w-3.5 h-3.5 text-[#00E5FF]" />
+                <span>Share</span>
+              </button>
+            </div>
+
             {/* Mode Switcher: 3 Tabs */}
             <div className="flex items-center p-1.5 rounded-2xl bg-white/[0.05] border border-white/10 mb-6 gap-1">
               <button
                 type="button"
                 onClick={() => setMode('manual')}
-                className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-2 px-1.5 sm:px-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
                   mode === 'manual'
                     ? 'bg-[#00E5FF] text-slate-950 shadow-[0_0_15px_rgba(0,229,255,0.4)]'
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
-                <Edit3 className="w-3.5 h-3.5" />
-                <span>Manual Entry</span>
-                <span className="hidden sm:inline text-[10px] opacity-75">(मैन्युअल खुद भरें)</span>
+                <Edit3 className="w-3.5 h-3.5 shrink-0" />
+                <span>Manual</span>
+                <span className="hidden sm:inline">Entry</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setMode('custom')}
-                className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-2 px-1.5 sm:px-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
                   mode === 'custom'
                     ? 'bg-[#00E5FF] text-slate-950 shadow-[0_0_15px_rgba(0,229,255,0.4)]'
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
-                <Sliders className="w-3.5 h-3.5" />
-                <span>Guided Options</span>
-                <span className="hidden sm:inline text-[10px] opacity-75">(विकल्प चुनें)</span>
+                <Sliders className="w-3.5 h-3.5 shrink-0" />
+                <span>Guided</span>
+                <span className="hidden sm:inline">Mode</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setMode('autofit')}
-                className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-2 px-1.5 sm:px-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
                   mode === 'autofit'
                     ? 'bg-[#00E5FF] text-slate-950 shadow-[0_0_15px_rgba(0,229,255,0.4)]'
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
-                <Zap className="w-3.5 h-3.5" />
-                <span>Auto-Fit Budget</span>
+                <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                <span>Auto-Fit</span>
               </button>
             </div>
 

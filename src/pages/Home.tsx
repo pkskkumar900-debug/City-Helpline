@@ -21,8 +21,9 @@ import {
   ChevronRight,
   TrendingUp,
   HeartHandshake,
-  Navigation,
-  Loader2,
+  Calculator,
+  Utensils,
+  IndianRupee,
   X
 } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
@@ -31,17 +32,10 @@ import { LiquidButton } from '../components/ui/LiquidButton';
 import { motion } from 'motion/react';
 import { ListingCard } from '../components/ListingCard';
 import { useLocationContext } from '../contexts/LocationContext';
-import { MarketplaceItem } from '../types';
-import { INITIAL_MARKETPLACE_ITEMS } from '../lib/marketplaceData';
-import { MarketplaceCard } from '../components/marketplace/MarketplaceCard';
-import { MarketplaceDetailModal } from '../components/marketplace/MarketplaceDetailModal';
-import { ShoppingBag, Calculator, Utensils, IndianRupee } from 'lucide-react';
 
 export default function Home() {
-  const { userLocation, isLoadingLocation, requestLiveLocation, openLocationModal } = useLocationContext();
+  const { userLocation, openLocationModal } = useLocationContext();
   const [allListings, setAllListings] = useState<Listing[]>([]);
-  const [marketplaceItems, setMarketplaceItems] = useState<MarketplaceItem[]>(INITIAL_MARKETPLACE_ITEMS);
-  const [selectedMarketplaceItem, setSelectedMarketplaceItem] = useState<MarketplaceItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
@@ -70,45 +64,9 @@ export default function Home() {
     }
   };
 
-  const fetchMarketplace = async () => {
-    try {
-      const q = query(collection(db, 'marketplace_items'));
-      const snapshot = await Promise.race([
-        getDocs(q),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Marketplace fetch timeout')), 5000))
-      ]);
-      const firestoreItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MarketplaceItem));
-      if (firestoreItems.length > 0) {
-        const existingIds = new Set(firestoreItems.map(i => i.id));
-        const demoLeft = INITIAL_MARKETPLACE_ITEMS.filter(i => !existingIds.has(i.id));
-        setMarketplaceItems([...firestoreItems, ...demoLeft]);
-      }
-    } catch {
-      // offline or delayed: keep initial marketplace items
-    }
-  };
-
   useEffect(() => {
     fetchListings();
-    fetchMarketplace();
   }, []);
-
-  // Marketplace items prioritized by user's city
-  const showcasedMarketplaceItems = useMemo(() => {
-    if (!userLocation?.city) {
-      return marketplaceItems.slice(0, 4);
-    }
-    const targetCity = userLocation.city.toLowerCase().trim();
-    const inCity = marketplaceItems.filter(item => item.city?.toLowerCase().trim() === targetCity);
-    const outsideCity = marketplaceItems.filter(item => item.city?.toLowerCase().trim() !== targetCity);
-    return [...inCity, ...outsideCity].slice(0, 4);
-  }, [marketplaceItems, userLocation?.city]);
-
-  // Compute hyper-local listings based on user's live or selected location
-  const localListings = useMemo(() => {
-    if (!userLocation?.city) return [];
-    return allListings.filter(l => l.city?.toLowerCase().trim() === userLocation.city.toLowerCase().trim());
-  }, [allListings, userLocation?.city]);
 
   // Featured places: prioritize places from user's city if available
   const featuredListings = useMemo(() => {
@@ -264,7 +222,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.1 }}
-              className="text-4xl sm:text-6xl xl:text-7xl font-black tracking-tight leading-[1.08] text-white"
+              className="text-3xl sm:text-5xl md:text-6xl xl:text-7xl font-black tracking-tight leading-[1.08] text-white"
             >
               Find Your Ideal <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00E5FF] via-cyan-200 to-indigo-300">
@@ -420,10 +378,10 @@ export default function Home() {
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
-                className="absolute -bottom-8 -left-6 sm:-left-10 z-20"
+                className="absolute -bottom-6 left-2 sm:-bottom-8 sm:-left-8 z-20"
               >
-                <div className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.08] backdrop-blur-2xl border border-white/25 shadow-[0_15px_35px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.4)] flex items-center gap-3.5 hover:scale-105 transition-transform duration-300">
-                  <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-white/20">
+                <div className="p-2.5 sm:p-4 rounded-2xl bg-white/[0.08] backdrop-blur-2xl border border-white/25 shadow-[0_15px_35px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.4)] flex items-center gap-2.5 sm:gap-3.5 hover:scale-105 transition-transform duration-300">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden shrink-0 border border-white/20">
                     <img
                       src="https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=200&q=80"
                       alt="Study Library"
@@ -432,9 +390,9 @@ export default function Home() {
                     />
                   </div>
                   <div>
-                    <span className="inline-block text-[10px] font-bold text-[#00E5FF] uppercase tracking-wider">Silent Library</span>
+                    <span className="inline-block text-[9px] sm:text-[10px] font-bold text-[#00E5FF] uppercase tracking-wider">Silent Library</span>
                     <p className="text-xs font-bold text-white leading-tight">24/7 Soundproof Cabin</p>
-                    <p className="text-[11px] text-gray-300">High-speed Wi-Fi & AC</p>
+                    <p className="text-[10px] sm:text-[11px] text-gray-300">High-speed Wi-Fi & AC</p>
                   </div>
                 </div>
               </motion.div>
@@ -444,15 +402,15 @@ export default function Home() {
                 initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: 0.5 }}
-                className="absolute -top-6 -right-4 sm:-right-8 z-20"
+                className="absolute -top-4 right-2 sm:-top-6 sm:-right-6 z-20"
               >
-                <div className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.08] backdrop-blur-2xl border border-white/25 shadow-[0_15px_35px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.4)] flex items-center gap-3 hover:scale-105 transition-transform duration-300">
-                  <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                    <ShieldCheck className="w-5 h-5" />
+                <div className="p-2.5 sm:p-4 rounded-2xl bg-white/[0.08] backdrop-blur-2xl border border-white/25 shadow-[0_15px_35px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.4)] flex items-center gap-2.5 sm:gap-3 hover:scale-105 transition-transform duration-300">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                    <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div>
                     <p className="text-xs font-black text-white">Direct Connect</p>
-                    <p className="text-[10px] text-emerald-300 font-semibold">Zero Commission Fee</p>
+                    <p className="text-[9px] sm:text-[10px] text-emerald-300 font-semibold">Zero Commission Fee</p>
                   </div>
                 </div>
               </motion.div>
@@ -695,142 +653,6 @@ export default function Home() {
           </div>
         ) : (
           <>
-            {/* Hyper-Local Services Section (Amazon / Flipkart style based on live/selected location) */}
-            <div className="mb-24">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
-                <div>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00E5FF]/10 border border-[#00E5FF]/30 text-[#00E5FF] text-xs font-bold uppercase tracking-wider mb-2 shadow-[0_0_12px_rgba(0,229,255,0.2)]">
-                    <MapPin className="h-3.5 w-3.5 text-[#00E5FF]" />
-                    {userLocation?.city ? `In Your City: ${userLocation.city}` : 'Hyper-Local Services'}
-                  </div>
-                  <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight flex items-center gap-3">
-                    <span>{userLocation?.city ? `Services in ${userLocation.city}` : 'Services Near You'}</span>
-                    {userLocation?.isLiveDetected && (
-                      <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                        <Navigation className="w-3 h-3 text-emerald-400" /> Live GPS Active
-                      </span>
-                    )}
-                  </h2>
-                  <p className="text-gray-400 text-sm mt-1">
-                    {userLocation?.city 
-                      ? `Verified PGs, silent study halls, and dining facilities directly serving ${userLocation.city}`
-                      : 'Enable device location or choose a city to filter services to your exact area'}
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={openLocationModal}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-300 hover:text-white bg-white/[0.05] hover:bg-white/[0.1] px-4 py-2.5 rounded-xl border border-white/10 transition-colors cursor-pointer"
-                  >
-                    <MapPin className="w-3.5 h-3.5 text-[#00E5FF]" />
-                    {userLocation ? 'Change City' : 'Select City'}
-                  </button>
-
-                  {userLocation?.city && (
-                    <Link
-                      to="/search"
-                      state={{ city: userLocation.city }}
-                      className="inline-flex items-center gap-2 text-sm font-bold text-[#00E5FF] hover:text-white transition-colors bg-white/[0.05] hover:bg-white/[0.1] px-5 py-2.5 rounded-2xl border border-white/15 backdrop-blur-xl shadow-lg group"
-                    >
-                      View All in {userLocation.city} <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  )}
-                </div>
-              </div>
-
-              {userLocation?.city ? (
-                localListings.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {localListings.slice(0, 6).map((listing, index) => (
-                      <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: index * 0.1 }}
-                        key={listing.id}
-                        className="h-full"
-                      >
-                        <ListingCard listing={listing} />
-                      </motion.div>
-                    ))}
-                  </div>
-                ) : (
-                  <GlassCard className="p-10 text-center border border-white/10 relative overflow-hidden" intensity="low">
-                    <div className="relative z-10 flex flex-col items-center justify-center max-w-lg mx-auto">
-                      <div className="w-16 h-16 rounded-2xl bg-[#00E5FF]/10 border border-[#00E5FF]/30 flex items-center justify-center text-[#00E5FF] mb-4 shadow-[0_0_20px_rgba(0,229,255,0.2)]">
-                        <MapPin className="w-8 h-8" />
-                      </div>
-                      <h3 className="text-xl font-bold text-white mb-2">
-                        No direct listings registered in {userLocation.city} yet
-                      </h3>
-                      <p className="text-gray-400 text-sm leading-relaxed mb-6">
-                        City Helpline is expanding fast! Showing verified student services across India's premier hubs (Kota, Delhi, Patna, etc.), or switch to another city.
-                      </p>
-                      <div className="flex flex-wrap items-center justify-center gap-3">
-                        <button
-                          type="button"
-                          onClick={openLocationModal}
-                          className="px-5 py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 text-xs font-semibold text-white transition-all cursor-pointer"
-                        >
-                          Switch City
-                        </button>
-                        <LiquidButton
-                          onClick={() => navigate('/add-listing')}
-                          className="px-5 py-2.5 text-xs font-bold"
-                        >
-                          Add Listing in {userLocation.city}
-                        </LiquidButton>
-                      </div>
-                    </div>
-                  </GlassCard>
-                )
-              ) : (
-                <div className="p-8 rounded-3xl bg-gradient-to-r from-blue-950/40 via-slate-900/60 to-purple-950/40 border border-white/15 backdrop-blur-xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
-                  <div className="flex items-center gap-4 text-left">
-                    <div className="w-14 h-14 rounded-2xl bg-[#00E5FF]/15 border border-[#00E5FF]/30 flex items-center justify-center text-[#00E5FF] shrink-0 shadow-[0_0_20px_rgba(0,229,255,0.25)]">
-                      <Navigation className="w-7 h-7" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-bold text-white">Find student services near your exact location</h4>
-                      <p className="text-sm text-gray-300 mt-0.5">
-                        Allow GPS location permission to instantly view PGs, hostels, libraries, and mess facilities near you.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 shrink-0 w-full md:w-auto">
-                    <LiquidButton
-                      onClick={() => requestLiveLocation(false)}
-                      disabled={isLoadingLocation}
-                      className="w-full md:w-auto px-6 py-3 text-xs font-bold flex items-center justify-center gap-2"
-                    >
-                      {isLoadingLocation ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Detecting GPS...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Navigation className="w-4 h-4" />
-                          <span>Use Live Location</span>
-                        </>
-                      )}
-                    </LiquidButton>
-
-                    <button
-                      type="button"
-                      onClick={openLocationModal}
-                      className="w-full md:w-auto px-5 py-3 rounded-2xl bg-white/[0.08] hover:bg-white/[0.15] border border-white/15 text-xs font-bold text-white transition-all text-center cursor-pointer"
-                    >
-                      Select City
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
             {/* Featured Section */}
             {featuredListings.length > 0 && (
               <div className="mb-24">
@@ -853,7 +675,7 @@ export default function Home() {
                   </Link>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
                   {featuredListings.map((listing, index) => (
                     <motion.div
                       initial={{ opacity: 0, y: 30 }}
@@ -892,7 +714,7 @@ export default function Home() {
               </div>
 
               {recentListings.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
                   {recentListings.map((listing, index) => (
                     <motion.div
                       initial={{ opacity: 0, y: 30 }}
@@ -934,71 +756,7 @@ export default function Home() {
         )}
       </section>
 
-      {/* 5. STUDENT MARKETPLACE (BUY & SELL SECOND-HAND) */}
-      <section className="relative py-14 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <LiquidGlassCard className="p-8 sm:p-12 mb-8" glowColor="rgba(0, 229, 255, 0.25)">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/30 text-cyan-300 text-xs font-bold uppercase tracking-wider mb-2">
-                <ShoppingBag className="w-3.5 h-3.5 text-[#00E5FF]" />
-                Student Marketplace • छात्र बाज़ार
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-                Buy & Sell Used Study Essentials
-              </h2>
-              <p className="text-gray-300 text-sm mt-1 max-w-xl">
-                Allen/Aakash study modules, coolers, study chairs, cycles, and mattress from seniors at up to 70% discount.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Link to="/sell-item">
-                <button
-                  type="button"
-                  className="px-4 py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-xs font-bold text-gray-200 hover:text-white transition-colors cursor-pointer"
-                >
-                  Sell an Item
-                </button>
-              </Link>
-              <Link 
-                to="/marketplace" 
-                className="inline-flex items-center gap-2 text-sm font-bold text-slate-950 bg-[#00E5FF] hover:bg-cyan-300 px-5 py-2.5 rounded-xl shadow-[0_0_20px_rgba(0,229,255,0.4)] transition-all group"
-              >
-                <span>Browse All</span>
-                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {showcasedMarketplaceItems.map(item => (
-              <MarketplaceCard
-                key={item.id}
-                item={item}
-                onOpenDetails={setSelectedMarketplaceItem}
-              />
-            ))}
-          </div>
-        </LiquidGlassCard>
-      </section>
-
-      {/* Modal for viewing marketplace item from Home */}
-      {selectedMarketplaceItem && (
-        <MarketplaceDetailModal
-          item={selectedMarketplaceItem}
-          onClose={() => setSelectedMarketplaceItem(null)}
-          onItemUpdated={updated => {
-            setMarketplaceItems(prev => prev.map(it => it.id === updated.id ? updated : it));
-            setSelectedMarketplaceItem(updated);
-          }}
-          onItemDeleted={deletedId => {
-            setMarketplaceItems(prev => prev.filter(it => it.id !== deletedId));
-            setSelectedMarketplaceItem(null);
-          }}
-        />
-      )}
-
-      {/* 6. MONTHLY STUDENT BUDGET ESTIMATOR SECTION */}
+      {/* 5. MONTHLY STUDENT BUDGET ESTIMATOR SECTION */}
       <section className="relative py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <LiquidGlassCard className="p-8 sm:p-12 relative overflow-hidden" glowColor="rgba(0, 229, 255, 0.2)">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
@@ -1151,24 +909,6 @@ export default function Home() {
           </div>
         </LiquidGlassCard>
       </section>
-
-      {/* Footer */}
-      <footer className="mt-8 border-t border-white/10 py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center space-y-3">
-        <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-gray-400">
-          <Link to="/search" className="hover:text-white transition-colors">PGs & Hostels</Link>
-          <Link to="/search?category=Mess%20%2F%20Tiffin" className="hover:text-white transition-colors">Mess & Tiffin</Link>
-          <Link to="/search?category=Library" className="hover:text-white transition-colors">Libraries</Link>
-          <Link to="/marketplace" className="hover:text-white transition-colors">Student Marketplace</Link>
-          <Link to="/budget" className="hover:text-white transition-colors">Budget Calculator</Link>
-        </div>
-        <p className="text-sm text-gray-400">
-          © 2026 City Helpline • Official Portal: <a href="https://app.imprince.me" className="text-[#00E5FF] hover:underline font-semibold">app.imprince.me</a>
-        </p>
-        <p className="text-xs text-gray-500">
-          Zero Brokerage Student Living & Academic Marketplace • Kota, Patna, Delhi, Sikar, Lucknow & 20+ Hubs
-        </p>
-      </footer>
-
     </div>
   );
 }
