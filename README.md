@@ -1,256 +1,217 @@
-# 🌟 City Helpline — Hyper-Local Student Ecosystem Platform
+# 🌟 City Helpline
 
 <p align="center">
-  <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=80" alt="City Helpline Hero Banner" width="100%" style="border-radius: 16px; max-height: 420px; object-fit: cover;" />
+  <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=80" alt="City Helpline Hero Banner" width="100%" style="border-radius: 16px; max-height: 400px; object-fit: cover;" />
 </p>
 
 <p align="center">
-  <strong>A modern, glassmorphic, hyper-local web platform connecting students and coaching aspirants with verified PGs, Hostels, Mess facilities, Study Libraries, Second-Hand Student Marketplace, and Monthly Budget Intelligence across India.</strong>
+  <strong>A hyper-local student ecosystem platform connecting students and aspirants with verified PGs, Hostels, Mess services, Study Libraries, Second-Hand Marketplace, and Monthly Budget Intelligence across India.</strong>
 </p>
 
 <p align="center">
-  <a href="#-core-pillars--capabilities"><img src="https://img.shields.io/badge/Status-Production%20Ready-00E5FF?style=for-the-badge" alt="Status"></a>
-  <a href="#-tech-stack--engineering-specifications"><img src="https://img.shields.io/badge/React-19.0.0-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React"></a>
-  <a href="#-tech-stack--engineering-specifications"><img src="https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"></a>
-  <a href="#-tech-stack--engineering-specifications"><img src="https://img.shields.io/badge/Vite-6.2-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"></a>
-  <a href="#-tech-stack--engineering-specifications"><img src="https://img.shields.io/badge/TailwindCSS-v4.1-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS"></a>
-  <a href="#-tech-stack--engineering-specifications"><img src="https://img.shields.io/badge/Firebase-v12.11-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase"></a>
-  <a href="#-tech-stack--engineering-specifications"><img src="https://img.shields.io/badge/Cloudinary-Media%20CDN-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white" alt="Cloudinary"></a>
+  <a href="https://github.com/princeraj-in/City-Helpline/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="License: MIT"></a>
+  <a href="#-tech-stack"><img src="https://img.shields.io/badge/React-19.0.0-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19"></a>
+  <a href="#-tech-stack"><img src="https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"></a>
+  <a href="#-tech-stack"><img src="https://img.shields.io/badge/Vite-6.2-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"></a>
+  <a href="#-tech-stack"><img src="https://img.shields.io/badge/TailwindCSS-v4.1-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS"></a>
+  <a href="#-tech-stack"><img src="https://img.shields.io/badge/Firebase-v12.11-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase"></a>
 </p>
 
 ---
 
-## 📌 Executive Summary
+## 📌 Overview
 
-**City Helpline** is engineered to eliminate the stress, high brokerages, and misinformation students face when relocating to premier education and coaching hubs across India (Kota, Patna, Delhi NCR, Sikar, Lucknow, Prayagraj, Pune, Indore, and Jaipur).
+**City Helpline** is a full-stack web application designed to solve common challenges students face when moving to education and coaching hubs (such as Kota, Patna, Delhi, Sikar, Lucknow, and Pune). Finding affordable accommodation, quality food, and essential study infrastructure often involves high brokerages and unverified listings.
 
-Built with a cutting-edge **Liquid Glassmorphism UI**, real-time **Firebase Cloud Firestore**, robust **Role-Based Access Control (RBAC)**, an automated **Cloudinary Unsigned Media Pipeline**, and an interactive **Monthly Budget Calculator & Student Marketplace**, the platform empowers students to:
-- Find and book verified **PGs, Hostels, Mess/Tiffins, and 24x7 AC Study Libraries** with zero brokerage.
-- Buy and sell second-hand study equipment (**Books & Notes, Coolers, Cycles, Study Tables**) peer-to-peer.
-- Accurately forecast and plan monthly expenses with custom manual inputs, city living indexes, and WhatsApp statements for parents.
+City Helpline simplifies this transition through:
+- **Zero Brokerage Listings**: Verified PGs, hostels, tiffin/mess services, and 24x7 study libraries.
+- **Student Budget Calculator**: Tools to forecast and manage monthly living expenses based on city cost benchmarks.
+- **Peer-to-Peer Marketplace**: A dedicated platform for students to buy and sell pre-owned study essentials (books, notes, tables, coolers, and cycles).
 
 ---
 
-## ✨ Core Pillars & Capabilities
+## ✨ Key Features
 
-### 🔍 1. Hyper-Local Discovery & Multi-Facet Filtering
-- **Multi-Category Exploration**: Instant filtering across **13+ curated categories** including *PGs, Hostels, Mess & Tiffin Services, Libraries, Study Rooms, Coaching Institutes, Gyms, Laundries, and Coworking Spaces*.
-- **State & City Clustering**: Pre-mapped geo-database spanning **10 Indian States** and **60+ Tier 1, 2, and 3 student hubs**.
-- **Live Location Detection**: High-precision browser geolocation detection with reverse-geocoding and instant hub switching.
-- **Real-Time Instant Search**: Live fuzzy search indexing titles, addresses, amenities, and descriptions with instant client-side memoization.
+### 🔍 1. Hyper-Local Discovery & Filtering
+- **Multi-Category Exploration**: Instant search and filtering across categories including *PGs, Hostels, Mess & Tiffin Services, Libraries, Coaching Institutes, and Study Rooms*.
+- **Geolocation & City Selection**: Browser geolocation detection with reverse-geocoding, plus manual state and city selection across major student hubs.
+- **Instant Search**: Real-time client-side search across listings by title, address, description, and amenities.
 
-### 💰 2. Monthly Student Budget Estimator (`/budget`)
-- **Three Intelligent Calculation Modes**:
-  1. ✍️ **Manual Entry (मैन्युअल खुद भरें)**: Direct numeric input for Room Rent, Electricity/AC Bill, Mess/Tiffin, Library Pass, Commute, Laundry, Coaching/Books, and Pocket Money.
-  2. ➕ **Custom Expense Creator**: Add arbitrary extra expenses (e.g. *Gym, Mobile & Wi-Fi Recharge, Milk & Fruits, Medicine*) with instant color-coded dynamic chart inclusion.
-  3. 🎛️ **Guided Options (विकल्प चुनें)**: Select from Single AC, Double Non-AC, Triple sharing, 3-meal mess plans, and library shifts.
-  4. ⚡ **Auto-Fit Target Budget (टारगेट बजट)**: Give a total monthly limit (e.g. ₹9,000/mo) and the engine automatically balances expenses based on city cost ratios.
-- **City Living Benchmarks**: Pre-calibrated monthly expenditure indices for major student hubs: Kota, Patna, Delhi (Mukherjee Nagar/Kalu Sarai), Sikar, Lucknow, Prayagraj, Pune, Indore, and Jaipur.
-- **Reactive SVG Donut Visualizer**: Real-time color-coded donut chart, percentage allocations, city average comparison, and feasibility badges (*Ultra-Budget, Optimal & Recommended, Comfortable, Premium*).
-- **Curated Service Matching**: Queries live Firestore listings to recommend an affordable **PG + Mess + Library Combo** matching the student's calculated monthly ceiling.
-- **Multi-Channel Sharing & Statement**:
-  - One-tap formatted WhatsApp breakdown for parents and roommates.
-  - Quick clipboard summary text copy.
-  - **"Download"** button generating an official, beautifully styled offline budget statement file.
+### 💰 2. Student Budget Estimator (`/budget`)
+- **Flexible Modes**:
+  - **Manual Entry**: Input rent, food, library pass, commute, laundry, and pocket money.
+  - **Custom Expenses**: Add customized line items (e.g., gym, mobile recharge, medicines) with dynamic chart integration.
+  - **Guided Options & Target Budget**: Auto-balance monthly costs against set budget caps.
+- **City Living Benchmarks**: Pre-calibrated monthly expenditure indices for major student hubs (Kota, Patna, Delhi, Sikar, Pune, Indore, Jaipur, etc.).
+- **Visual Analytics**: Interactive SVG donut chart showing breakdown percentages and affordability status.
+- **Export & Share**: Generate formatted WhatsApp summaries for parents/roommates and print or save PDF statements.
 
 ### 🛍️ 3. Student Second-Hand Marketplace (`/marketplace`)
-- **Peer-to-Peer Student Exchange**: Buy and sell pre-owned study essentials directly without platform fees or middleman charges.
-- **Tailored Academic Categories**:
-  - 📚 *Books & Handwritten Notes* (JEE, NEET, UPSC, SSC, GATE)
-  - 🪑 *Study Furniture* (Wooden study tables, ergonomic chairs, bookshelves)
-  - ❄️ *Coolers & Fans* (Desert coolers, high-speed fans)
-  - 🚲 *Cycles & Bikes* (Geared/standard cycles for coaching commute)
-  - 🔌 *Electronics & Gadgets* (Study lamps, scientific calculators, power banks)
-  - 🛏️ *Mattress & Bedding* (Single bed mattresses, pillows, blankets)
-- **Direct WhatsApp & Phone Connectivity**: Instant 1-tap WhatsApp chat and phone dialer pre-populated with item inquiries.
-- **Post Your Item Workflow (`/sell-item`)**: Simple listing form with multi-image Cloudinary CDN uploads, condition tag selection (*Brand New, Like New, Good, Fair*), price negotiation toggle, and seller city tags.
+- **Direct Peer-to-Peer Deals**: Buy and sell pre-owned academic items without broker fees or commission.
+- **Categories**: Books & handwritten notes, study furniture, desert coolers, bicycles, and electronics.
+- **Instant Contact**: Direct 1-tap WhatsApp and phone connectivity with sellers.
+- **Post Item (`/sell-item`)**: Simple listing workflow with image uploads, item condition tags, and price negotiation options.
 
-### 🛡️ 4. Enterprise Role-Based Access Control (RBAC)
-- **Student / General User (`user`)**:
-  - Search and browse verified property & service listings.
-  - Save favorite listings to personal bookmarks.
-  - Submit verified ratings and written reviews.
-  - Post items to the Student Marketplace and manage their listings.
-  - Estimate and download monthly budget plans.
-- **Service Provider / Contributor (`contributor`)**:
-  - Dedicated contributor profile with business contact and address verification.
-  - List properties with pricing, amenities, room specifications, and food menus.
-  - Upload multi-photo galleries directly to Cloudinary CDN with instant visual previews.
-  - Edit and maintain live listings with real-time sync.
-- **System Administrator (`admin`)**:
-  - Central Command Dashboard with operational metrics.
-  - Listing moderation workflow (**Pending**, **Approved**, **Rejected**, or **Featured** status toggles).
-  - User governance: manage roles, monitor account status, and enforce instant bans.
+### 🛡️ 4. Role-Based Access Control (RBAC)
+- **Student / General User (`user`)**: Browse listings, save favorites, write reviews, post marketplace items, and calculate budgets.
+- **Contributor (`contributor`)**: Create and manage service listings with photos, amenities, room specifications, and contact information.
+- **Administrator (`admin`)**: Moderate submissions (Pending, Approved, Rejected, Featured), monitor system health, and manage user roles.
 
-### ⚡ 5. High-Performance Cloudinary Media Pipeline
-- **Zero-Blob Client Uploads**: Raw `File` buffers are dispatched directly to Cloudinary's secure unsigned endpoint (`cityhelpline_upload`), guaranteeing production CDN caching and reliable `secure_url` persistence.
-- **Multi-Image Compression & Gallery**: Supports multiple high-resolution photos per listing and marketplace item with dynamic thumbnail carousels and smooth modal previews.
-
-### 🎨 6. Premium Liquid & Glassmorphism Aesthetic
-- **Fluid Dark Canvas**: Rich deep-space palette (`#0B0E14`) elevated by dynamic radial ambient lighting and noise diffusion.
-- **Aero-Glass Cards**: High-refraction backdrop blur (`blur-30px`) with 3D perspective hover tilts and animated sheen reflections.
-- **Golden & Neon Accents**: Precision-crafted micro-interaction buttons (`#00E5FF`, `#F59E0B`, `#A855F7`) with specular highlight animations.
-- **Fluid Animations**: Staggered layout entry transitions powered by **Motion (Framer Motion)**.
+### ⚡ 5. Media & Storage Pipeline
+- **Cloudinary Integration**: Fast client-side image uploads directly to Cloudinary CDN via secure unsigned upload presets, ensuring optimized media delivery.
+- **Firebase Firestore**: Real-time NoSQL data synchronization with robust role-enforced security rules.
 
 ---
 
-## 🏗️ Architecture & Data Flow
+## 🏗️ System Architecture
 
-```
-                      +--------------------------------------------------+
-                      |               City Helpline Client               |
-                      |          (React 19 + Vite + Tailwind CSS)        |
-                      +--------------------------------------------------+
-                             /            |           \\              \\
-            OAuth / Auth    /             |            \\ Media Upload \\ Budget Plan
-                           v              |             v              v
-     +--------------------------------+   |   +-------------------+  +------------------+
-     |     Firebase Authentication    |   |   | Cloudinary Image  |  | Benchmark Engine |
-     | (Google, GitHub, Password)     |   |   | CDN (Unsigned)    |  | & SVG Donut Calc |
-     +--------------------------------+   |   +-------------------+  +------------------+
-                           \\              |             /
-                            \\             |            / secure_url
-                             v            v           v
-                      +--------------------------------------------------+
-                      |              Cloud Firestore Database            |
-                      |  - /users/{userId}              [Profiles & Roles]     |
-                      |  - /listings/{listingId}        [PG, Mess, Library]    |
-                      |  - /reviews/{reviewId}          [Atomic Reviews]       |
-                      |  - /marketplace_items/{itemId}  [Student Buy & Sell]   |
-                      +--------------------------------------------------+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                    City Helpline Client                     │
+│               React 19 • TypeScript • Vite                  │
+└──────────────┬──────────────────┬─────────────────┬─────────┘
+               │                  │                 │
+               ▼                  ▼                 ▼
+     ┌──────────────────┐ ┌──────────────┐ ┌──────────────────┐
+     │  Firebase Auth   │ │  Cloudinary  │ │ Budget Estimator │
+     │  OAuth / Email   │ │   Image CDN  │ │ & SVG Donut Calc │
+     └─────────┬────────┘ └───────┬──────┘ └──────────────────┘
+               │                  │
+               ▼                  ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   Cloud Firestore Database                  │
+│  • /users/{userId}              → User profiles & RBAC      │
+│  • /listings/{listingId}        → PGs, Mess, Libraries      │
+│  • /reviews/{reviewId}          → Listing ratings & reviews │
+│  • /marketplace_items/{itemId}  → Student marketplace posts │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 💻 Tech Stack & Engineering Specifications
+## 💻 Tech Stack
 
-| Layer | Technology | Version | Purpose |
-| :--- | :--- | :--- | :--- |
-| **Frontend Framework** | React | `^19.0.0` | Modern component architecture & reactive hooks |
-| **Language** | TypeScript | `~5.8.2` | Strict end-to-end type safety |
-| **Build Tooling** | Vite | `^6.2.0` | High-speed HMR and optimized production bundles |
-| **Styling Engine** | Tailwind CSS | `^4.1.14` | Zero-runtime modern utility styling |
-| **Motion & Physics** | Motion (Framer) | `^12.23.24` | 60fps spring transitions & layout animations |
-| **Cloud Database** | Cloud Firestore | `^12.11.0` | Real-time NoSQL storage with security rules |
-| **Authentication** | Firebase Auth | `^12.11.0` | Google OAuth, GitHub OAuth, Email/Password |
-| **Media Pipeline** | Cloudinary API | REST / Unsigned | Automated CDN image upload & hosting |
-| **Iconography** | Lucide React | `^0.546.0` | Scalable micro-vector icon library |
-| **Notifications** | Sonner | `^2.0.7` | Elegant, non-blocking toast notifications |
+| Layer | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Frontend** | React 19, TypeScript | Reactive UI architecture and strict type safety |
+| **Build Tooling** | Vite 6 | Fast build pipeline and Hot Module Replacement (HMR) |
+| **Styling & UI** | Tailwind CSS v4 | Utility-first responsive design and glassmorphism |
+| **Animations** | Motion (Framer) | Smooth layout entry and transition animations |
+| **Database** | Cloud Firestore | Real-time NoSQL data store with strict security rules |
+| **Authentication** | Firebase Authentication | Google OAuth, GitHub OAuth, and Email/Password |
+| **Media Hosting** | Cloudinary REST API | Unsigned image uploads and CDN delivery |
+| **Icons & Feedback** | Lucide React, Sonner | Modern iconography and non-blocking toast notifications |
 
 ---
 
 ## 📂 Project Directory Structure
 
-```
-city-helpline/
-├── index.html                   # HTML5 Entry Point with dynamic OpenGraph SEO
-├── package.json                 # Project dependencies, build scripts & engine config
-├── tsconfig.json                # TypeScript compiler configuration
-├── vite.config.ts               # Vite bundler plugins and server mapping
-├── firestore.rules              # Production-grade Firestore security rules
-├── firebase-blueprint.json      # Structured Firestore schema blueprints
-├── metadata.json                # Application metadata & permissions
+```text
+City-Helpline/
+├── index.html                   # HTML entry point with OpenGraph meta tags
+├── package.json                 # Dependencies and build scripts
+├── tsconfig.json                # TypeScript configuration
+├── vite.config.ts               # Vite bundler configuration
+├── firestore.rules              # Firestore database security rules
+├── firebase-blueprint.json      # Schema definitions
+├── metadata.json                # Application metadata
 ├── src/
-│   ├── main.tsx                 # React virtual DOM bootstrap
-│   ├── App.tsx                  # Root router, dynamic themes, and route guards
-│   ├── index.css                # Master CSS, ambient gradients, and liquid animations
+│   ├── main.tsx                 # Application root entry point
+│   ├── App.tsx                  # Router configuration and global layouts
+│   ├── index.css                # Global styles, variables, and theme classes
 │   ├── types/
-│   │   └── index.ts             # Domain models (UserProfile, Listing, Review, Marketplace)
+│   │   └── index.ts             # Domain interfaces (User, Listing, Review, Marketplace)
 │   ├── contexts/
-│   │   ├── AuthContext.tsx      # Global auth state, session snapshot, and RBAC context
-│   │   └── LocationContext.tsx  # Geo-location detection & target city state
+│   │   ├── AuthContext.tsx      # Authentication state and role management
+│   │   └── LocationContext.tsx  # User geolocation and selected city state
 │   ├── lib/
-│   │   ├── firebase.ts          # Firebase SDK initialization & auth providers
-│   │   ├── storage.ts           # Cloudinary unsigned upload client handler
-│   │   ├── budgetBenchmarks.ts  # City living indices & saving hacks for 10+ hubs
-│   │   ├── marketplaceData.ts   # Marketplace starter catalog & category definitions
-│   │   ├── locationService.ts   # Geolocation & reverse-geocoding service
+│   │   ├── firebase.ts          # Firebase SDK initialization
+│   │   ├── storage.ts           # Cloudinary upload handler
+│   │   ├── budgetBenchmarks.ts  # City living indices and calculations
+│   │   ├── marketplaceData.ts   # Marketplace starter catalog and categories
+│   │   ├── locationService.ts   # Geolocation and reverse-geocoding utilities
 │   │   ├── firestoreError.ts    # Friendly Firestore error parsing
-│   │   ├── constants.ts         # Categories & State-City relational mapping
-│   │   └── utils.ts             # Utility functions (cn class-merge helper)
+│   │   ├── constants.ts         # Categories and state-city database
+│   │   └── utils.ts             # Utility functions
 │   ├── components/
-│   │   ├── ListingCard.tsx      # Modular glassmorphic listing card component
-│   │   ├── AccountSettings.tsx  # User profile & credentials manager
+│   │   ├── ListingCard.tsx      # Service listing preview card
+│   │   ├── AccountSettings.tsx  # User account settings modal
 │   │   ├── location/
-│   │   │   ├── LocationPromptBanner.tsx # Dynamic geolocation request banner
-│   │   │   ├── LocationSelectorModal.tsx# Multi-state & city picker modal
-│   │   │   └── NavbarLocationButton.tsx # Current city selector button
+│   │   │   ├── LocationPromptBanner.tsx # Geolocation prompt
+│   │   │   ├── LocationSelectorModal.tsx# City and state picker modal
+│   │   │   └── NavbarLocationButton.tsx # Active city button in navbar
 │   │   ├── marketplace/
-│   │   │   ├── MarketplaceCard.tsx        # Buy & sell item card with contact CTAs
-│   │   │   └── MarketplaceDetailModal.tsx # Full screen item viewer & seller details
+│   │   │   ├── MarketplaceCard.tsx        # Item listing card with quick action CTAs
+│   │   │   └── MarketplaceDetailModal.tsx # Full-view item details modal
 │   │   ├── budget/
-│   │   │   ├── BudgetChart.tsx            # Reactive SVG Donut & percentage progress
-│   │   │   ├── RecommendedServices.tsx    # Live Firestore matching PG+Mess+Library
-│   │   │   └── BudgetShareModal.tsx       # WhatsApp share, text copy & download statement
+│   │   │   ├── BudgetChart.tsx            # SVG Donut chart component
+│   │   │   ├── RecommendedServices.tsx    # Live Firestore matching services
+│   │   │   └── BudgetShareModal.tsx       # Share and export statement dialog
 │   │   ├── layout/
-│   │   │   ├── Navbar.tsx           # Desktop glassmorphic navigation bar
-│   │   │   ├── BottomNav.tsx        # Mobile touch-first navigation bar
-│   │   │   └── ProtectedRoute.tsx   # Role-aware navigation barrier
+│   │   │   ├── Navbar.tsx       # Desktop navigation bar
+│   │   │   ├── BottomNav.tsx    # Mobile navigation bar
+│   │   │   └── ProtectedRoute.tsx# Role-guarded route wrapper
 │   │   └── ui/
-│   │       ├── GlassCard.tsx        # Backdrop-blur container with dynamic lighting
-│   │       ├── LiquidGlassCard.tsx  # Animated multi-color specular border card
-│   │       ├── LiquidButton.tsx     # Kinetic liquid-gradient button
-│   │       ├── LiquidInput.tsx      # Form input with interactive focus states
-│   │       ├── LiquidCheckbox.tsx   # Animated custom checkbox component
-│   │       └── SearchableSelect.tsx # Grouped searchable dropdown selector
+│   │       ├── GlassCard.tsx        # Glassmorphic card container
+│   │       ├── LiquidGlassCard.tsx  # Ambient gradient border card
+│   │       ├── LiquidButton.tsx     # Animated primary button
+│   │       ├── LiquidInput.tsx      # Styled input component
+│   │       ├── LiquidCheckbox.tsx   # Custom animated checkbox
+│   │       └── SearchableSelect.tsx # Searchable dropdown selector
 │   └── pages/
-│       ├── Home.tsx             # Landing experience, hero search, marketplace & budget CTA
-│       ├── Search.tsx           # Multi-filter search engine and catalog
-│       ├── ListingDetails.tsx   # Detailed specs, gallery, contact CTA, reviews
-│       ├── BudgetCalculator.tsx # 3-mode student budget planner with custom expense creator
-│       ├── Marketplace.tsx      # Student marketplace directory with category filters
-│       ├── SellItem.tsx         # Sell second-hand items with Cloudinary photo uploads
-│       ├── AddListing.tsx       # Contributor creation form with Cloudinary upload
-│       ├── EditListing.tsx      # Listing updating & existing media manager
-│       ├── AdminDashboard.tsx   # Admin moderation desk and user management
-│       ├── Profile.tsx          # User profile, saved favorites, and listings
-│       └── Auth.tsx             # Unified Login/Signup with OAuth popups
+│       ├── Home.tsx             # Landing page with hero search and featured sections
+│       ├── Search.tsx           # Directory search with multi-facet filters
+│       ├── ListingDetails.tsx   # Service details, gallery, and reviews
+│       ├── BudgetCalculator.tsx # 3-mode student budget estimator
+│       ├── Marketplace.tsx      # Second-hand marketplace feed
+│       ├── SellItem.tsx         # Post marketplace item form
+│       ├── AddListing.tsx       # Create new service listing form
+│       ├── EditListing.tsx      # Update existing listing form
+│       ├── AdminDashboard.tsx   # Moderation desk and user management
+│       ├── Profile.tsx          # User profile and bookmarked listings
+│       └── Auth.tsx             # Login and signup authentication view
 ```
 
 ---
 
-## 🔒 Security Architecture & Firestore Rules
+## 🔒 Security Architecture
 
-All data mutations are governed by rigorous Firestore security rules:
+All data operations in Cloud Firestore are protected by strict security rules defined in `firestore.rules`:
 
-- **Identity Verification**: Ensures requests are authenticated via Firebase Auth tokens (`request.auth != null`).
-- **Ownership Invariance**: Creators retain exclusive edit access over their own listings, marketplace posts, and profile records.
-- **Role Elevation Guard**: Standard users cannot self-assign `contributor` or `admin` privileges.
-- **Strict Data Validation (`isValidListing`, `isValidUser`, `isValidReview`)**:
-  - All submitted documents strictly enforce allowed field lists (`hasOnlyAllowedFields`).
-  - String length bounds: Titles (<200 chars), Descriptions (<5000 chars), Addresses (<500 chars).
-  - Sanitized numbers: Prices must be non-negative (`>= 0`), ratings must be bounded between `1` and `5`.
-  - Max image gallery length capped at `10` URLs.
-- **Automated Moderation Gate**: All new listings default to `'pending'` status, requiring administrator review before appearing in public searches.
+- **Authentication Required**: Write operations require a valid Firebase Auth session.
+- **Owner Access Control**: Users can only edit or delete listings, marketplace items, and profiles they own.
+- **Admin Governance**: Administrative operations (such as approving listings or modifying roles) require admin credentials.
+- **Input Validation**: Strict schema boundaries are enforced on string lengths, allowed properties, price boundaries, and rating ranges.
+- **Listing Moderation**: Submitted listings default to `'pending'` status and become publicly visible only after approval.
 
 ---
 
-## 🚀 Getting Started & Local Development
+## 🚀 Getting Started & Local Setup
 
 ### Prerequisites
-- **Node.js**: v18.0.0 or higher
-- **npm** or **bun** package manager
+- **Node.js**: `v18.0.0` or higher
+- **npm** or **bun**
 
-### 1. Clone & Install Dependencies
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/princeraj-in/City-Helpline.git
 cd City-Helpline
 npm install
 ```
 
-### 2. Configure Environment Variables
-Copy `.env.example` to create your local `.env`:
+### 2. Environment Configuration
+Copy `.env.example` to create your local `.env` file:
 ```bash
 cp .env.example .env
 ```
 
-Ensure your credentials are appropriately configured:
+Configure your environment variables:
 ```env
 # Cloudinary Configuration
-VITE_CLOUDINARY_CLOUD_NAME=djpqwrs1l
+VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
 VITE_CLOUDINARY_UPLOAD_PRESET=cityhelpline_upload
 
-# Firebase Web App Keys (Auto-configured or custom)
+# Firebase Web Configuration
 VITE_FIREBASE_API_KEY=your_api_key
 VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=your_project_id
@@ -259,32 +220,39 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 ```
 
-### 3. Launch Development Server
+### 3. Run Locally
+Start the development server:
 ```bash
 npm run dev
 ```
-The application will launch locally at `http://localhost:3000`.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### 4. Build for Production
-To compile and minify the applet for production deployment:
 ```bash
 npm run build
 ```
-The optimized assets will be emitted to the `dist/` directory.
 
-### 5. Type Checking & Verification
+To run type checking and lint validation:
 ```bash
 npm run lint
 ```
 
 ---
 
-## 🌟 Contributing & Quality Guidelines
+## 🌟 Contributing
 
-1. **Fork the Repository** and create a feature branch (`git checkout -b feature/AmazingFeature`).
-2. **Commit Changes** with descriptive conventional commit messages (`git commit -m 'feat: add interactive map coordinates'`).
-3. **Validate Builds**: Ensure `npm run lint` and `npm run build` pass without warnings.
-4. **Open a Pull Request** against the `main` branch.
+Contributions are welcome! Follow these steps to contribute:
+1. **Fork** the repository.
+2. Create your feature branch (`git checkout -b feature/amazing-feature`).
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`).
+4. Push to the branch (`git push origin feature/amazing-feature`).
+5. Open a **Pull Request**.
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
 ---
 
