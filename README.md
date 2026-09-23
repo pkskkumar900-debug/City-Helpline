@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <strong>A modern, glassmorphic, hyper-local web platform connecting students and residents with top-tier PGs, Hostels, Mess facilities, Libraries, Coaching Centers, and essential city services across India.</strong>
+  <strong>A modern, glassmorphic, hyper-local web platform connecting students and coaching aspirants with verified PGs, Hostels, Mess facilities, Study Libraries, Second-Hand Student Marketplace, and Monthly Budget Intelligence across India.</strong>
 </p>
 
 <p align="center">
@@ -22,7 +22,12 @@
 
 ## 📌 Executive Summary
 
-**City Helpline** is engineered to address the critical challenges students encounter when relocating to education hubs across India (Kota, Patna, Delhi, Lucknow, Pune, Bengaluru, and more). Built with a state-of-the-art **Liquid Glassmorphic design system**, real-time **Firebase Cloud Firestore**, robust **Multi-Provider Authentication**, and an automated **Cloudinary Unsigned Media Pipeline**, the platform bridges verified local service providers with students seeking dependable accommodation, study spaces, and amenities.
+**City Helpline** is engineered to eliminate the stress, high brokerages, and misinformation students face when relocating to premier education and coaching hubs across India (Kota, Patna, Delhi NCR, Sikar, Lucknow, Prayagraj, Pune, Indore, and Jaipur).
+
+Built with a cutting-edge **Liquid Glassmorphism UI**, real-time **Firebase Cloud Firestore**, robust **Role-Based Access Control (RBAC)**, an automated **Cloudinary Unsigned Media Pipeline**, and an interactive **Monthly Budget Calculator & Student Marketplace**, the platform empowers students to:
+- Find and book verified **PGs, Hostels, Mess/Tiffins, and 24x7 AC Study Libraries** with zero brokerage.
+- Buy and sell second-hand study equipment (**Books & Notes, Coolers, Cycles, Study Tables**) peer-to-peer.
+- Accurately forecast and plan monthly expenses with custom manual inputs, city living indexes, and WhatsApp statements for parents.
 
 ---
 
@@ -31,32 +36,60 @@
 ### 🔍 1. Hyper-Local Discovery & Multi-Facet Filtering
 - **Multi-Category Exploration**: Instant filtering across **13+ curated categories** including *PGs, Hostels, Mess & Tiffin Services, Libraries, Study Rooms, Coaching Institutes, Gyms, Laundries, and Coworking Spaces*.
 - **State & City Clustering**: Pre-mapped geo-database spanning **10 Indian States** and **60+ Tier 1, 2, and 3 student hubs**.
-- **Real-Time Instant Search**: Live fuzzy search indexing titles, addresses, and descriptions with instant client-side memoization.
+- **Live Location Detection**: High-precision browser geolocation detection with reverse-geocoding and instant hub switching.
+- **Real-Time Instant Search**: Live fuzzy search indexing titles, addresses, amenities, and descriptions with instant client-side memoization.
 
-### 🛡️ 2. Enterprise Role-Based Access Control (RBAC)
+### 💰 2. Monthly Student Budget Estimator (`/budget`)
+- **Three Intelligent Calculation Modes**:
+  1. ✍️ **Manual Entry (मैन्युअल खुद भरें)**: Direct numeric input for Room Rent, Electricity/AC Bill, Mess/Tiffin, Library Pass, Commute, Laundry, Coaching/Books, and Pocket Money.
+  2. ➕ **Custom Expense Creator**: Add arbitrary extra expenses (e.g. *Gym, Mobile & Wi-Fi Recharge, Milk & Fruits, Medicine*) with instant color-coded dynamic chart inclusion.
+  3. 🎛️ **Guided Options (विकल्प चुनें)**: Select from Single AC, Double Non-AC, Triple sharing, 3-meal mess plans, and library shifts.
+  4. ⚡ **Auto-Fit Target Budget (टारगेट बजट)**: Give a total monthly limit (e.g. ₹9,000/mo) and the engine automatically balances expenses based on city cost ratios.
+- **City Living Benchmarks**: Pre-calibrated monthly expenditure indices for major student hubs: Kota, Patna, Delhi (Mukherjee Nagar/Kalu Sarai), Sikar, Lucknow, Prayagraj, Pune, Indore, and Jaipur.
+- **Reactive SVG Donut Visualizer**: Real-time color-coded donut chart, percentage allocations, city average comparison, and feasibility badges (*Ultra-Budget, Optimal & Recommended, Comfortable, Premium*).
+- **Curated Service Matching**: Queries live Firestore listings to recommend an affordable **PG + Mess + Library Combo** matching the student's calculated monthly ceiling.
+- **Multi-Channel Sharing & Statement**:
+  - One-tap formatted WhatsApp breakdown for parents and roommates.
+  - Quick clipboard summary text copy.
+  - **"Download"** button generating an official, beautifully styled offline budget statement file.
+
+### 🛍️ 3. Student Second-Hand Marketplace (`/marketplace`)
+- **Peer-to-Peer Student Exchange**: Buy and sell pre-owned study essentials directly without platform fees or middleman charges.
+- **Tailored Academic Categories**:
+  - 📚 *Books & Handwritten Notes* (JEE, NEET, UPSC, SSC, GATE)
+  - 🪑 *Study Furniture* (Wooden study tables, ergonomic chairs, bookshelves)
+  - ❄️ *Coolers & Fans* (Desert coolers, high-speed fans)
+  - 🚲 *Cycles & Bikes* (Geared/standard cycles for coaching commute)
+  - 🔌 *Electronics & Gadgets* (Study lamps, scientific calculators, power banks)
+  - 🛏️ *Mattress & Bedding* (Single bed mattresses, pillows, blankets)
+- **Direct WhatsApp & Phone Connectivity**: Instant 1-tap WhatsApp chat and phone dialer pre-populated with item inquiries.
+- **Post Your Item Workflow (`/post-item`)**: Simple listing form with multi-image Cloudinary CDN uploads, condition tag selection (*Brand New, Like New, Good, Fair*), price negotiation toggle, and seller city tags.
+
+### 🛡️ 4. Enterprise Role-Based Access Control (RBAC)
 - **Student / General User (`user`)**:
-  - Search and browse approved listings.
-  - Save favorite listings to their personal profile bookmarks.
+  - Search and browse verified property & service listings.
+  - Save favorite listings to personal bookmarks.
   - Submit verified ratings and written reviews.
-  - One-tap direct contact via Phone dialer and WhatsApp chat.
+  - Post items to the Student Marketplace and manage their listings.
+  - Estimate and download monthly budget plans.
 - **Service Provider / Contributor (`contributor`)**:
-  - Dedicated business profile with contact, address, and verification attributes.
-  - Submit listings with pricing, descriptions, and amenities.
+  - Dedicated contributor profile with business contact and address verification.
+  - List properties with pricing, amenities, room specifications, and food menus.
   - Upload multi-photo galleries directly to Cloudinary CDN with instant visual previews.
   - Edit and maintain live listings with real-time sync.
 - **System Administrator (`admin`)**:
-  - Central Command Dashboard with real-time operational metrics.
+  - Central Command Dashboard with operational metrics.
   - Listing moderation workflow (**Pending**, **Approved**, **Rejected**, or **Featured** status toggles).
-  - User governance: manage roles, monitor account status, and enforce instant account bans.
+  - User governance: manage roles, monitor account status, and enforce instant bans.
 
-### ⚡ 3. High-Performance Cloudinary Media Pipeline
+### ⚡ 5. High-Performance Cloudinary Media Pipeline
 - **Zero-Blob Client Uploads**: Raw `File` buffers are dispatched directly to Cloudinary's secure unsigned endpoint (`cityhelpline_upload`), guaranteeing production CDN caching and reliable `secure_url` persistence.
-- **Multi-Image Compression & Gallery**: Supports up to 10 high-resolution images per listing with dynamic thumbnail carousels and smooth modal previews.
+- **Multi-Image Compression & Gallery**: Supports multiple high-resolution photos per listing and marketplace item with dynamic thumbnail carousels and smooth modal previews.
 
-### 🎨 4. Premium Liquid & Glassmorphism Aesthetic
+### 🎨 6. Premium Liquid & Glassmorphism Aesthetic
 - **Fluid Dark Canvas**: Rich deep-space palette (`#0B0E14`) elevated by dynamic radial ambient lighting and noise diffusion.
 - **Aero-Glass Cards**: High-refraction backdrop blur (`blur-30px`) with 3D perspective hover tilts and animated sheen reflections.
-- **Golden Metallic Accents**: Precision-crafted micro-interaction buttons with specular highlight animations.
+- **Golden & Neon Accents**: Precision-crafted micro-interaction buttons (`#00E5FF`, `#F59E0B`, `#A855F7`) with specular highlight animations.
 - **Fluid Animations**: Staggered layout entry transitions powered by **Motion (Framer Motion)**.
 
 ---
@@ -68,24 +101,22 @@
                       |               City Helpline Client               |
                       |          (React 19 + Vite + Tailwind CSS)        |
                       +--------------------------------------------------+
-                                        /         |         \
-                                       /          |          \
-                 OAuth Popups / Creds /           |           \ Unsigned Multipart
-                                     /            |            \ Form Uploads
-                                    v             |             v
-     +--------------------------------+           |      +-------------------------+
-     |     Firebase Authentication    |           |      |   Cloudinary Image CDN  |
-     | (Google, GitHub, Password)     |           |      | (Asset Transformation)  |
-     +--------------------------------+           |      +-------------------------+
-                                    \             |             /
-                                     \            |            / Returns
-                       User UID Token \           |           / secure_url
-                                       v          v          v
+                             /            |           \              \
+            OAuth / Auth    /             |            \ Media Upload \ Budget Plan
+                           v              |             v              v
+     +--------------------------------+   |   +-------------------+  +------------------+
+     |     Firebase Authentication    |   |   | Cloudinary Image  |  | Benchmark Engine |
+     | (Google, GitHub, Password)     |   |   | CDN (Unsigned)    |  | & SVG Donut Calc |
+     +--------------------------------+   |   +-------------------+  +------------------+
+                           \              |             /
+                            \             |            / secure_url
+                             v            v           v
                       +--------------------------------------------------+
                       |              Cloud Firestore Database            |
-                      |  - /users/{userId}      [Strict Schema Rules]    |
-                      |  - /listings/{listingId}[Status: Approved/Pending|
-                      |  - /reviews/{reviewId}  [Atomic Calculations]    |
+                      |  - /users/{userId}        [Profiles & Roles]     |
+                      |  - /listings/{listingId}  [PG, Mess, Library]    |
+                      |  - /reviews/{reviewId}    [Atomic Reviews]       |
+                      |  - /marketplace/{itemId}  [Student Buy & Sell]   |
                       +--------------------------------------------------+
 ```
 
@@ -95,9 +126,9 @@
 
 | Layer | Technology | Version | Purpose |
 | :--- | :--- | :--- | :--- |
-| **Frontend Framework** | React | `^19.0.0` | Next-gen declarative UI architecture |
+| **Frontend Framework** | React | `^19.0.0` | Modern component architecture & reactive hooks |
 | **Language** | TypeScript | `~5.8.2` | Strict end-to-end type safety |
-| **Build Tooling** | Vite | `^6.2.0` | Ultra-fast HMR and optimized production bundles |
+| **Build Tooling** | Vite | `^6.2.0` | High-speed HMR and optimized production bundles |
 | **Styling Engine** | Tailwind CSS | `^4.1.14` | Zero-runtime modern utility styling |
 | **Motion & Physics** | Motion (Framer) | `^12.23.24` | 60fps spring transitions & layout animations |
 | **Cloud Database** | Cloud Firestore | `^12.11.0` | Real-time NoSQL storage with security rules |
@@ -124,31 +155,45 @@ city-helpline/
 │   ├── App.tsx                  # Root router, dynamic themes, and route guards
 │   ├── index.css                # Master CSS, ambient gradients, and liquid animations
 │   ├── types/
-│   │   └── index.ts             # Domain models (UserProfile, Listing, Review, Roles)
+│   │   └── index.ts             # Domain models (UserProfile, Listing, Review, Marketplace)
 │   ├── contexts/
-│   │   └── AuthContext.tsx      # Global auth state, session snapshot, and RBAC context
+│   │   ├── AuthContext.tsx      # Global auth state, session snapshot, and RBAC context
+│   │   └── LocationContext.tsx  # Geo-location detection & target city state
 │   ├── lib/
 │   │   ├── firebase.ts          # Firebase SDK initialization & auth providers
 │   │   ├── storage.ts           # Cloudinary unsigned upload client handler
+│   │   ├── budgetBenchmarks.ts  # City living indices & saving hacks for 10+ hubs
+│   │   ├── marketplaceData.ts   # Marketplace starter catalog & category definitions
 │   │   ├── constants.ts         # Categories & State-City relational mapping
 │   │   └── utils.ts             # Utility functions (cn class-merge helper)
 │   ├── components/
 │   │   ├── ListingCard.tsx      # Modular glassmorphic listing card component
 │   │   ├── AccountSettings.tsx  # User profile & credentials manager
+│   │   ├── marketplace/
+│   │   │   ├── MarketplaceCard.tsx        # Buy & sell item card with contact CTAs
+│   │   │   └── MarketplaceDetailModal.tsx # Full screen item viewer & seller details
+│   │   ├── budget/
+│   │   │   ├── BudgetChart.tsx            # Reactive SVG Donut & percentage progress
+│   │   │   ├── RecommendedServices.tsx    # Live Firestore matching PG+Mess+Library
+│   │   │   └── BudgetShareModal.tsx       # WhatsApp share, text copy & download statement
 │   │   ├── layout/
 │   │   │   ├── Navbar.tsx       # Desktop glassmorphic navigation bar
 │   │   │   ├── BottomNav.tsx    # Mobile touch-first navigation bar
 │   │   │   └── ProtectedRoute.tsx# Role-aware navigation barrier
 │   │   └── ui/
-│   │       ├── GlassCard.tsx    # Backdrop-blur container with dynamic lighting
-│   │       ├── LiquidButton.tsx # Kinetic liquid-gradient button
-│   │       ├── LiquidInput.tsx  # Form input with interactive focus states
-│   │       ├── LiquidCheckbox.tsx# Animated custom checkbox component
-│   │       └── SearchableSelect.tsx# Grouped searchable dropdown selector
+│   │       ├── GlassCard.tsx        # Backdrop-blur container with dynamic lighting
+│   │       ├── LiquidGlassCard.tsx  # Animated multi-color specular border card
+│   │       ├── LiquidButton.tsx     # Kinetic liquid-gradient button
+│   │       ├── LiquidInput.tsx      # Form input with interactive focus states
+│   │       ├── LiquidCheckbox.tsx   # Animated custom checkbox component
+│   │       └── SearchableSelect.tsx # Grouped searchable dropdown selector
 │   └── pages/
-│       ├── Home.tsx             # Landing experience, hero search, featured feeds
+│       ├── Home.tsx             # Landing experience, hero search, marketplace & budget CTA
 │       ├── Search.tsx           # Multi-filter search engine and catalog
 │       ├── ListingDetails.tsx   # Detailed specs, gallery, contact CTA, reviews
+│       ├── BudgetCalculator.tsx # 3-mode student budget planner with custom expense creator
+│       ├── Marketplace.tsx      # Student marketplace directory with category filters
+│       ├── PostMarketplaceItem.tsx # Sell second-hand items with Cloudinary photo uploads
 │       ├── AddListing.tsx       # Contributor creation form with Cloudinary upload
 │       ├── EditListing.tsx      # Listing updating & existing media manager
 │       ├── AdminDashboard.tsx   # Admin moderation desk and user management
@@ -163,11 +208,11 @@ city-helpline/
 All data mutations are governed by rigorous Firestore security rules:
 
 - **Identity Verification**: Ensures requests are authenticated via Firebase Auth tokens (`request.auth != null`).
-- **Ownership Invariance**: Creators retain exclusive edit access over their own listings and profile records.
+- **Ownership Invariance**: Creators retain exclusive edit access over their own listings, marketplace posts, and profile records.
 - **Role Elevation Guard**: Standard users cannot self-assign `contributor` or `admin` privileges.
 - **Strict Data Validation (`isValidListing`, `isValidUser`, `isValidReview`)**:
   - All submitted documents strictly enforce allowed field lists (`hasOnlyAllowedFields`).
-  - Strict string boundaries: Titles (<200 chars), Descriptions (<5000 chars), Addresses (<500 chars).
+  - String length bounds: Titles (<200 chars), Descriptions (<5000 chars), Addresses (<500 chars).
   - Sanitized numbers: Prices must be non-negative (`>= 0`), ratings must be bounded between `1` and `5`.
   - Max image gallery length capped at `10` URLs.
 - **Automated Moderation Gate**: All new listings default to `'pending'` status, requiring administrator review before appearing in public searches.
