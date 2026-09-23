@@ -1,14 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { auth, googleProvider, githubProvider, db } from '../lib/firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, fetchSignInMethodsForEmail, linkWithPopup, GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signInWithPopup, 
+  fetchSignInMethodsForEmail, 
+  linkWithPopup, 
+  GoogleAuthProvider, 
+  GithubAuthProvider,
+  sendPasswordResetEmail,
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence
+} from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Role, isSuperAdminEmail } from '../types';
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'motion/react';
-import { LogIn, UserPlus, Eye, EyeOff, Mail, Lock, User, AlertCircle, Phone, Building2, MapPin, Briefcase, Github, ChevronRight } from 'lucide-react';
+import { 
+  LogIn, UserPlus, Eye, EyeOff, Mail, Lock, User, AlertCircle, Phone, 
+  Building2, MapPin, Briefcase, Github, ChevronRight, ExternalLink, 
+  Copy, Check, ShieldAlert, KeyRound, X, RefreshCw
+} from 'lucide-react';
 import { CATEGORIES, STATE_CITIES } from '../lib/constants';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
+import { parseAuthError, AuthErrorInfo } from '../lib/authError';
 import { LiquidInput } from '../components/ui/LiquidInput';
 import { LiquidButton } from '../components/ui/LiquidButton';
 import { LiquidCheckbox } from '../components/ui/LiquidCheckbox';
@@ -71,6 +88,14 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [domainError, setDomainError] = useState<AuthErrorInfo | null>(null);
+  const [copiedDomain, setCopiedDomain] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+
+  // Forgot Password State
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   // First Time User State
   const [showRoleModal, setShowRoleModal] = useState(false);
@@ -99,9 +124,16 @@ export default function Auth() {
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setDomainError(null);
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      try {
+        await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
+      } catch (pErr) {
+        console.warn("Could not set auth persistence:", pErr);
+      }
+
+      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
       
       const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
       if (userDoc.exists()) {
@@ -127,7 +159,11 @@ export default function Auth() {
         navigate('/');
       }
     } catch (err: any) {
-      toast.error(err.message || 'Login failed, try again');
+      const parsed = parseAuthError(err);
+      if (parsed.isUnauthorizedDomain) {
+        setDomainError(parsed);
+      }
+      toast.error(parsed.message);
     } finally {
       setLoading(false);
     }
@@ -135,6 +171,7 @@ export default function Auth() {
 
   const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setDomainError(null);
     
     if (role === 'contributor') {
       if (!phone || !businessName || !businessType || !city || !address) {
@@ -146,13 +183,19 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      try {
+        await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
+      } catch (pErr) {
+        console.warn("Could not set auth persistence:", pErr);
+      }
+
+      const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
       const user = userCredential.user;
 
       const userProfile: any = {
         uid: user.uid,
-        name,
-        email,
+        name: name.trim(),
+        email: email.trim(),
         role: isSuperAdminEmail(email) ? 'admin' : role,
         banned: false,
         createdAt: serverTimestamp(),
@@ -160,20 +203,49 @@ export default function Auth() {
       };
 
       if (role === 'contributor') {
-        userProfile.phone = phone;
-        userProfile.businessName = businessName;
+        userProfile.phone = phone.trim();
+        userProfile.businessName = businessName.trim();
         userProfile.businessType = businessType;
         userProfile.city = city;
-        userProfile.address = address;
+        userProfile.address = address.trim();
       }
 
       await setDoc(doc(db, 'users', user.uid), userProfile);
       toast.success('Account created successfully');
       navigate(role === 'contributor' ? '/profile' : '/');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to create an account');
+      const parsed = parseAuthError(err);
+      if (parsed.isUnauthorizedDomain) {
+        setDomainError(parsed);
+      }
+      toast.error(parsed.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail.trim()) {
+      toast.error('Please enter your email address');
+      return;
+    }
+
+    setForgotLoading(true);
+    setDomainError(null);
+    try {
+      await sendPasswordResetEmail(auth, forgotEmail.trim());
+      toast.success('Password reset link sent! Please check your email inbox.');
+      setShowForgotModal(false);
+      setForgotEmail('');
+    } catch (err: any) {
+      const parsed = parseAuthError(err);
+      if (parsed.isUnauthorizedDomain) {
+        setDomainError(parsed);
+      }
+      toast.error(parsed.message);
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -211,8 +283,12 @@ export default function Auth() {
       return user;
     } catch (err: any) {
       console.error("GitHub Login Error:", err);
+      const parsed = parseAuthError(err);
+      if (parsed.isUnauthorizedDomain) {
+        setDomainError(parsed);
+      }
       if (err.code === 'auth/popup-blocked') {
-        alert('Popup blocked by browser. Please allow popups for this site.');
+        toast.error('Popup blocked by browser. Please allow popups for this site.');
         setLoading(false);
         return;
       }
@@ -249,7 +325,7 @@ export default function Auth() {
           }
         }
       }
-      toast.error(err.message || 'GitHub login failed, try again');
+      toast.error(parsed.message);
     } finally {
       if (!showLinkModal) {
         setLoading(false);
@@ -290,8 +366,13 @@ export default function Auth() {
       }
       return user;
     } catch (err: any) {
+      console.error("Social Auth Error:", err);
+      const parsed = parseAuthError(err);
+      if (parsed.isUnauthorizedDomain) {
+        setDomainError(parsed);
+      }
       if (err.code === 'auth/popup-blocked') {
-        alert('Popup blocked by browser. Please allow popups for this site.');
+        toast.error('Popup blocked by browser. Please allow popups for this site.');
         setLoading(false);
         return;
       }
@@ -335,7 +416,7 @@ export default function Auth() {
           }
         }
       }
-      toast.error(err.message || 'Login failed, try again');
+      toast.error(parsed.message);
     } finally {
       if (!showLinkModal) {
         setLoading(false);
@@ -346,6 +427,7 @@ export default function Auth() {
   const handleLinkAccount = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setLoading(true);
+    setDomainError(null);
     try {
       let userCredential;
       if (linkProvider === 'google.com') {
@@ -386,7 +468,11 @@ export default function Auth() {
         setShowLinkModal(false);
       }
     } catch (err: any) {
-      toast.error(err.message || 'Failed to link accounts');
+      const parsed = parseAuthError(err);
+      if (parsed.isUnauthorizedDomain) {
+        setDomainError(parsed);
+      }
+      toast.error(parsed.message);
     } finally {
       setLoading(false);
     }
@@ -395,6 +481,7 @@ export default function Auth() {
   const handleRoleSelection = async (selectedRole: Role) => {
     if (!pendingUser) return;
     setLoading(true);
+    setDomainError(null);
     try {
       const userProfile: any = {
         uid: pendingUser.uid,
@@ -412,7 +499,11 @@ export default function Auth() {
       toast.success('Account created successfully');
       navigate(selectedRole === 'contributor' ? '/profile' : '/');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to save user role');
+      const parsed = parseAuthError(err);
+      if (parsed.isUnauthorizedDomain) {
+        setDomainError(parsed);
+      }
+      toast.error(parsed.message);
     } finally {
       setLoading(false);
     }
@@ -581,6 +672,69 @@ export default function Auth() {
             className="mt-10 space-y-6" 
             style={{ transform: "translateZ(50px)" }}
           >
+            {/* Domain Authorization Warning Banner */}
+            {domainError && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-3 backdrop-blur-md shadow-[0_0_25px_rgba(245,158,11,0.2)]"
+              >
+                <div className="flex items-start gap-2.5">
+                  <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="font-bold text-sm text-amber-300">Firebase Domain Authorization Required</h4>
+                    <p className="text-gray-300 mt-1 leading-relaxed">
+                      The domain <code className="px-1.5 py-0.5 rounded bg-black/50 text-amber-300 font-mono font-bold">{domainError.domain || (typeof window !== 'undefined' ? window.location.hostname : 'app.imprince.me')}</code> is not whitelisted in Firebase Auth settings.
+                    </p>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={() => setDomainError(null)} 
+                    className="text-gray-400 hover:text-white p-1"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1.5 text-[11px]">
+                  <div className="font-semibold text-white">How to fix in 1 minute:</div>
+                  <ol className="list-decimal pl-4 space-y-1 text-gray-300">
+                    <li>Open Firebase Console Settings below.</li>
+                    <li>Under <strong className="text-white">Authorized domains</strong>, click <strong className="text-white">Add domain</strong>.</li>
+                    <li>Enter <strong className="text-amber-300 font-mono">{domainError.domain || 'app.imprince.me'}</strong> and click Save.</li>
+                  </ol>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1 flex-wrap">
+                  {domainError.consoleUrl && (
+                    <a
+                      href={domainError.consoleUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs transition-colors shadow-sm"
+                    >
+                      <span>Open Firebase Console</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const domainToCopy = domainError.domain || (typeof window !== 'undefined' ? window.location.hostname : 'app.imprince.me');
+                      navigator.clipboard.writeText(domainToCopy);
+                      setCopiedDomain(true);
+                      toast.success(`Copied "${domainToCopy}" to clipboard`);
+                      setTimeout(() => setCopiedDomain(false), 2000);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs transition-colors"
+                  >
+                    {copiedDomain ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedDomain ? 'Domain Copied!' : 'Copy Domain'}</span>
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
             <form onSubmit={isLogin ? handleLoginSubmit : handleSignupSubmit} className="space-y-6">
               {!isLogin && (
               <div className="flex p-1 bg-[rgba(255,255,255,0.03)] rounded-[40px] border border-white/10 mb-6 backdrop-blur-sm" style={{ transform: "translateZ(20px)" }}>
@@ -648,9 +802,17 @@ export default function Auth() {
                 <div className="flex justify-between items-center mb-2">
                   <label className={`block text-sm font-medium text-gray-300 transition-colors group-focus-within:${isLogin ? 'text-[#00E5FF]' : 'text-[#8A2BE2]'}`}>Password</label>
                   {isLogin && (
-                    <a href="#" className="text-xs font-medium text-[#00E5FF] hover:text-white transition-colors" style={{ textShadow: '0 0 10px rgba(0, 229, 255, 0.5)' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForgotEmail(email);
+                        setShowForgotModal(true);
+                      }}
+                      className="text-xs font-medium text-[#00E5FF] hover:text-white transition-colors cursor-pointer"
+                      style={{ textShadow: '0 0 10px rgba(0, 229, 255, 0.5)' }}
+                    >
                       Forgot password?
-                    </a>
+                    </button>
                   )}
                 </div>
                 <LiquidInput
@@ -765,8 +927,8 @@ export default function Auth() {
               {isLogin && (
                 <div className="flex items-center">
                   <LiquidCheckbox
-                    checked={false} // You might want to add state for this
-                    onChange={() => {}}
+                    checked={rememberMe}
+                    onChange={() => setRememberMe(!rememberMe)}
                     label="Remember me"
                   />
                 </div>
@@ -975,6 +1137,80 @@ export default function Auth() {
                 className="mt-6 w-full text-sm text-gray-400 hover:text-white transition-colors"
               >
                 Cancel
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Forgot Password Modal */}
+      <AnimatePresence>
+        {showForgotModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowForgotModal(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", bounce: 0.4 }}
+              className="relative w-full max-w-md bg-gray-900/90 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-[0_0_50px_rgba(0,0,0,0.6)] overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#00E5FF] to-[#8A2BE2]" />
+              
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 rounded-2xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center mx-auto mb-4">
+                  <KeyRound className="w-8 h-8 text-[#00E5FF]" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2">Reset Password</h3>
+                <p className="text-gray-400 text-sm">
+                  Enter your email address and we'll send you instructions to reset your password.
+                </p>
+              </div>
+
+              <form onSubmit={handleForgotPassword} className="space-y-5">
+                <div className="relative group">
+                  <label className="block text-sm font-medium text-gray-300 mb-2 transition-colors group-focus-within:text-[#00E5FF]">Email Address</label>
+                  <LiquidInput
+                    type="email"
+                    required
+                    placeholder="you@example.com"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    icon={<Mail className="h-5 w-5" />}
+                    glowColor="rgba(0, 229, 255, 0.5)"
+                  />
+                </div>
+
+                <div className="golden-wrapper w-full mt-4">
+                  <button
+                    type="submit"
+                    disabled={forgotLoading}
+                    className="golden-button w-full flex items-center justify-center py-3.5"
+                  >
+                    {forgotLoading ? (
+                      <span className="flex items-center gap-2">
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>Sending Link...</span>
+                      </span>
+                    ) : (
+                      'Send Reset Link'
+                    )}
+                  </button>
+                </div>
+              </form>
+
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(false)}
+                className="mt-6 w-full text-sm text-gray-400 hover:text-white transition-colors"
+              >
+                Back to Login
               </button>
             </motion.div>
           </div>
