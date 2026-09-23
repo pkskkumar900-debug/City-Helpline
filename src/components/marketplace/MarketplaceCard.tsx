@@ -3,6 +3,7 @@ import { MarketplaceItem } from '../../types';
 import { GlassCard } from '../ui/GlassCard';
 import { MapPin, Phone, MessageCircle, Clock, ShieldCheck, Tag } from 'lucide-react';
 import { motion } from 'motion/react';
+import { APP_CONFIG } from '../../lib/appConfig';
 
 interface MarketplaceCardProps {
   item: MarketplaceItem;
@@ -19,8 +20,9 @@ export const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ item, onOpenDe
     const phone = item.whatsappNumber || item.sellerPhone;
     const cleanPhone = phone.replace(/[^0-9]/g, '');
     const fullPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+    const itemUrl = APP_CONFIG.getMarketplaceUrl(item.id);
     const text = encodeURIComponent(
-      `Hi ${item.sellerName}, maine City Helpline Marketplace par aapka item "${item.title}" dekha. Kya ye abhi available hai?`
+      `Hi ${item.sellerName}, maine City Helpline Student Marketplace (${itemUrl}) par aapka item "${item.title}" dekha. Kya ye abhi available hai?`
     );
     window.open(`https://wa.me/${fullPhone}?text=${text}`, '_blank', 'noopener,noreferrer');
   };

@@ -5,6 +5,7 @@ import {
   Download, IndianRupee, Sparkles
 } from 'lucide-react';
 import { BudgetCategoryItem } from './BudgetChart';
+import { APP_CONFIG } from '../../lib/appConfig';
 
 interface BudgetShareModalProps {
   isOpen: boolean;
@@ -48,7 +49,7 @@ export const BudgetShareModal: React.FC<BudgetShareModalProps> = ({
 ${lines}
 
 💡 Estimated via City Helpline Student Budget Calculator
-🔗 Find verified PGs, Mess & Libraries at: https://cityhelpline.com/search?city=${encodeURIComponent(city)}`;
+🔗 Find verified PGs, Mess & Libraries at: ${APP_CONFIG.getSearchUrl(city)}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(shareText);
@@ -257,11 +258,11 @@ ${lines}
     </table>
 
     <div class="notice-box">
-      <strong>Direct & Verified Properties:</strong> Find and contact verified PGs, hostels, tiffin services, and 24x7 study libraries directly in ${city} with 0% brokerage on <strong>https://cityhelpline.com</strong>.
+      <strong>Direct & Verified Properties:</strong> Find and contact verified PGs, hostels, tiffin services, and 24x7 study libraries directly in ${city} with 0% brokerage on <strong>${APP_CONFIG.baseUrl}</strong>.
     </div>
 
     <div class="footer">
-      Generated via City Helpline Student Budget Calculator • Save or print this document for parent or room partner records.
+      Generated via City Helpline (${APP_CONFIG.baseUrl}) • Student Budget Calculator • Save or print this document for parent or room partner records.
     </div>
   </div>
 </body>

@@ -1152,6 +1152,23 @@ export default function Home() {
         </LiquidGlassCard>
       </section>
 
+      {/* Footer */}
+      <footer className="mt-8 border-t border-white/10 py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center space-y-3">
+        <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-gray-400">
+          <Link to="/search" className="hover:text-white transition-colors">PGs & Hostels</Link>
+          <Link to="/search?category=Mess%20%2F%20Tiffin" className="hover:text-white transition-colors">Mess & Tiffin</Link>
+          <Link to="/search?category=Library" className="hover:text-white transition-colors">Libraries</Link>
+          <Link to="/marketplace" className="hover:text-white transition-colors">Student Marketplace</Link>
+          <Link to="/budget" className="hover:text-white transition-colors">Budget Calculator</Link>
+        </div>
+        <p className="text-sm text-gray-400">
+          © 2026 City Helpline • Official Portal: <a href="https://app.imprince.me" className="text-[#00E5FF] hover:underline font-semibold">app.imprince.me</a>
+        </p>
+        <p className="text-xs text-gray-500">
+          Zero Brokerage Student Living & Academic Marketplace • Kota, Patna, Delhi, Sikar, Lucknow & 20+ Hubs
+        </p>
+      </footer>
+
     </div>
   );
 }

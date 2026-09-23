@@ -3,12 +3,14 @@ import { MarketplaceItem } from '../../types';
 import { GlassCard } from '../ui/GlassCard';
 import { 
   X, MapPin, Phone, MessageCircle, ShieldAlert, CheckCircle, 
-  Trash2, AlertTriangle, Sparkles, User, Calendar, ExternalLink
+  Trash2, AlertTriangle, Sparkles, User, Calendar, ExternalLink,
+  Share2, Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../contexts/AuthContext';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { APP_CONFIG } from '../../lib/appConfig';
 
 interface MarketplaceDetailModalProps {
   item: MarketplaceItem | null;
@@ -35,14 +37,38 @@ export const MarketplaceDetailModal: React.FC<MarketplaceDetailModalProps> = ({
     ? Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)
     : null;
 
+  const [copiedShare, setCopiedShare] = useState(false);
+
   const handleWhatsApp = () => {
     const phone = item.whatsappNumber || item.sellerPhone;
     const cleanPhone = phone.replace(/[^0-9]/g, '');
     const fullPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+    const itemUrl = APP_CONFIG.getMarketplaceUrl(item.id);
     const text = encodeURIComponent(
-      `Hi ${item.sellerName}, maine City Helpline Student Marketplace par aapka item "${item.title}" dekha. Kya ye abhi available hai?`
+      `Hi ${item.sellerName}, maine City Helpline Student Marketplace (${itemUrl}) par aapka item "${item.title}" dekha. Kya ye abhi available hai?`
     );
     window.open(`https://wa.me/${fullPhone}?text=${text}`, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleShare = () => {
+    const itemUrl = APP_CONFIG.getMarketplaceUrl(item.id);
+    const shareText = `Check out "${item.title}" (₹${item.price.toLocaleString('en-IN')}) on City Helpline Student Marketplace: ${itemUrl}`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: `${item.title} - City Helpline Marketplace`,
+        text: shareText,
+        url: itemUrl
+      }).catch(() => {
+        navigator.clipboard.writeText(itemUrl);
+        setCopiedShare(true);
+        setTimeout(() => setCopiedShare(false), 2000);
+      });
+    } else {
+      navigator.clipboard.writeText(itemUrl);
+      setCopiedShare(true);
+      setTimeout(() => setCopiedShare(false), 2000);
+    }
   };
 
   const handleCall = () => {
@@ -241,7 +267,7 @@ export const MarketplaceDetailModal: React.FC<MarketplaceDetailModalProps> = ({
                       </div>
                     </div>
 
-                    <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-2 gap-2">
+                    <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <button
                         onClick={handleWhatsApp}
                         disabled={item.status === 'sold'}
@@ -256,7 +282,23 @@ export const MarketplaceDetailModal: React.FC<MarketplaceDetailModalProps> = ({
                         className="py-2.5 px-3 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
                       >
                         <Phone className="w-4 h-4" />
-                        <span>Call {item.sellerPhone}</span>
+                        <span>Call</span>
+                      </button>
+                      <button
+                        onClick={handleShare}
+                        className="py-2.5 px-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] text-white border border-white/20 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                      >
+                        {copiedShare ? (
+                          <>
+                            <Check className="w-4 h-4 text-emerald-400" />
+                            <span className="text-emerald-400">Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Share2 className="w-4 h-4 text-[#00E5FF]" />
+                            <span>Share</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>

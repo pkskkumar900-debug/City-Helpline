@@ -4,8 +4,9 @@ import { doc, getDoc, collection, query, where, getDocs, addDoc, orderBy, update
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { Listing, Review, isSuperAdminEmail } from '../types';
-import { MapPin, Phone, User, Star, Calendar, MessageCircle, ArrowLeft, Heart } from 'lucide-react';
+import { MapPin, Phone, User, Star, Calendar, MessageCircle, ArrowLeft, Heart, Share2, Check } from 'lucide-react';
 import { motion } from 'motion/react';
+import { APP_CONFIG } from '../lib/appConfig';
 
 export default function ListingDetails() {
   const { id } = useParams<{ id: string }>();
@@ -120,6 +121,8 @@ export default function ListingDetails() {
 
   const isSaved = userProfile?.savedListings?.includes(listing.id) || false;
 
+  const [copiedLink, setCopiedLink] = useState(false);
+
   const toggleSave = async () => {
     if (!currentUser) return;
     try {
@@ -135,6 +138,28 @@ export default function ListingDetails() {
       }
     } catch (error) {
       console.error("Error toggling save:", error);
+    }
+  };
+
+  const handleShare = () => {
+    if (!listing) return;
+    const listingUrl = APP_CONFIG.getListingUrl(listing.id);
+    const shareText = `Check out "${listing.title}" (₹${listing.price.toLocaleString('en-IN')}/mo) in ${listing.city} on City Helpline: ${listingUrl}`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: `${listing.title} - City Helpline`,
+        text: shareText,
+        url: listingUrl
+      }).catch(() => {
+        navigator.clipboard.writeText(listingUrl);
+        setCopiedLink(true);
+        setTimeout(() => setCopiedLink(false), 2000);
+      });
+    } else {
+      navigator.clipboard.writeText(listingUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
     }
   };
 
@@ -241,7 +266,7 @@ export default function ListingDetails() {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-5">
+              <div className="flex flex-col sm:flex-row gap-4">
                 <a
                   href={`tel:${listing.contact}`}
                   className="flex-1 flex items-center justify-center gap-3 bg-[rgba(0,229,255,0.1)] hover:bg-[rgba(0,229,255,0.2)] text-[#00E5FF] border border-[#00E5FF]/30 font-bold py-4 px-6 rounded-2xl transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_0_20px_rgba(0,229,255,0.2)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_0_30px_rgba(0,229,255,0.4)] hover:-translate-y-1 backdrop-blur-md"
@@ -250,7 +275,7 @@ export default function ListingDetails() {
                   Call Now
                 </a>
                 <a
-                  href={`https://wa.me/${listing.contact.replace(/[^0-9]/g, '')}`}
+                  href={`https://wa.me/${listing.contact.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${listing.authorName}, I saw your listing "${listing.title}" on City Helpline (${APP_CONFIG.getListingUrl(listing.id)}). Is it still available?`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 flex items-center justify-center gap-3 bg-[rgba(16,185,129,0.1)] hover:bg-[rgba(16,185,129,0.2)] text-emerald-400 border border-emerald-400/30 font-bold py-4 px-6 rounded-2xl transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_0_30px_rgba(16,185,129,0.4)] hover:-translate-y-1 backdrop-blur-md"
@@ -258,6 +283,24 @@ export default function ListingDetails() {
                   <MessageCircle className="h-5 w-5" />
                   WhatsApp
                 </a>
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  className="sm:w-auto px-5 py-4 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-white font-bold flex items-center justify-center gap-2 transition-all hover:-translate-y-1 cursor-pointer"
+                  title="Share Listing Link"
+                >
+                  {copiedLink ? (
+                    <>
+                      <Check className="h-5 w-5 text-emerald-400" />
+                      <span className="text-emerald-400">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="h-5 w-5 text-[#00E5FF]" />
+                      <span>Share</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>

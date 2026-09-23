@@ -478,9 +478,12 @@ export default function AccountSettings() {
       </div>
 
       {/* Footer */}
-      <div className="mt-12 pt-6 border-t border-gray-800 text-center pb-8">
-        <p className="text-sm text-gray-500">
-          © 2026 City Helpline | Developed by Prince Kushwaha | Support: <a href="mailto:imprince.dev@gmail.com" className="text-blue-400 hover:underline">imprince.dev@gmail.com</a>
+      <div className="mt-12 pt-6 border-t border-gray-800 text-center pb-8 space-y-1">
+        <p className="text-sm text-gray-400">
+          © 2026 City Helpline • Official Portal: <a href="https://app.imprince.me" target="_blank" rel="noopener noreferrer" className="text-[#00E5FF] hover:underline font-semibold">app.imprince.me</a>
+        </p>
+        <p className="text-xs text-gray-500">
+          Developed by Prince Kushwaha | Support: <a href="mailto:imprince.dev@gmail.com" className="text-blue-400 hover:underline">imprince.dev@gmail.com</a>
         </p>
       </div>
     </div>
