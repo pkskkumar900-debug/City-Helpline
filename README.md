@@ -9,13 +9,13 @@
 </p>
 
 <p align="center">
-  <a href="#-key-features"><img src="https://img.shields.io/badge/Status-Production%20Ready-00E5FF?style=for-the-badge" alt="Status"></a>
-  <a href="#-tech-stack"><img src="https://img.shields.io/badge/React-19.0.0-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React"></a>
-  <a href="#-tech-stack"><img src="https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"></a>
-  <a href="#-tech-stack"><img src="https://img.shields.io/badge/Vite-6.2-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"></a>
-  <a href="#-tech-stack"><img src="https://img.shields.io/badge/TailwindCSS-v4.1-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS"></a>
-  <a href="#-tech-stack"><img src="https://img.shields.io/badge/Firebase-v12.11-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase"></a>
-  <a href="#-tech-stack"><img src="https://img.shields.io/badge/Cloudinary-Media%20CDN-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white" alt="Cloudinary"></a>
+  <a href="#-core-pillars--capabilities"><img src="https://img.shields.io/badge/Status-Production%20Ready-00E5FF?style=for-the-badge" alt="Status"></a>
+  <a href="#-tech-stack--engineering-specifications"><img src="https://img.shields.io/badge/React-19.0.0-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React"></a>
+  <a href="#-tech-stack--engineering-specifications"><img src="https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"></a>
+  <a href="#-tech-stack--engineering-specifications"><img src="https://img.shields.io/badge/Vite-6.2-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"></a>
+  <a href="#-tech-stack--engineering-specifications"><img src="https://img.shields.io/badge/TailwindCSS-v4.1-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS"></a>
+  <a href="#-tech-stack--engineering-specifications"><img src="https://img.shields.io/badge/Firebase-v12.11-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase"></a>
+  <a href="#-tech-stack--engineering-specifications"><img src="https://img.shields.io/badge/Cloudinary-Media%20CDN-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white" alt="Cloudinary"></a>
 </p>
 
 ---
@@ -63,7 +63,7 @@ Built with a cutting-edge **Liquid Glassmorphism UI**, real-time **Firebase Clou
   - 🔌 *Electronics & Gadgets* (Study lamps, scientific calculators, power banks)
   - 🛏️ *Mattress & Bedding* (Single bed mattresses, pillows, blankets)
 - **Direct WhatsApp & Phone Connectivity**: Instant 1-tap WhatsApp chat and phone dialer pre-populated with item inquiries.
-- **Post Your Item Workflow (`/post-item`)**: Simple listing form with multi-image Cloudinary CDN uploads, condition tag selection (*Brand New, Like New, Good, Fair*), price negotiation toggle, and seller city tags.
+- **Post Your Item Workflow (`/sell-item`)**: Simple listing form with multi-image Cloudinary CDN uploads, condition tag selection (*Brand New, Like New, Good, Fair*), price negotiation toggle, and seller city tags.
 
 ### 🛡️ 4. Enterprise Role-Based Access Control (RBAC)
 - **Student / General User (`user`)**:
@@ -101,22 +101,22 @@ Built with a cutting-edge **Liquid Glassmorphism UI**, real-time **Firebase Clou
                       |               City Helpline Client               |
                       |          (React 19 + Vite + Tailwind CSS)        |
                       +--------------------------------------------------+
-                             /            |           \              \
-            OAuth / Auth    /             |            \ Media Upload \ Budget Plan
+                             /            |           \\              \\
+            OAuth / Auth    /             |            \\ Media Upload \\ Budget Plan
                            v              |             v              v
      +--------------------------------+   |   +-------------------+  +------------------+
      |     Firebase Authentication    |   |   | Cloudinary Image  |  | Benchmark Engine |
      | (Google, GitHub, Password)     |   |   | CDN (Unsigned)    |  | & SVG Donut Calc |
      +--------------------------------+   |   +-------------------+  +------------------+
-                           \              |             /
-                            \             |            / secure_url
+                           \\              |             /
+                            \\             |            / secure_url
                              v            v           v
                       +--------------------------------------------------+
                       |              Cloud Firestore Database            |
-                      |  - /users/{userId}        [Profiles & Roles]     |
-                      |  - /listings/{listingId}  [PG, Mess, Library]    |
-                      |  - /reviews/{reviewId}    [Atomic Reviews]       |
-                      |  - /marketplace/{itemId}  [Student Buy & Sell]   |
+                      |  - /users/{userId}              [Profiles & Roles]     |
+                      |  - /listings/{listingId}        [PG, Mess, Library]    |
+                      |  - /reviews/{reviewId}          [Atomic Reviews]       |
+                      |  - /marketplace_items/{itemId}  [Student Buy & Sell]   |
                       +--------------------------------------------------+
 ```
 
@@ -164,11 +164,17 @@ city-helpline/
 │   │   ├── storage.ts           # Cloudinary unsigned upload client handler
 │   │   ├── budgetBenchmarks.ts  # City living indices & saving hacks for 10+ hubs
 │   │   ├── marketplaceData.ts   # Marketplace starter catalog & category definitions
+│   │   ├── locationService.ts   # Geolocation & reverse-geocoding service
+│   │   ├── firestoreError.ts    # Friendly Firestore error parsing
 │   │   ├── constants.ts         # Categories & State-City relational mapping
 │   │   └── utils.ts             # Utility functions (cn class-merge helper)
 │   ├── components/
 │   │   ├── ListingCard.tsx      # Modular glassmorphic listing card component
 │   │   ├── AccountSettings.tsx  # User profile & credentials manager
+│   │   ├── location/
+│   │   │   ├── LocationPromptBanner.tsx # Dynamic geolocation request banner
+│   │   │   ├── LocationSelectorModal.tsx# Multi-state & city picker modal
+│   │   │   └── NavbarLocationButton.tsx # Current city selector button
 │   │   ├── marketplace/
 │   │   │   ├── MarketplaceCard.tsx        # Buy & sell item card with contact CTAs
 │   │   │   └── MarketplaceDetailModal.tsx # Full screen item viewer & seller details
@@ -177,9 +183,9 @@ city-helpline/
 │   │   │   ├── RecommendedServices.tsx    # Live Firestore matching PG+Mess+Library
 │   │   │   └── BudgetShareModal.tsx       # WhatsApp share, text copy & download statement
 │   │   ├── layout/
-│   │   │   ├── Navbar.tsx       # Desktop glassmorphic navigation bar
-│   │   │   ├── BottomNav.tsx    # Mobile touch-first navigation bar
-│   │   │   └── ProtectedRoute.tsx# Role-aware navigation barrier
+│   │   │   ├── Navbar.tsx           # Desktop glassmorphic navigation bar
+│   │   │   ├── BottomNav.tsx        # Mobile touch-first navigation bar
+│   │   │   └── ProtectedRoute.tsx   # Role-aware navigation barrier
 │   │   └── ui/
 │   │       ├── GlassCard.tsx        # Backdrop-blur container with dynamic lighting
 │   │       ├── LiquidGlassCard.tsx  # Animated multi-color specular border card
@@ -193,7 +199,7 @@ city-helpline/
 │       ├── ListingDetails.tsx   # Detailed specs, gallery, contact CTA, reviews
 │       ├── BudgetCalculator.tsx # 3-mode student budget planner with custom expense creator
 │       ├── Marketplace.tsx      # Student marketplace directory with category filters
-│       ├── PostMarketplaceItem.tsx # Sell second-hand items with Cloudinary photo uploads
+│       ├── SellItem.tsx         # Sell second-hand items with Cloudinary photo uploads
 │       ├── AddListing.tsx       # Contributor creation form with Cloudinary upload
 │       ├── EditListing.tsx      # Listing updating & existing media manager
 │       ├── AdminDashboard.tsx   # Admin moderation desk and user management
@@ -227,8 +233,8 @@ All data mutations are governed by rigorous Firestore security rules:
 
 ### 1. Clone & Install Dependencies
 ```bash
-git clone https://github.com/your-username/city-helpline.git
-cd city-helpline
+git clone https://github.com/princeraj-in/City-Helpline.git
+cd City-Helpline
 npm install
 ```
 
@@ -273,25 +279,6 @@ npm run lint
 
 ---
 
-## 🗺️ Supported Regions & Coverage
-
-City Helpline features mapped hierarchies for major educational hubs:
-
-| State | Primary Student Cities |
-| :--- | :--- |
-| **Rajasthan** | Kota, Jaipur, Jodhpur, Sikar, Bikaner, Udaipur |
-| **Bihar** | Patna, Gaya, Muzaffarpur, Bhagalpur, Darbhanga |
-| **Uttar Pradesh** | Lucknow, Kanpur, Varanasi, Prayagraj, Noida, Ghaziabad |
-| **Delhi NCR** | New Delhi, North Delhi, South Delhi, Dwarka, Rohini |
-| **Maharashtra** | Pune, Mumbai, Nagpur, Nashik, Navi Mumbai |
-| **Karnataka** | Bengaluru, Mysuru, Mangaluru, Hubballi, Belagavi |
-| **Madhya Pradesh**| Indore, Bhopal, Gwalior, Jabalpur, Ujjain |
-| **Gujarat** | Ahmedabad, Vadodara, Surat, Gandhinagar, Rajkot |
-| **West Bengal** | Kolkata, Durgapur, Siliguri, Kharagpur, Asansol |
-| **Tamil Nadu** | Chennai, Coimbatore, Madurai, Vellore, Tiruchirappalli |
-
----
-
 ## 🌟 Contributing & Quality Guidelines
 
 1. **Fork the Repository** and create a feature branch (`git checkout -b feature/AmazingFeature`).
@@ -300,10 +287,6 @@ City Helpline features mapped hierarchies for major educational hubs:
 4. **Open a Pull Request** against the `main` branch.
 
 ---
-
-## 📄 License & Attribution
-
-Distributed under the **Apache 2.0 License**. See `LICENSE` for more information.
 
 <p align="center">
   Crafted with precision for students across India • <strong>City Helpline</strong>
