@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Building2, LogOut, PlusCircle, User, ShieldCheck, Search, Home, ShoppingBag } from 'lucide-react';
+import { Building2, LogOut, PlusCircle, User, ShieldCheck, Search, Home, ShoppingBag, Calculator } from 'lucide-react';
 import { LiquidButton } from '../ui/LiquidButton';
 import { isSuperAdminEmail } from '../../types';
 import { NavbarLocationButton } from '../location/NavbarLocationButton';
@@ -63,6 +63,13 @@ export function Navbar() {
               <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-gradient-to-r from-rose-500 to-amber-500 text-white uppercase tracking-wider shadow-sm">
                 New
               </span>
+            </Link>
+            <Link
+              to="/budget"
+              className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${isActive('/budget') || isActive('/budget-calculator') ? 'text-[#00E5FF]' : 'text-gray-400 hover:text-white'}`}
+            >
+              <Calculator className="h-4 w-4" />
+              <span>Budget</span>
             </Link>
 
             {currentUser ? (

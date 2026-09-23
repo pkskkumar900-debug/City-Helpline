@@ -25,6 +25,7 @@ import Search from './pages/Search';
 import Profile from './pages/Profile';
 import Marketplace from './pages/Marketplace';
 import SellItem from './pages/SellItem';
+import BudgetCalculator from './pages/BudgetCalculator';
 
 function AppLayout() {
   const { isLocationModalOpen, closeLocationModal } = useLocationContext();
@@ -40,6 +41,8 @@ function AppLayout() {
           <Route path="/" element={<Home />} />
           <Route path="/search" element={<Search />} />
           <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/budget" element={<BudgetCalculator />} />
+          <Route path="/budget-calculator" element={<BudgetCalculator />} />
           <Route path="/login" element={<Auth />} />
           <Route path="/signup" element={<Auth />} />
           <Route path="/listing/:id" element={<ListingDetails />} />

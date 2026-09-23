@@ -35,7 +35,7 @@ import { MarketplaceItem } from '../types';
 import { INITIAL_MARKETPLACE_ITEMS } from '../lib/marketplaceData';
 import { MarketplaceCard } from '../components/marketplace/MarketplaceCard';
 import { MarketplaceDetailModal } from '../components/marketplace/MarketplaceDetailModal';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, Calculator, Utensils, IndianRupee } from 'lucide-react';
 
 export default function Home() {
   const { userLocation, isLoadingLocation, requestLiveLocation, openLocationModal } = useLocationContext();
@@ -998,7 +998,123 @@ export default function Home() {
         />
       )}
 
-      {/* 6. HOST / AMBASSADOR CTA LIQUID GLASS BANNER */}
+      {/* 6. MONTHLY STUDENT BUDGET ESTIMATOR SECTION */}
+      <section className="relative py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <LiquidGlassCard className="p-8 sm:p-12 relative overflow-hidden" glowColor="rgba(0, 229, 255, 0.2)">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-7 space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/30 text-cyan-300 text-xs font-bold uppercase tracking-wider">
+                <Calculator className="w-3.5 h-3.5 text-[#00E5FF] animate-pulse" />
+                <span>Monthly Budget Estimator • खर्च कैलकुलेटर</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
+                Planning to Move to {userLocation?.city || 'a New Study Hub'}? <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00E5FF] via-cyan-200 to-indigo-300">
+                  Calculate Your Living Cost First
+                </span>
+              </h2>
+              <p className="text-gray-300 text-sm sm:text-base leading-relaxed max-w-xl">
+                Get an exact breakdown for Room Rent (Single/Double AC), 3-meal Mess, 24x7 Study Library pass, and Local Commute in Kota, Patna, Delhi, and 20+ student cities.
+              </p>
+
+              {/* Sample cost comparison tags */}
+              <div className="flex flex-wrap gap-2.5 pt-2">
+                <div className="px-3.5 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-gray-300 flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-[#00E5FF]" />
+                  <span>Rooms from <strong>₹3,500/mo</strong></span>
+                </div>
+                <div className="px-3.5 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-gray-300 flex items-center gap-1.5">
+                  <Utensils className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Healthy Mess from <strong>₹2,400/mo</strong></span>
+                </div>
+                <div className="px-3.5 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-gray-300 flex items-center gap-1.5">
+                  <BookOpen className="w-3.5 h-3.5 text-purple-400" />
+                  <span>AC Libraries from <strong>₹600/mo</strong></span>
+                </div>
+              </div>
+
+              <div className="pt-4 flex flex-wrap items-center gap-4">
+                <Link to="/budget">
+                  <LiquidButton
+                    variant="primary"
+                    className="px-7 py-3 text-sm font-bold flex items-center gap-2 shadow-[0_0_25px_rgba(0,229,255,0.4)]"
+                  >
+                    <Calculator className="w-4 h-4" />
+                    <span>Calculate Monthly Budget</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </LiquidButton>
+                </Link>
+                <span className="text-xs text-gray-400">
+                  Instant WhatsApp breakdown for parents
+                </span>
+              </div>
+            </div>
+
+            {/* Visual Budget Mini Card */}
+            <div className="lg:col-span-5">
+              <GlassCard className="p-6 rounded-3xl border border-white/15 space-y-4 shadow-2xl relative" intensity="high">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-cyan-300">
+                    Typical Hub Allocation
+                  </span>
+                  <span className="text-xs font-bold text-gray-400">
+                    {userLocation?.city || 'Kota / Patna'}
+                  </span>
+                </div>
+
+                <div className="space-y-3 pt-1">
+                  <div>
+                    <div className="flex justify-between text-xs font-semibold mb-1">
+                      <span className="text-gray-300">🏠 Double Sharing Room</span>
+                      <span className="text-white font-bold">₹4,800/mo (48%)</span>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div className="w-[48%] h-full bg-[#00E5FF] rounded-full shadow-[0_0_8px_#00E5FF]" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-xs font-semibold mb-1">
+                      <span className="text-gray-300">🍲 Full Mess (3 Meals)</span>
+                      <span className="text-white font-bold">₹2,800/mo (28%)</span>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div className="w-[28%] h-full bg-amber-400 rounded-full shadow-[0_0_8px_#F59E0B]" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-xs font-semibold mb-1">
+                      <span className="text-gray-300">📚 AC Study Library</span>
+                      <span className="text-white font-bold">₹800/mo (8%)</span>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div className="w-[8%] h-full bg-purple-400 rounded-full shadow-[0_0_8px_#A855F7]" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-xs font-semibold mb-1">
+                      <span className="text-gray-300">🚲 Travel, Laundry & Misc</span>
+                      <span className="text-white font-bold">₹1,400/mo (16%)</span>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div className="w-[16%] h-full bg-emerald-400 rounded-full shadow-[0_0_8px_#10B981]" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-white/10 flex items-center justify-between">
+                  <span className="text-xs text-gray-400">Optimal Monthly Total:</span>
+                  <span className="text-xl font-black text-white">₹9,800 <span className="text-xs font-normal text-gray-400">/ mo</span></span>
+                </div>
+              </GlassCard>
+            </div>
+          </div>
+        </LiquidGlassCard>
+      </section>
+
+      {/* 7. HOST / AMBASSADOR CTA LIQUID GLASS BANNER */}
       <section className="relative py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <LiquidGlassCard className="p-8 sm:p-14 relative overflow-hidden" glowColor="rgba(138, 43, 226, 0.25)">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
