@@ -31,14 +31,16 @@ export const RecommendedServices: React.FC<RecommendedServicesProps> = ({
     const fetchServices = async () => {
       setLoading(true);
       try {
-        // Query listings for current city
+        // Query approved listings for student recommendations
         const q = query(
           collection(db, 'listings'),
-          where('city', '==', city),
-          limit(30)
+          where('status', '==', 'approved'),
+          limit(50)
         );
         const snapshot = await getDocs(q);
-        const allListings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Listing));
+        const allListings = snapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() } as Listing))
+          .filter(l => !city || l.city?.toLowerCase() === city?.toLowerCase());
 
         // Find PG/Hostel near rentBudget
         const pgs = allListings.filter(l => l.category === 'PG' || l.category === 'Hostel');

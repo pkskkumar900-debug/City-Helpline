@@ -11,6 +11,7 @@ import { GlassCard } from '../components/ui/GlassCard';
 import { LiquidGlassCard } from '../components/ui/LiquidGlassCard';
 import { LiquidButton } from '../components/ui/LiquidButton';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
+import { PersonalPageHeader } from '../components/layout/PersonalPageHeader';
 import { 
   ShoppingBag, ArrowLeft, UploadCloud, X, AlertCircle, 
   CheckCircle, Sparkles, MapPin, Tag, IndianRupee, Phone, MessageCircle, Info
@@ -171,21 +172,17 @@ export default function SellItem() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mb-16">
-      {/* Header Back button */}
-      <div className="mb-6 flex items-center justify-between">
-        <Link
-          to="/marketplace"
-          className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Marketplace</span>
-        </Link>
-
-        <span className="text-xs font-semibold text-cyan-300 bg-cyan-400/10 px-3 py-1 rounded-full border border-cyan-400/20">
-          Sell to Juniors & Local Students
-        </span>
-      </div>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 mb-20 md:mb-16">
+      <PersonalPageHeader
+        title="Sell Student Item"
+        subtitle="Sell books, cycle, cooler, study table or mattress directly to students"
+        badge="Zero Commission"
+        badgeColor="bg-cyan-400/10 text-cyan-300 border-cyan-400/30"
+        icon={ShoppingBag}
+        iconColor="text-[#00E5FF]"
+        exitUrl="/marketplace"
+        backLabel="Marketplace"
+      />
 
       <LiquidGlassCard className="p-6 sm:p-10 mb-8" glowColor="rgba(0, 229, 255, 0.25)">
         <div className="flex items-center gap-3 mb-6">

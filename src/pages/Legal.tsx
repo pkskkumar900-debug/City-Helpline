@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
   ShieldCheck, FileText, Scale, AlertTriangle, Lock, 
@@ -7,6 +7,7 @@ import {
   UserCheck, HelpCircle, ExternalLink, ArrowRight, ShieldAlert,
   Clock, MapPin, Eye, Sparkles, ChevronRight
 } from 'lucide-react';
+import { PersonalPageHeader } from '../components/layout/PersonalPageHeader';
 
 export type LegalTab = 'privacy' | 'terms' | 'safety' | 'listing-policy' | 'grievance';
 
@@ -41,8 +42,73 @@ export default function Legal({ defaultTab = 'privacy' }: LegalProps) {
     { id: 'grievance', label: 'Grievance & Legal Officer', icon: Mail, tag: 'Official Redressal' },
   ];
 
+  const getHeaderInfo = () => {
+    switch (activeTab) {
+      case 'safety':
+        return {
+          title: 'Student Safety & Anti-Fraud Advisory',
+          subtitle: 'Safety checklist, scam protection, verified owner protocols & emergency helplines',
+          badge: 'Safety First',
+          badgeColor: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+          icon: ShieldAlert,
+          iconColor: 'text-amber-400'
+        };
+      case 'terms':
+        return {
+          title: 'Terms of Service & Platform Rules',
+          subtitle: 'Zero-brokerage terms, user conduct, code of compliance and intermediary policies',
+          badge: 'User Terms',
+          badgeColor: 'bg-[#00E5FF]/15 text-[#00E5FF] border-[#00E5FF]/30',
+          icon: Scale,
+          iconColor: 'text-[#00E5FF]'
+        };
+      case 'listing-policy':
+        return {
+          title: 'Listing & Verification Policy',
+          subtitle: 'Verification standards, safety norms & guidelines for PG, hostel and mess owners',
+          badge: 'Verification',
+          badgeColor: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+          icon: Building2,
+          iconColor: 'text-emerald-400'
+        };
+      case 'grievance':
+        return {
+          title: 'Grievance Redressal & Legal Officer',
+          subtitle: 'Official escalation cell and contact channel under IT Rules 2021',
+          badge: 'Grievance Cell',
+          badgeColor: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+          icon: Mail,
+          iconColor: 'text-rose-400'
+        };
+      case 'privacy':
+      default:
+        return {
+          title: 'Privacy Policy & Data Protection',
+          subtitle: 'Digital Personal Data Protection (DPDP) Act 2023 & India IT Act compliance',
+          badge: 'DPDP 2023',
+          badgeColor: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
+          icon: Lock,
+          iconColor: 'text-purple-400'
+        };
+    }
+  };
+
+  const headerMeta = getHeaderInfo();
+
   return (
-    <div className="min-h-screen bg-[#07090E] text-white pt-6 pb-24 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#07090E] text-white pt-2 pb-24 px-4 sm:px-6 lg:px-8">
+      {/* Top Sticky Navigation Header with Back and Cut (X) Button */}
+      <PersonalPageHeader
+        title={headerMeta.title}
+        subtitle={headerMeta.subtitle}
+        badge={headerMeta.badge}
+        badgeColor={headerMeta.badgeColor}
+        icon={headerMeta.icon}
+        iconColor={headerMeta.iconColor}
+        backLabel="Back"
+        exitUrl="/profile"
+      />
+
       <div className="max-w-6xl mx-auto space-y-8">
         
         {/* Header Hero */}

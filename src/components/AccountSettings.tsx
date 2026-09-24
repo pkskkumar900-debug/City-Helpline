@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db, auth } from '../lib/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { uploadImage } from '../lib/storage';
-import { sendPasswordResetEmail } from 'firebase/auth';
+import { sendPasswordResetEmail, updateProfile } from 'firebase/auth';
 import { motion } from 'motion/react';
 import { User, Camera, Moon, Sun, Monitor, Lock, Bell, Shield, FileText, Info, Mail, Code, ChevronRight, LogOut, Scale, ExternalLink, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -38,18 +38,61 @@ export default function AccountSettings() {
     setMessage({ type: '', text: '' });
     
     try {
-      const updateData: any = { name };
-      if (userProfile?.role === 'contributor') {
-        updateData.phone = phone;
-        updateData.businessName = businessName;
-        updateData.businessType = businessType;
-        updateData.city = city;
-        updateData.address = address;
+      const trimmedName = name.trim() || currentUser.displayName || 'User';
+      const userRef = doc(db, 'users', currentUser.uid);
+      const userSnap = await getDoc(userRef);
+
+      const isSuperAdmin = Boolean(
+        currentUser.email && 
+        ["pkskkumar900@gmail.com", "kusprince.raj@gmail.com", "prkus82@gmail.com"].includes(currentUser.email.toLowerCase())
+      );
+
+      if (!userSnap.exists()) {
+        // First-time document creation
+        const initialData: Record<string, any> = {
+          uid: currentUser.uid,
+          name: trimmedName,
+          email: currentUser.email || '',
+          role: isSuperAdmin ? 'admin' : (userProfile?.role || 'user'),
+          banned: false,
+          createdAt: Date.now(),
+          lastLogin: Date.now(),
+          phone: phone.trim(),
+          city: city.trim(),
+          address: address.trim(),
+        };
+
+        if (userProfile?.role === 'contributor') {
+          if (businessName) initialData.businessName = businessName.trim();
+          if (businessType) initialData.businessType = businessType.trim();
+        }
+
+        await setDoc(userRef, initialData);
+      } else {
+        // Document already exists: only send editable profile fields, never touch role, banned, uid, or createdAt
+        const updateData: Record<string, any> = { 
+          name: trimmedName,
+          phone: phone.trim(),
+          city: city.trim(),
+          address: address.trim(),
+        };
+
+        const currentRole = userSnap.data()?.role || userProfile?.role;
+        if (currentRole === 'contributor') {
+          if (businessName !== undefined) updateData.businessName = businessName.trim();
+          if (businessType !== undefined) updateData.businessType = businessType.trim();
+        }
+
+        await setDoc(userRef, updateData, { merge: true });
+      }
+      
+      if (auth.currentUser && trimmedName) {
+        updateProfile(auth.currentUser, { displayName: trimmedName }).catch(() => {});
       }
 
-      await updateDoc(doc(db, 'users', currentUser.uid), updateData);
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
     } catch (error: any) {
+      console.error('Error updating profile:', error);
       setMessage({ type: 'error', text: error.message || 'Failed to update profile' });
     } finally {
       setLoading(false);
@@ -67,12 +110,36 @@ export default function AccountSettings() {
       const photoURL = await uploadImage(file);
       
       if (photoURL) {
-        await updateDoc(doc(db, 'users', currentUser.uid), {
-          photoURL
-        });
+        const userRef = doc(db, 'users', currentUser.uid);
+        const userSnap = await getDoc(userRef);
+
+        const isSuperAdmin = Boolean(
+          currentUser.email && 
+          ["pkskkumar900@gmail.com", "kusprince.raj@gmail.com", "prkus82@gmail.com"].includes(currentUser.email.toLowerCase())
+        );
+
+        if (!userSnap.exists()) {
+          await setDoc(userRef, {
+            uid: currentUser.uid,
+            name: currentUser.displayName || 'User',
+            email: currentUser.email || '',
+            photoURL,
+            role: isSuperAdmin ? 'admin' : (userProfile?.role || 'user'),
+            banned: false,
+            createdAt: Date.now(),
+            lastLogin: Date.now(),
+          });
+        } else {
+          await setDoc(userRef, { photoURL }, { merge: true });
+        }
+
+        if (auth.currentUser) {
+          updateProfile(auth.currentUser, { photoURL }).catch(() => {});
+        }
         setMessage({ type: 'success', text: 'Profile photo updated!' });
       }
     } catch (error: any) {
+      console.error('Photo upload error:', error);
       setMessage({ type: 'error', text: error.message || 'Failed to upload photo' });
     } finally {
       setLoading(false);
@@ -106,11 +173,11 @@ export default function AccountSettings() {
 
     if (currentUser) {
       try {
-        await updateDoc(doc(db, 'users', currentUser.uid), {
+        await setDoc(doc(db, 'users', currentUser.uid), {
           themePreference: newTheme
-        });
+        }, { merge: true });
       } catch (error) {
-        console.error("Failed to save theme preference to Firestore", error);
+        console.warn("Notice: Failed to sync theme preference to Firestore:", error);
       }
     }
   };
@@ -182,67 +249,77 @@ export default function AccountSettings() {
               <p className="text-xs text-gray-500 mt-1">Email cannot be changed.</p>
             </div>
             
+            {/* Common Contact Details for All Users */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="relative group">
+                <label className="block text-sm font-medium text-gray-300 mb-2 transition-colors group-focus-within:text-[#00E5FF]">Phone Number</label>
+                <input
+                  type="tel"
+                  placeholder="+91 98765 43210"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full px-4 py-3 bg-[rgba(255,255,255,0.05)] border border-white/10 rounded-2xl text-white focus:outline-none focus:border-[#00E5FF]/50 backdrop-blur-md transition-all text-sm"
+                />
+              </div>
+              <div className="relative group">
+                <label className="block text-sm font-medium text-gray-300 mb-2 transition-colors group-focus-within:text-[#00E5FF]">Current City / Hub</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Kota, Patna, Delhi, Pune"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  className="w-full px-4 py-3 bg-[rgba(255,255,255,0.05)] border border-white/10 rounded-2xl text-white focus:outline-none focus:border-[#00E5FF]/50 backdrop-blur-md transition-all text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="relative group">
+              <label className="block text-sm font-medium text-gray-300 mb-2 transition-colors group-focus-within:text-[#00E5FF]">Address / Student Area</label>
+              <textarea
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="e.g. Near Allen Samyak, Landmark City, Kunhari"
+                rows={2}
+                className="w-full px-4 py-3 bg-[rgba(255,255,255,0.05)] border border-white/10 rounded-2xl text-white focus:outline-none focus:border-[#00E5FF]/50 backdrop-blur-md transition-all text-sm resize-none"
+              />
+            </div>
+            
             {userProfile?.role === 'contributor' && (
-              <>
-                <div className="relative group">
-                  <label className="block text-sm font-medium text-gray-300 mb-2 transition-colors group-focus-within:text-[#00E5FF]">Phone Number</label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-4 py-3 bg-[rgba(255,255,255,0.05)] border border-white/10 rounded-2xl text-white focus:outline-none focus:border-[#00E5FF]/50 backdrop-blur-md transition-all"
-                    required
-                  />
+              <div className="pt-3 border-t border-white/10 space-y-4">
+                <div className="text-xs font-bold text-[#00E5FF] uppercase tracking-wider">
+                  Provider Business Details
                 </div>
-                <div className="relative group">
-                  <label className="block text-sm font-medium text-gray-300 mb-2 transition-colors group-focus-within:text-[#00E5FF]">Business Name</label>
-                  <input
-                    type="text"
-                    value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                    className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="relative group">
+                    <label className="block text-sm font-medium text-gray-300 mb-2 transition-colors group-focus-within:text-[#00E5FF]">Business / Property Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Krishna Residency & Library"
+                      value={businessName}
+                      onChange={(e) => setBusinessName(e.target.value)}
+                      className="w-full px-4 py-3 bg-[rgba(255,255,255,0.05)] border border-white/10 rounded-2xl text-white focus:outline-none focus:border-[#00E5FF]/50 backdrop-blur-md transition-all text-sm"
+                    />
+                  </div>
+                  <div className="relative group">
+                    <label className="block text-sm font-medium text-gray-300 mb-2 transition-colors group-focus-within:text-[#00E5FF]">Business Type</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Boys Hostel, AC Library, Mess"
+                      value={businessType}
+                      onChange={(e) => setBusinessType(e.target.value)}
+                      className="w-full px-4 py-3 bg-[rgba(255,255,255,0.05)] border border-white/10 rounded-2xl text-white focus:outline-none focus:border-[#00E5FF]/50 backdrop-blur-md transition-all text-sm"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Business Type</label>
-                  <input
-                    type="text"
-                    value={businessType}
-                    onChange={(e) => setBusinessType(e.target.value)}
-                    className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">City</label>
-                  <input
-                    type="text"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Address</label>
-                  <textarea
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    rows={3}
-                    className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                    required
-                  />
-                </div>
-              </>
+              </div>
             )}
             
             <button
               type="submit"
-              disabled={loading || (name === userProfile?.name && phone === userProfile?.phone && businessName === userProfile?.businessName && businessType === userProfile?.businessType && city === userProfile?.city && address === userProfile?.address)}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
+              disabled={loading || (name === (userProfile?.name || '') && phone === (userProfile?.phone || '') && businessName === (userProfile?.businessName || '') && businessType === (userProfile?.businessType || '') && city === (userProfile?.city || '') && address === (userProfile?.address || ''))}
+              className="px-6 py-3 bg-gradient-to-r from-[#00E5FF] to-[#8A2BE2] hover:brightness-110 text-black font-black rounded-xl text-sm transition-all shadow-[0_0_20px_rgba(0,229,255,0.3)] disabled:opacity-40 active:scale-95 cursor-pointer"
             >
-              {loading ? 'Saving...' : 'Save Changes'}
+              {loading ? 'Saving Profile...' : 'Save Changes'}
             </button>
           </form>
         </div>

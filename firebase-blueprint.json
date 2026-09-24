@@ -18,7 +18,9 @@
         "city": { "type": "string" },
         "address": { "type": "string" },
         "photoURL": { "type": "string" },
-        "themePreference": { "type": "string", "enum": ["light", "dark", "system"] }
+        "themePreference": { "type": "string", "enum": ["light", "dark", "system"] },
+        "savedListings": { "type": "array", "items": { "type": "string" } },
+        "notifications": { "type": "boolean" }
       },
       "required": ["uid", "name", "email", "role", "createdAt"]
     },

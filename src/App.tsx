@@ -30,6 +30,10 @@ import SellItem from './pages/SellItem';
 import BudgetCalculator from './pages/BudgetCalculator';
 import Legal from './pages/Legal';
 import AiChatPage from './pages/AiChatPage';
+import AccountSettingsPage from './pages/AccountSettingsPage';
+import SavedListingsPage from './pages/SavedListingsPage';
+import MyMarketplacePage from './pages/MyMarketplacePage';
+import MyListingsPage from './pages/MyListingsPage';
 import { AiFloatingAssistant } from './components/ai/AiFloatingAssistant';
 import { InstallAppPrompt } from './components/common/InstallAppPrompt';
 
@@ -146,6 +150,54 @@ function AppLayout() {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/settings" 
+            element={
+              <ProtectedRoute>
+                <AccountSettingsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/account-settings" 
+            element={
+              <ProtectedRoute>
+                <AccountSettingsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/saved-listings" 
+            element={
+              <ProtectedRoute>
+                <SavedListingsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/saved" 
+            element={
+              <ProtectedRoute>
+                <SavedListingsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/my-marketplace" 
+            element={
+              <ProtectedRoute>
+                <MyMarketplacePage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/my-listings" 
+            element={
+              <ProtectedRoute>
+                <MyListingsPage />
               </ProtectedRoute>
             } 
           />

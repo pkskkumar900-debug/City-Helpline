@@ -9,6 +9,7 @@ import { GlassCard } from '../components/ui/GlassCard';
 import { LiquidGlassCard } from '../components/ui/LiquidGlassCard';
 import { LiquidButton } from '../components/ui/LiquidButton';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
+import { PersonalPageHeader } from '../components/layout/PersonalPageHeader';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
@@ -350,8 +351,19 @@ export default function BudgetCalculator() {
     <motion.div
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mb-20 md:mb-0"
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 mb-20 md:mb-0"
     >
+      <PersonalPageHeader
+        title="Student Living Budget"
+        subtitle="Estimate & plan monthly PG rent, mess food, library seat and living costs"
+        badge="Budget Tool"
+        badgeColor="bg-cyan-400/10 text-cyan-300 border-cyan-400/30"
+        icon={Calculator}
+        iconColor="text-[#00E5FF]"
+        exitUrl="/profile"
+        backLabel="Profile"
+      />
+
       {/* Top Banner Card */}
       <LiquidGlassCard className="p-4 sm:p-8 md:p-10 mb-8 overflow-visible" glowColor="rgba(0, 229, 255, 0.25)">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">

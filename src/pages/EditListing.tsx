@@ -9,6 +9,8 @@ import { UploadCloud, X, ArrowLeft, Tag, MapPin } from 'lucide-react';
 import { motion } from 'motion/react';
 import { CATEGORIES, STATE_CITIES } from '../lib/constants';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
+import { PersonalPageHeader } from '../components/layout/PersonalPageHeader';
+import { Building2 } from 'lucide-react';
 
 export default function EditListing() {
   const { id } = useParams<{ id: string }>();
@@ -153,20 +155,23 @@ export default function EditListing() {
       animate={{ opacity: 1 }}
       className="min-h-screen pb-20 md:pb-12"
     >
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <button 
-          onClick={() => navigate(-1)} 
-          className="inline-flex items-center text-[#00E5FF] hover:text-[#00E5FF]/80 mb-6 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
-        </button>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <PersonalPageHeader
+          title="Edit Listing"
+          subtitle={`Editing details for: ${title || 'Accommodation'}`}
+          badge="Host Portal"
+          badgeColor="bg-cyan-400/10 text-cyan-300 border-cyan-400/30"
+          icon={Building2}
+          iconColor="text-[#00E5FF]"
+          exitUrl="/my-listings"
+          backLabel="My Listings"
+        />
 
         <motion.div 
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="glass-card rounded-3xl p-8 lg:p-12 relative overflow-hidden"
+          className="glass-card rounded-3xl p-6 sm:p-10 lg:p-12 relative overflow-hidden"
         >
           {/* Decorative Background Elements */}
           <div className="absolute -top-32 -right-32 w-96 h-96 bg-[#00E5FF]/10 rounded-full blur-3xl pointer-events-none"></div>

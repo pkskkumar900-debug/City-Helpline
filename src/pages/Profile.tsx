@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { collection, query, where, getDocs, orderBy, getDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, getDoc, doc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Listing, MarketplaceItem } from '../types';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { User, LogOut, Settings, PlusCircle, Building2, MapPin, List, Star, ArrowLeft, Search, ShoppingBag, Trash2, CheckCircle, Tag, Calculator } from 'lucide-react';
+import { 
+  User, LogOut, Settings, PlusCircle, Building2, MapPin, 
+  Star, ShoppingBag, Calculator, ChevronRight, Sparkles, 
+  ShieldCheck, ArrowRight, ExternalLink, RefreshCw, Heart, 
+  Tag, Compass, CheckCircle2
+} from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
-import AccountSettings from '../components/AccountSettings';
-import { ProfileBudgetSection } from '../components/profile/ProfileBudgetSection';
+import { LiquidGlassCard } from '../components/ui/LiquidGlassCard';
 import { useLocationContext } from '../contexts/LocationContext';
 
 export default function Profile() {
@@ -18,25 +22,29 @@ export default function Profile() {
   const [savedListings, setSavedListings] = useState<Listing[]>([]);
   const [myMarketplaceItems, setMyMarketplaceItems] = useState<MarketplaceItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'listings' | 'saved' | 'marketplace' | 'budget' | 'settings'>('budget');
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchListings = async () => {
+    const fetchUserData = async () => {
       if (!currentUser) return;
       
       try {
-        // Fetch My Listings
-        const qMy = query(
-          collection(db, 'listings'),
-          where('authorId', '==', currentUser.uid),
-          orderBy('createdAt', 'desc')
-        );
-        const snapshotMy = await getDocs(qMy);
-        const dataMy = snapshotMy.docs.map(doc => ({ id: doc.id, ...doc.data() } as Listing));
-        setMyListings(dataMy);
+        // 1. Fetch My Listings (Safe fetch & client-side sort)
+        try {
+          const qMy = query(
+            collection(db, 'listings'),
+            where('authorId', '==', currentUser.uid)
+          );
+          const snapshotMy = await getDocs(qMy);
+          const dataMy = snapshotMy.docs.map(doc => ({ id: doc.id, ...doc.data() } as Listing));
+          dataMy.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+          setMyListings(dataMy);
+        } catch (listingErr) {
+          console.warn('Could not load user hosted listings:', listingErr);
+        }
 
-        // Fetch My Marketplace Items
+        // 2. Fetch My Marketplace Items
         try {
           const qMarket = query(
             collection(db, 'marketplace_items'),
@@ -50,57 +58,42 @@ export default function Profile() {
           console.warn('Could not load user marketplace items:', mErr);
         }
 
-        // Fetch Saved Listings
+        // 3. Fetch Saved Listings
         if (userProfile?.savedListings && userProfile.savedListings.length > 0) {
-          const savedDocs = await Promise.all(
-            userProfile.savedListings.map(async (savedId) => {
-              try {
-                const docSnap = await getDoc(doc(db, 'listings', savedId));
-                if (docSnap.exists()) {
-                  const data = { id: docSnap.id, ...docSnap.data() } as Listing;
-                  if (data.status === 'approved' || data.authorId === currentUser.uid) {
-                    return data;
+          try {
+            const savedDocs = await Promise.all(
+              userProfile.savedListings.map(async (savedId) => {
+                try {
+                  const docSnap = await getDoc(doc(db, 'listings', savedId));
+                  if (docSnap.exists()) {
+                    const data = { id: docSnap.id, ...docSnap.data() } as Listing;
+                    if (data.status === 'approved' || data.authorId === currentUser.uid) {
+                      return data;
+                    }
                   }
+                } catch (e) {
+                  // Ignore inaccessible or removed saved items
                 }
-              } catch (e) {
-                console.warn(`Could not load saved listing ${savedId}:`, e);
-              }
-              return null;
-            })
-          );
-          setSavedListings(savedDocs.filter((l): l is Listing => l !== null));
+                return null;
+              })
+            );
+            setSavedListings(savedDocs.filter((l): l is Listing => l !== null));
+          } catch (savedErr) {
+            console.warn('Could not load saved bookmarks:', savedErr);
+            setSavedListings([]);
+          }
         } else {
           setSavedListings([]);
         }
       } catch (error) {
-        console.error('Error fetching listings:', error);
+        console.warn('Notice: Non-critical profile data loading issue:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchListings();
+    fetchUserData();
   }, [currentUser, userProfile?.savedListings]);
-
-  const toggleMarketplaceStatus = async (item: MarketplaceItem) => {
-    const newStatus = item.status === 'available' ? 'sold' : 'available';
-    try {
-      await updateDoc(doc(db, 'marketplace_items', item.id), { status: newStatus });
-      setMyMarketplaceItems(prev => prev.map(i => i.id === item.id ? { ...i, status: newStatus } : i));
-    } catch (err) {
-      console.error('Failed to update item status:', err);
-    }
-  };
-
-  const deleteMarketplaceItem = async (itemId: string) => {
-    if (!window.confirm('Are you sure you want to remove this item from the marketplace?')) return;
-    try {
-      await deleteDoc(doc(db, 'marketplace_items', itemId));
-      setMyMarketplaceItems(prev => prev.filter(i => i.id !== itemId));
-    } catch (err) {
-      console.error('Failed to delete item:', err);
-    }
-  };
 
   const handleLogout = async () => {
     await logout();
@@ -109,13 +102,20 @@ export default function Profile() {
 
   if (!currentUser) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-        <GlassCard className="p-8 text-center max-w-md w-full" intensity="low">
-          <User className="h-16 w-16 text-gray-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-white mb-2">Not Logged In</h2>
-          <p className="text-gray-400 mb-6">Please log in to view your profile and manage your listings.</p>
-          <Link to="/login" className="block w-full py-3 bg-[#00E5FF] hover:bg-[#00E5FF]/80 text-black rounded-xl font-bold transition-colors shadow-[0_0_15px_rgba(0,229,255,0.4)]">
-            Log In
+      <div className="flex flex-col items-center justify-center min-h-[65vh] px-4">
+        <GlassCard className="p-8 sm:p-10 text-center max-w-md w-full border border-white/10" intensity="low">
+          <div className="w-16 h-16 rounded-2xl bg-cyan-400/10 border border-cyan-400/30 flex items-center justify-center mx-auto mb-4 text-[#00E5FF]">
+            <User className="h-8 w-8" />
+          </div>
+          <h2 className="text-2xl font-black text-white mb-2 tracking-tight">Not Signed In</h2>
+          <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+            Sign in to access your personal dashboard, saved accommodations, marketplace ads, and account settings.
+          </p>
+          <Link 
+            to="/login" 
+            className="block w-full py-3.5 bg-[#00E5FF] hover:bg-cyan-300 text-slate-950 rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(0,229,255,0.4)] active:scale-95"
+          >
+            Sign In / Register
           </Link>
         </GlassCard>
       </div>
@@ -123,493 +123,451 @@ export default function Profile() {
   }
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mb-20 md:mb-0"
-    >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Profile Sidebar */}
-        <div className="lg:col-span-1">
-          <motion.div 
-            whileHover={{ y: -5 }}
-            className="sticky top-24 relative overflow-hidden"
-          >
-            <GlassCard className="p-8" intensity="low">
-              {/* Background Glow */}
-              <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#00E5FF]/20 to-transparent pointer-events-none"></div>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 mb-24 md:mb-16">
+      {/* Top Profile Header Hero */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8"
+      >
+        <LiquidGlassCard className="p-6 sm:p-8 relative overflow-hidden" glowColor="rgba(0, 229, 255, 0.2)">
+          {/* Subtle background glow */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-cyan-500/15 via-indigo-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
 
-              <div className="flex flex-col items-center text-center mb-8 relative z-10">
-                <div className="relative group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-[#00E5FF] to-[#8A2BE2] rounded-full blur opacity-75 group-hover:opacity-100 transition duration-500"></div>
-                  <div className="relative h-28 w-28 bg-[rgba(255,255,255,0.06)] rounded-full flex items-center justify-center shadow-2xl overflow-hidden border-2 border-white/10 backdrop-blur-md">
-                    {userProfile?.photoURL ? (
-                      <img src={userProfile.photoURL} alt="Profile" className="h-full w-full object-cover" />
-                    ) : (
-                      <span className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-[#00E5FF] to-[#8A2BE2]">
-                        {userProfile?.name?.charAt(0).toUpperCase() || 'U'}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <h2 className="text-3xl font-bold text-white mt-6 mb-1 tracking-tight">{userProfile?.name}</h2>
-                <p className="text-gray-400 font-medium">{userProfile?.email}</p>
-                <div className="mt-4 px-4 py-1.5 bg-[#00E5FF]/10 rounded-full text-sm font-semibold text-[#00E5FF] border border-[#00E5FF]/20 shadow-[0_0_15px_rgba(0,229,255,0.15)]">
-                  {userProfile?.role === 'admin' ? 'Administrator' : 'User'}
-                </div>
-
-                {/* Location Display & Switcher */}
-                <div className="mt-5 w-full p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-between text-left shadow-sm">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-[#00E5FF]/15 text-[#00E5FF] flex items-center justify-center shrink-0">
-                      <MapPin className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase font-bold text-gray-400">Current Location</p>
-                      <p className="text-xs font-bold text-white">
-                        {userLocation ? `${userLocation.city}${userLocation.state ? `, ${userLocation.state}` : ''}` : 'Not detected'}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={openLocationModal}
-                    className="text-xs font-bold text-[#00E5FF] hover:underline px-2 py-1 cursor-pointer"
-                  >
-                    Change
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-3 border-t border-white/10 pt-8 relative z-10">
-                <Link to="/add-listing" className="group flex items-center gap-4 p-4 rounded-2xl hover:bg-[rgba(255,255,255,0.06)] text-gray-400 hover:text-white transition-all duration-300">
-                  <div className="p-2 rounded-xl bg-[#00E5FF]/10 text-[#00E5FF] group-hover:bg-[#00E5FF] group-hover:text-black transition-colors shadow-[0_0_10px_rgba(0,229,255,0.2)]">
-                    <PlusCircle className="h-5 w-5" />
-                  </div>
-                  <span className="font-semibold">Add New Listing (PG, Mess, Library)</span>
-                </Link>
-                <Link to="/sell-item" className="group flex items-center gap-4 p-4 rounded-2xl hover:bg-[rgba(255,255,255,0.06)] text-gray-400 hover:text-white transition-all duration-300">
-                  <div className="p-2 rounded-xl bg-cyan-400/10 text-cyan-300 group-hover:bg-[#00E5FF] group-hover:text-black transition-colors shadow-[0_0_10px_rgba(0,229,255,0.2)]">
-                    <ShoppingBag className="h-5 w-5" />
-                  </div>
-                  <span className="font-semibold">Sell Student Item</span>
-                </Link>
-                {userProfile?.role === 'contributor' && (
-                  <button 
-                    onClick={() => setActiveTab('listings')}
-                    className={`w-full group flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 ${activeTab === 'listings' ? 'bg-[rgba(0,229,255,0.1)] text-white border border-[#00E5FF]/20 shadow-[0_0_15px_rgba(0,229,255,0.1)]' : 'hover:bg-[rgba(255,255,255,0.06)] text-gray-400 hover:text-white'}`}
-                  >
-                    <div className={`p-2 rounded-xl transition-colors ${activeTab === 'listings' ? 'bg-[#00E5FF] text-black shadow-[0_0_10px_rgba(0,229,255,0.5)]' : 'bg-[rgba(255,255,255,0.06)] text-gray-400 group-hover:bg-[rgba(255,255,255,0.1)] group-hover:text-white'}`}>
-                      <List className="h-5 w-5" />
-                    </div>
-                    <span className="font-semibold">My Listings</span>
-                  </button>
-                )}
-                <button 
-                  onClick={() => setActiveTab('marketplace')}
-                  className={`w-full group flex items-center justify-between p-4 rounded-2xl transition-all duration-300 ${activeTab === 'marketplace' ? 'bg-[rgba(0,229,255,0.1)] text-white border border-[#00E5FF]/20 shadow-[0_0_15px_rgba(0,229,255,0.1)]' : 'hover:bg-[rgba(255,255,255,0.06)] text-gray-400 hover:text-white'}`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`p-2 rounded-xl transition-colors ${activeTab === 'marketplace' ? 'bg-[#00E5FF] text-black shadow-[0_0_10px_rgba(0,229,255,0.5)]' : 'bg-[rgba(255,255,255,0.06)] text-gray-400 group-hover:bg-[rgba(255,255,255,0.1)] group-hover:text-white'}`}>
-                      <ShoppingBag className="h-5 w-5" />
-                    </div>
-                    <span className="font-semibold">Marketplace Ads</span>
-                  </div>
-                  {myMarketplaceItems.length > 0 && (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#00E5FF]/20 text-[#00E5FF]">
-                      {myMarketplaceItems.length}
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            {/* User Identity Info */}
+            <div className="flex items-center gap-4 sm:gap-6">
+              <div className="relative group shrink-0">
+                <div className="absolute -inset-1 bg-gradient-to-r from-[#00E5FF] via-cyan-400 to-indigo-500 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-500" />
+                <div className="relative h-20 w-20 sm:h-24 sm:w-24 bg-slate-900 rounded-full flex items-center justify-center shadow-2xl overflow-hidden border-2 border-white/20">
+                  {userProfile?.photoURL ? (
+                    <img src={userProfile.photoURL} alt="Profile" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-[#00E5FF] to-indigo-400">
+                      {userProfile?.name?.charAt(0).toUpperCase() || 'U'}
                     </span>
                   )}
-                </button>
-                <button 
-                  onClick={() => setActiveTab('budget')}
-                  className={`w-full group flex items-center justify-between p-4 rounded-2xl transition-all duration-300 ${activeTab === 'budget' ? 'bg-[rgba(0,229,255,0.1)] text-white border border-[#00E5FF]/20 shadow-[0_0_15px_rgba(0,229,255,0.1)]' : 'hover:bg-[rgba(255,255,255,0.06)] text-gray-400 hover:text-white'}`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`p-2 rounded-xl transition-colors ${activeTab === 'budget' ? 'bg-[#00E5FF] text-black shadow-[0_0_10px_rgba(0,229,255,0.5)]' : 'bg-[rgba(255,255,255,0.06)] text-gray-400 group-hover:bg-[rgba(255,255,255,0.1)] group-hover:text-white'}`}>
-                      <Calculator className="h-5 w-5" />
-                    </div>
-                    <span className="font-semibold">Student Budget</span>
-                  </div>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#00E5FF]/20 text-[#00E5FF]">
-                    Planner
-                  </span>
-                </button>
-                <button 
-                  onClick={() => setActiveTab('saved')}
-                  className={`w-full group flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 ${activeTab === 'saved' ? 'bg-[rgba(0,229,255,0.1)] text-white border border-[#00E5FF]/20 shadow-[0_0_15px_rgba(0,229,255,0.1)]' : 'hover:bg-[rgba(255,255,255,0.06)] text-gray-400 hover:text-white'}`}
-                >
-                  <div className={`p-2 rounded-xl transition-colors ${activeTab === 'saved' ? 'bg-[#00E5FF] text-black shadow-[0_0_10px_rgba(0,229,255,0.5)]' : 'bg-[rgba(255,255,255,0.06)] text-gray-400 group-hover:bg-[rgba(255,255,255,0.1)] group-hover:text-white'}`}>
-                    <Star className="h-5 w-5" />
-                  </div>
-                  <span className="font-semibold">Saved Listings</span>
-                </button>
-                <button 
-                  onClick={() => setActiveTab('settings')}
-                  className={`w-full group flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 ${activeTab === 'settings' ? 'bg-[rgba(0,229,255,0.1)] text-white border border-[#00E5FF]/20 shadow-[0_0_15px_rgba(0,229,255,0.1)]' : 'hover:bg-[rgba(255,255,255,0.06)] text-gray-400 hover:text-white'}`}
-                >
-                  <div className={`p-2 rounded-xl transition-colors ${activeTab === 'settings' ? 'bg-[#00E5FF] text-black shadow-[0_0_10px_rgba(0,229,255,0.5)]' : 'bg-[rgba(255,255,255,0.06)] text-gray-400 group-hover:bg-[rgba(255,255,255,0.1)] group-hover:text-white'}`}>
-                    <Settings className="h-5 w-5" />
-                  </div>
-                  <span className="font-semibold">Account Settings</span>
-                </button>
-                <button 
-                  onClick={handleLogout}
-                  className="w-full group flex items-center gap-4 p-4 rounded-2xl hover:bg-[#FF3B3B]/10 text-gray-400 hover:text-[#FF3B3B] transition-all duration-300 mt-2"
-                >
-                  <div className="p-2 rounded-xl bg-[rgba(255,255,255,0.06)] text-gray-400 group-hover:bg-[#FF3B3B]/20 group-hover:text-[#FF3B3B] transition-colors">
-                    <LogOut className="h-5 w-5" />
-                  </div>
-                  <span className="font-semibold">Log Out</span>
-                </button>
+                </div>
               </div>
-            </GlassCard>
-          </motion.div>
+
+              <div className="min-w-0">
+                <div className="flex items-center gap-2.5 flex-wrap mb-1">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight truncate">
+                    {userProfile?.name || 'Student User'}
+                  </h1>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#00E5FF]/15 text-[#00E5FF] border border-[#00E5FF]/30 shadow-[0_0_10px_rgba(0,229,255,0.15)]">
+                    {userProfile?.role === 'admin' ? 'Administrator' : userProfile?.role === 'contributor' ? 'Host / Contributor' : 'Verified Student'}
+                  </span>
+                </div>
+
+                <p className="text-xs sm:text-sm text-gray-300 font-medium truncate mb-2">
+                  {userProfile?.email || currentUser.email}
+                </p>
+
+                <div className="flex items-center gap-3 flex-wrap text-xs text-gray-400">
+                  {/* Location badge */}
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.05] border border-white/10">
+                    <MapPin className="w-3.5 h-3.5 text-[#00E5FF]" />
+                    <span className="text-gray-200 font-medium">
+                      {userLocation ? `${userLocation.city}${userLocation.state ? `, ${userLocation.state}` : ''}` : 'Kota'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={openLocationModal}
+                      className="ml-1 text-[11px] font-bold text-[#00E5FF] hover:underline cursor-pointer"
+                    >
+                      Change
+                    </button>
+                  </div>
+
+                  {userProfile?.phone && (
+                    <span className="px-2.5 py-1 rounded-lg bg-white/[0.05] border border-white/10 text-gray-300">
+                      📞 {userProfile.phone}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions Right */}
+            <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-white/10">
+              <Link
+                to="/settings"
+                className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-white border border-white/10 font-bold text-xs transition-all active:scale-95 shadow-sm"
+              >
+                <Settings className="w-4 h-4 text-[#00E5FF]" />
+                <span>Account Settings</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(true)}
+                className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 font-bold text-xs transition-all active:scale-95 cursor-pointer"
+                title="Log Out"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Log Out</span>
+              </button>
+            </div>
+          </div>
+        </LiquidGlassCard>
+      </motion.div>
+
+      {/* Quick Stats Grid: 4 Metric Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        {/* Saved Listings */}
+        <Link
+          to="/saved-listings"
+          className="group relative overflow-hidden rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-white/[0.06] to-white/[0.02] hover:from-cyan-500/15 hover:to-white/[0.04] border border-white/10 hover:border-cyan-400/40 transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(0,229,255,0.15)] flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center text-amber-300 group-hover:scale-110 transition-transform">
+              <Star className="w-5 h-5 fill-amber-400/30 text-amber-400" />
+            </div>
+            <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-[#00E5FF] group-hover:translate-x-1 transition-all" />
+          </div>
+          <div>
+            <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              {loading ? '...' : savedListings.length}
+            </div>
+            <p className="text-xs font-semibold text-gray-400 mt-0.5">Saved Bookmarks</p>
+          </div>
+        </Link>
+
+        {/* Marketplace Ads */}
+        <Link
+          to="/my-marketplace"
+          className="group relative overflow-hidden rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-white/[0.06] to-white/[0.02] hover:from-cyan-500/15 hover:to-white/[0.04] border border-white/10 hover:border-cyan-400/40 transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(0,229,255,0.15)] flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-xl bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center text-[#00E5FF] group-hover:scale-110 transition-transform">
+              <ShoppingBag className="w-5 h-5" />
+            </div>
+            <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-[#00E5FF] group-hover:translate-x-1 transition-all" />
+          </div>
+          <div>
+            <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              {loading ? '...' : myMarketplaceItems.length}
+            </div>
+            <p className="text-xs font-semibold text-gray-400 mt-0.5">Marketplace Ads</p>
+          </div>
+        </Link>
+
+        {/* Hosted Properties */}
+        <Link
+          to="/my-listings"
+          className="group relative overflow-hidden rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-white/[0.06] to-white/[0.02] hover:from-cyan-500/15 hover:to-white/[0.04] border border-white/10 hover:border-cyan-400/40 transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(0,229,255,0.15)] flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-400/10 border border-indigo-400/20 flex items-center justify-center text-indigo-300 group-hover:scale-110 transition-transform">
+              <Building2 className="w-5 h-5" />
+            </div>
+            <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-[#00E5FF] group-hover:translate-x-1 transition-all" />
+          </div>
+          <div>
+            <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              {loading ? '...' : myListings.length}
+            </div>
+            <p className="text-xs font-semibold text-gray-400 mt-0.5">Hosted Listings</p>
+          </div>
+        </Link>
+
+        {/* Student Living Budget */}
+        <Link
+          to="/budget"
+          className="group relative overflow-hidden rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-white/[0.06] to-white/[0.02] hover:from-cyan-500/15 hover:to-white/[0.04] border border-white/10 hover:border-cyan-400/40 transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(0,229,255,0.15)] flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-400/10 border border-emerald-400/20 flex items-center justify-center text-emerald-300 group-hover:scale-110 transition-transform">
+              <Calculator className="w-5 h-5" />
+            </div>
+            <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-[#00E5FF] group-hover:translate-x-1 transition-all" />
+          </div>
+          <div>
+            <div className="text-base sm:text-lg font-black text-white tracking-tight flex items-center gap-1">
+              <span>Planner</span>
+              <span className="text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">Live</span>
+            </div>
+            <p className="text-xs font-semibold text-gray-400 mt-0.5">Student Budget Tool</p>
+          </div>
+        </Link>
+      </div>
+
+      {/* Main Feature Sections: Clean, categorized cards leading to dedicated personal pages */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+        
+        {/* Category 1: Student Accommodations & Living */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <Building2 className="w-4 h-4 text-[#00E5FF]" />
+            <h2 className="text-xs font-black uppercase tracking-wider text-gray-400">
+              Accommodations & Living
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3">
+            {/* Student Budget Planner Card */}
+            <Link
+              to="/budget"
+              className="group p-4 sm:p-5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-[#00E5FF]/40 transition-all duration-200 shadow-md flex items-center justify-between gap-4"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-300 shrink-0 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(16,185,129,0.2)]">
+                  <Calculator className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-[#00E5FF] transition-colors truncate">
+                      Student Living Budget Planner
+                    </h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">
+                      Monthly Tool
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
+                    Calculate monthly room rent, mess food, AC library, and travel costs.
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0" />
+            </Link>
+
+            {/* Saved Bookmarks Card */}
+            <Link
+              to="/saved-listings"
+              className="group p-4 sm:p-5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-[#00E5FF]/40 transition-all duration-200 shadow-md flex items-center justify-between gap-4"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-300 shrink-0 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(245,158,11,0.2)]">
+                  <Star className="w-5 h-5 fill-amber-400/30 text-amber-400" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-[#00E5FF] transition-colors truncate">
+                      Saved & Bookmarked Places
+                    </h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">
+                      {savedListings.length} Saved
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
+                    Quickly access shortlisted student PGs, hostels, flats, and libraries.
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0" />
+            </Link>
+
+            {/* My Hosted Listings Card */}
+            <Link
+              to="/my-listings"
+              className="group p-4 sm:p-5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-[#00E5FF]/40 transition-all duration-200 shadow-md flex items-center justify-between gap-4"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-[#00E5FF] shrink-0 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(0,229,255,0.2)]">
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-[#00E5FF] transition-colors truncate">
+                      My Hosted Accommodations
+                    </h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">
+                      {myListings.length} Listed
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
+                    Manage and update your listed PG, hostel, silent library, or mess.
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0" />
+            </Link>
+
+            {/* Post Accommodation Card */}
+            <Link
+              to="/add-listing"
+              className="group p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-cyan-500/10 to-indigo-500/10 hover:from-cyan-500/20 hover:to-indigo-500/20 border border-cyan-400/30 hover:border-cyan-400/60 transition-all duration-200 shadow-md flex items-center justify-between gap-4"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-xl bg-[#00E5FF] text-slate-950 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-[0_0_15px_rgba(0,229,255,0.4)]">
+                  <PlusCircle className="w-6 h-6" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-sm sm:text-base font-black text-white group-hover:text-[#00E5FF] transition-colors truncate">
+                    List New PG / Room / Mess
+                  </h3>
+                  <p className="text-xs text-gray-300 mt-0.5 line-clamp-1">
+                    Reach thousands of students searching for rooms and study spaces.
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0" />
+            </Link>
+          </div>
         </div>
 
-        {/* Main Content */}
-        <div className="lg:col-span-2">
-          {activeTab === 'settings' ? (
-            <AccountSettings />
-          ) : activeTab === 'marketplace' ? (
-            <>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
-                <div>
-                  <h2 className="text-3xl font-bold text-white tracking-tight">My Marketplace Ads</h2>
-                  <p className="text-gray-400 text-sm mt-1">Manage items you are selling to students</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="bg-[#00E5FF]/10 text-[#00E5FF] py-1.5 px-4 rounded-full text-sm font-semibold border border-[#00E5FF]/20 shadow-[0_0_15px_rgba(0,229,255,0.1)]">
-                    {myMarketplaceItems.length} Items
-                  </span>
-                  <Link
-                    to="/sell-item"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#00E5FF] hover:bg-cyan-300 text-slate-950 text-xs font-bold transition-all shadow-[0_0_15px_rgba(0,229,255,0.4)]"
-                  >
-                    <PlusCircle className="w-4 h-4" />
-                    <span>Sell Item</span>
-                  </Link>
-                </div>
-              </div>
+        {/* Category 2: Student Marketplace & Pre-owned Goods */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <ShoppingBag className="w-4 h-4 text-[#00E5FF]" />
+            <h2 className="text-xs font-black uppercase tracking-wider text-gray-400">
+              Campus Marketplace & Second-hand Items
+            </h2>
+          </div>
 
-              {loading ? (
-                <div className="space-y-6">
-                  {[1, 2].map(i => (
-                    <div key={i} className="glass-card rounded-3xl h-36 animate-pulse bg-white/[0.05] border border-white/10" />
-                  ))}
+          <div className="grid grid-cols-1 gap-3">
+            {/* My Marketplace Ads Card */}
+            <Link
+              to="/my-marketplace"
+              className="group p-4 sm:p-5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-[#00E5FF]/40 transition-all duration-200 shadow-md flex items-center justify-between gap-4"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-300 shrink-0 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(168,85,247,0.2)]">
+                  <ShoppingBag className="w-5 h-5" />
                 </div>
-              ) : myMarketplaceItems.length > 0 ? (
-                <div className="space-y-4">
-                  {myMarketplaceItems.map((item) => (
-                    <GlassCard
-                      key={item.id}
-                      className="p-5 flex flex-col sm:flex-row gap-5 items-start sm:items-center justify-between hover:border-white/20 transition-all"
-                      intensity="low"
-                    >
-                      <div className="flex items-center gap-4 min-w-0">
-                        <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white/[0.06] border border-white/10 shrink-0">
-                          {item.images && item.images.length > 0 ? (
-                            <img src={item.images[0]} alt={item.title} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-500">
-                              <ShoppingBag className="w-8 h-8" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap mb-1">
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/[0.06] text-gray-300 border border-white/10">
-                              {item.category}
-                            </span>
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              item.status === 'available'
-                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
-                                : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
-                            }`}>
-                              {item.status === 'available' ? 'Available' : 'Sold'}
-                            </span>
-                          </div>
-                          <h4 className="text-base font-bold text-white truncate max-w-sm">
-                            {item.title}
-                          </h4>
-                          <p className="text-sm font-black text-[#00E5FF] mt-0.5">
-                            ₹{item.price.toLocaleString('en-IN')}
-                            {item.originalPrice && (
-                              <span className="text-xs text-gray-500 line-through font-normal ml-2">
-                                ₹{item.originalPrice.toLocaleString('en-IN')}
-                              </span>
-                            )}
-                          </p>
-                          <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
-                            <MapPin className="w-3 h-3 text-[#00E5FF]" />
-                            <span>{item.city}{item.area ? ` • ${item.area}` : ''}</span>
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end pt-3 sm:pt-0 border-t sm:border-t-0 border-white/10">
-                        <button
-                          type="button"
-                          onClick={() => toggleMarketplaceStatus(item)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                            item.status === 'available'
-                              ? 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30'
-                              : 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30'
-                          }`}
-                        >
-                          {item.status === 'available' ? 'Mark Sold' : 'Mark Available'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => deleteMarketplaceItem(item.id)}
-                          className="p-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 transition-all cursor-pointer"
-                          title="Delete ad"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </GlassCard>
-                  ))}
-                </div>
-              ) : (
-                <GlassCard className="p-14 text-center border-dashed border-2 border-white/10" intensity="low">
-                  <div className="w-16 h-16 rounded-2xl bg-cyan-400/10 border border-cyan-400/30 flex items-center justify-center text-[#00E5FF] mx-auto mb-4">
-                    <ShoppingBag className="w-8 h-8" />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-[#00E5FF] transition-colors truncate">
+                      My Marketplace Ads
+                    </h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">
+                      {myMarketplaceItems.length} Active Ads
+                    </span>
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">No Marketplace Ads Yet</h3>
-                  <p className="text-gray-400 text-sm max-w-md mx-auto mb-6">
-                    Have Allen/Aakash books, study table, cooler, cycle or mattress you don't need? Sell them to students and help them save money!
+                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
+                    Manage your books, cycles, study desks, and coolers listed for sale.
                   </p>
-                  <Link
-                    to="/sell-item"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#00E5FF] hover:bg-cyan-300 text-slate-950 text-sm font-bold shadow-[0_0_20px_rgba(0,229,255,0.4)] transition-all"
-                  >
-                    <PlusCircle className="w-4 h-4" />
-                    <span>Post First Item for Sale</span>
-                  </Link>
-                </GlassCard>
-              )}
-            </>
-          ) : activeTab === 'budget' ? (
-            <ProfileBudgetSection />
-          ) : activeTab === 'saved' ? (
-            <>
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-3xl font-bold text-white tracking-tight">Saved Listings</h2>
-                <span className="bg-[#00E5FF]/10 text-[#00E5FF] py-1.5 px-4 rounded-full text-sm font-semibold border border-[#00E5FF]/20 shadow-[0_0_15px_rgba(0,229,255,0.1)]">
-                  {savedListings.length} Total
-                </span>
+                </div>
               </div>
+              <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0" />
+            </Link>
 
-              {loading ? (
-                <div className="space-y-6">
-                  {[1, 2, 3].map(i => (
-                    <div key={i} className="glass-card rounded-3xl h-40 animate-pulse bg-[rgba(255,255,255,0.05)] border border-white/10"></div>
-                  ))}
+            {/* Sell Student Item Card */}
+            <Link
+              to="/sell-item"
+              className="group p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-purple-500/10 to-cyan-500/10 hover:from-purple-500/20 hover:to-cyan-500/20 border border-purple-400/30 hover:border-purple-400/60 transition-all duration-200 shadow-md flex items-center justify-between gap-4"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-xl bg-purple-500 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-[0_0_15px_rgba(168,85,247,0.4)]">
+                  <Tag className="w-5 h-5" />
                 </div>
-              ) : savedListings.length > 0 ? (
-                <div className="space-y-6">
-                  {savedListings.map((listing, index) => (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      whileHover={{ scale: 1.01 }}
-                      key={listing.id}
-                    >
-                      <GlassCard className="p-5 flex flex-col sm:flex-row gap-6 hover:border-white/20 transition-all duration-300 group" intensity="low">
-                        <div className="w-full sm:w-48 h-48 sm:h-auto rounded-2xl overflow-hidden flex-shrink-0 bg-[rgba(255,255,255,0.06)] relative">
-                          {listing.images && listing.images.length > 0 ? (
-                            <>
-                              <img src={listing.images[0]} alt={listing.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" referrerPolicy="no-referrer" />
-                              <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0D]/80 via-transparent to-transparent"></div>
-                            </>
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-[rgba(255,255,255,0.06)]">
-                              <Building2 className="h-10 w-10 text-gray-600" />
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="flex-grow flex flex-col justify-between py-2">
-                          <div>
-                            <div className="flex justify-between items-start gap-4">
-                              <div>
-                                <h3 className="text-xl font-bold text-white line-clamp-1 group-hover:text-[#00E5FF] transition-colors">{listing.title}</h3>
-                                <div className="flex items-center mt-2 space-x-3">
-                                  <div className="flex items-center bg-[rgba(255,255,255,0.06)] px-2 py-1 rounded-lg border border-white/10">
-                                    <Star className="h-3.5 w-3.5 text-yellow-400 fill-yellow-400 mr-1.5" />
-                                    <span className="text-white text-xs font-bold">
-                                      {listing.averageRating ? listing.averageRating.toFixed(1) : 'New'}
-                                    </span>
-                                    {listing.reviewCount !== undefined && listing.reviewCount > 0 && (
-                                      <span className="text-gray-400 text-xs ml-1.5">({listing.reviewCount})</span>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center text-gray-400 text-sm bg-[rgba(255,255,255,0.06)] px-2 py-1 rounded-lg border border-white/10">
-                                    <MapPin className="h-3.5 w-3.5 mr-1" />
-                                    {listing.city}
-                                  </div>
-                                </div>
-                              </div>
-                              <span className={`px-3 py-1.5 text-xs font-semibold rounded-full whitespace-nowrap shadow-sm ${
-                                listing.status === 'approved' ? 'bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/20' : 
-                                listing.status === 'rejected' ? 'bg-[#FF3B3B]/10 text-[#FF3B3B] border border-[#FF3B3B]/20' : 
-                                'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
-                              }`}>
-                                {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
-                              </span>
-                            </div>
-                            <p className="text-gray-400 text-sm mt-4 line-clamp-2 leading-relaxed">{listing.description}</p>
-                          </div>
-                          
-                          <div className="flex items-center justify-end mt-6">
-                            <Link to={`/listing/${listing.id}`} className="inline-flex items-center justify-center px-4 py-2 bg-[rgba(255,255,255,0.06)] hover:bg-[#00E5FF]/20 hover:text-[#00E5FF] border border-white/10 hover:border-[#00E5FF]/50 text-white text-sm font-semibold rounded-xl transition-all duration-300">
-                              View Details
-                              <ArrowLeft className="h-4 w-4 ml-2 rotate-180" />
-                            </Link>
-                          </div>
-                        </div>
-                      </GlassCard>
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="glass-card rounded-3xl p-16 text-center border-dashed border-2 border-white/10 relative overflow-hidden"
-                >
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#00E5FF]/5 rounded-full blur-3xl pointer-events-none"></div>
-                  
-                  <div className="relative z-10 flex flex-col items-center justify-center">
-                    <div className="relative mb-6">
-                      <div className="absolute inset-0 bg-gradient-to-tr from-[#00E5FF]/20 to-[#8A2BE2]/20 rounded-full blur-xl animate-pulse"></div>
-                      <div className="h-24 w-24 bg-[rgba(255,255,255,0.05)] backdrop-blur-xl rounded-full flex items-center justify-center border border-white/10 shadow-[0_0_20px_rgba(0,229,255,0.1)] relative z-10">
-                        <Star className="h-10 w-10 text-[#00E5FF]" />
-                      </div>
-                    </div>
-                    <h3 className="text-2xl font-extrabold text-white mb-3 tracking-tight">No saved listings</h3>
-                    <p className="text-gray-400 max-w-md mx-auto text-base leading-relaxed mb-8">You haven't saved any listings yet. Explore the city and save your favorites!</p>
-                    <Link to="/search" className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#00E5FF] to-[#8A2BE2] hover:from-[#8A2BE2] hover:to-[#00E5FF] text-white rounded-2xl font-bold shadow-[0_5px_15px_rgba(0,229,255,0.3)] hover:shadow-[0_0_25px_rgba(0,229,255,0.5)] transition-all hover:scale-105">
-                      <Search className="h-5 w-5" />
-                      Explore Listings
-                    </Link>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm sm:text-base font-black text-white group-hover:text-[#00E5FF] transition-colors truncate">
+                      Sell Student Item
+                    </h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">
+                      Zero Commission
+                    </span>
                   </div>
-                </motion.div>
-              )}
-            </>
-          ) : (
-            <>
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-3xl font-bold text-white tracking-tight">My Listings</h2>
-                <span className="bg-[#00E5FF]/10 text-[#00E5FF] py-1.5 px-4 rounded-full text-sm font-semibold border border-[#00E5FF]/20 shadow-[0_0_15px_rgba(0,229,255,0.1)]">
-                  {myListings.length} Total
-                </span>
+                  <p className="text-xs text-gray-300 mt-0.5 line-clamp-1">
+                    Post study notes, books, room cooler, mattress, or cycle.
+                  </p>
+                </div>
               </div>
+              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0" />
+            </Link>
 
-              {loading ? (
-                <div className="space-y-6">
-                  {[1, 2, 3].map(i => (
-                    <div key={i} className="glass-card rounded-3xl h-40 animate-pulse bg-[rgba(255,255,255,0.02)] border border-white/10"></div>
-                  ))}
+            {/* Browse Campus Marketplace Card */}
+            <Link
+              to="/marketplace"
+              className="group p-4 sm:p-5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-[#00E5FF]/40 transition-all duration-200 shadow-md flex items-center justify-between gap-4"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-xl bg-cyan-400/15 border border-cyan-400/30 flex items-center justify-center text-cyan-300 shrink-0 group-hover:scale-105 transition-transform">
+                  <Compass className="w-5 h-5" />
                 </div>
-              ) : myListings.length > 0 ? (
-                <div className="space-y-6">
-                  {myListings.map((listing, index) => (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      whileHover={{ scale: 1.01 }}
-                      key={listing.id}
-                      className="glass-card rounded-3xl p-5 flex flex-col sm:flex-row gap-6 hover:border-white/20 transition-all duration-300 group"
-                    >
-                      <div className="w-full sm:w-48 h-48 sm:h-auto rounded-2xl overflow-hidden flex-shrink-0 bg-[rgba(255,255,255,0.06)] relative">
-                        {listing.images && listing.images.length > 0 ? (
-                          <>
-                            <img src={listing.images[0]} alt={listing.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" referrerPolicy="no-referrer" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0D]/80 via-transparent to-transparent"></div>
-                          </>
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-[rgba(255,255,255,0.06)]">
-                            <Building2 className="h-10 w-10 text-gray-600" />
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="flex-grow flex flex-col justify-between py-2">
-                        <div>
-                          <div className="flex justify-between items-start gap-4">
-                            <div>
-                              <h3 className="text-xl font-bold text-white line-clamp-1 group-hover:text-[#00E5FF] transition-colors">{listing.title}</h3>
-                              <div className="flex items-center mt-2 space-x-3">
-                                <div className="flex items-center bg-[rgba(255,255,255,0.06)] px-2 py-1 rounded-lg border border-white/10">
-                                  <Star className="h-3.5 w-3.5 text-yellow-400 fill-yellow-400 mr-1.5" />
-                                  <span className="text-white text-xs font-bold">
-                                    {listing.averageRating ? listing.averageRating.toFixed(1) : 'New'}
-                                  </span>
-                                  {listing.reviewCount !== undefined && listing.reviewCount > 0 && (
-                                    <span className="text-gray-400 text-xs ml-1.5">({listing.reviewCount})</span>
-                                  )}
-                                </div>
-                                <div className="flex items-center text-gray-400 text-sm bg-[rgba(255,255,255,0.06)] px-2 py-1 rounded-lg border border-white/10">
-                                  <MapPin className="h-3.5 w-3.5 mr-1" />
-                                  {listing.city}
-                                </div>
-                              </div>
-                            </div>
-                            <span className={`px-3 py-1.5 text-xs font-semibold rounded-full whitespace-nowrap shadow-sm ${
-                              listing.status === 'approved' ? 'bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/20' : 
-                              listing.status === 'rejected' ? 'bg-[#FF3B3B]/10 text-[#FF3B3B] border border-[#FF3B3B]/20' : 
-                              'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
-                            }`}>
-                              {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
-                            </span>
-                          </div>
-                          <p className="text-gray-400 text-sm mt-4 line-clamp-2 leading-relaxed">{listing.description}</p>
-                        </div>
-                        
-                        <div className="flex items-center justify-end mt-6">
-                          <Link to={`/listing/${listing.id}`} className="inline-flex items-center justify-center px-4 py-2 bg-[rgba(255,255,255,0.06)] hover:bg-[#00E5FF]/20 hover:text-[#00E5FF] border border-white/10 hover:border-[#00E5FF]/50 text-white text-sm font-semibold rounded-xl transition-all duration-300">
-                            View Details
-                            <ArrowLeft className="h-4 w-4 ml-2 rotate-180" />
-                          </Link>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                <div className="min-w-0">
+                  <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-[#00E5FF] transition-colors truncate">
+                    Browse All Campus Marketplace
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
+                    Explore pre-owned study essentials sold by fellow students.
+                  </p>
                 </div>
-              ) : (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="glass-card rounded-3xl p-16 text-center border-dashed border-2 border-white/10 relative overflow-hidden"
-                >
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#00E5FF]/5 rounded-full blur-3xl pointer-events-none"></div>
-                  
-                  <div className="relative z-10 flex flex-col items-center justify-center">
-                    <div className="relative mb-6">
-                      <div className="absolute inset-0 bg-gradient-to-tr from-[#00E5FF]/20 to-[#8A2BE2]/20 rounded-full blur-xl animate-pulse"></div>
-                      <div className="h-24 w-24 bg-[rgba(255,255,255,0.05)] backdrop-blur-xl rounded-full flex items-center justify-center border border-white/10 shadow-[0_0_20px_rgba(0,229,255,0.1)] relative z-10">
-                        <List className="h-10 w-10 text-[#00E5FF]" />
-                      </div>
-                    </div>
-                    <h3 className="text-2xl font-extrabold text-white mb-3 tracking-tight">No listings yet</h3>
-                    <p className="text-gray-400 max-w-md mx-auto text-base leading-relaxed mb-8">You haven't created any listings. Share your services with the city and start reaching more people!</p>
-                    <Link to="/add-listing" className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#00E5FF] to-[#8A2BE2] hover:from-[#8A2BE2] hover:to-[#00E5FF] text-white rounded-2xl font-bold shadow-[0_5px_15px_rgba(0,229,255,0.3)] hover:shadow-[0_0_25px_rgba(0,229,255,0.5)] transition-all hover:scale-105">
-                      <PlusCircle className="h-5 w-5" />
-                      Create Your First Listing
-                    </Link>
-                  </div>
-                </motion.div>
-              )}
-            </>
-          )}
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0" />
+            </Link>
+
+            {/* Account Settings Card */}
+            <Link
+              to="/settings"
+              className="group p-4 sm:p-5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-[#00E5FF]/40 transition-all duration-200 shadow-md flex items-center justify-between gap-4"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-xl bg-slate-700/40 border border-white/10 flex items-center justify-center text-gray-200 shrink-0 group-hover:scale-105 transition-transform">
+                  <Settings className="w-5 h-5 text-[#00E5FF]" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-[#00E5FF] transition-colors truncate">
+                    Account & Profile Settings
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
+                    Edit name, phone, email, theme mode, and security password.
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0" />
+            </Link>
+          </div>
         </div>
       </div>
-    </motion.div>
+
+      {/* Safety & Help Footer Banner */}
+      <div className="p-5 sm:p-6 rounded-3xl bg-white/[0.03] border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-300 shrink-0">
+            <ShieldCheck className="w-5 h-5" />
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-white">Student Safety First Guarantee</h4>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Always inspect rooms and items in person before transferring advance payments.
+            </p>
+          </div>
+        </div>
+        <Link
+          to="/safety"
+          className="px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-cyan-300 border border-white/10 transition-colors shrink-0"
+        >
+          View Safety Guidelines
+        </Link>
+      </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="w-full max-w-sm rounded-3xl bg-[#0F172A] border border-white/15 p-6 shadow-2xl text-center"
+          >
+            <div className="w-14 h-14 rounded-2xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center mx-auto mb-4 text-rose-400">
+              <LogOut className="w-7 h-7" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">Log Out of Your Account?</h3>
+            <p className="text-xs text-gray-400 mb-6 leading-relaxed">
+              Are you sure you want to end your active session on this device?
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] text-white font-bold text-xs transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs transition-colors shadow-lg cursor-pointer"
+              >
+                Yes, Log Out
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </div>
   );
 }
