@@ -1,0 +1,66 @@
+{
+  "name": "City Helpline - Student Habitat & PG Directory",
+  "short_name": "City Helpline",
+  "description": "Zero-brokerage student PGs, hostels, silent libraries, mess meals and student marketplace for Kota, Patna, Delhi and educational hubs.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B0F19",
+  "theme_color": "#0B0F19",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "lifestyle", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Search PGs & Rooms",
+      "short_name": "PGs",
+      "description": "Find verified student PGs and hostels",
+      "url": "/search",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "AI Mitra Chatbot",
+      "short_name": "AI Mitra",
+      "description": "Ask student helpline and rent advisor",
+      "url": "/chat",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Student Marketplace",
+      "short_name": "Market",
+      "description": "Buy & sell notes, books, study essentials",
+      "url": "/marketplace",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Budget Estimator",
+      "short_name": "Budget",
+      "description": "Calculate monthly living expense",
+      "url": "/budget",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

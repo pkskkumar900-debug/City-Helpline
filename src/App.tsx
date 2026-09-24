@@ -29,6 +29,9 @@ import Marketplace from './pages/Marketplace';
 import SellItem from './pages/SellItem';
 import BudgetCalculator from './pages/BudgetCalculator';
 import Legal from './pages/Legal';
+import AiChatPage from './pages/AiChatPage';
+import { AiFloatingAssistant } from './components/ai/AiFloatingAssistant';
+import { InstallAppPrompt } from './components/common/InstallAppPrompt';
 
 function AppLayout() {
   const { isLocationModalOpen, closeLocationModal } = useLocationContext();
@@ -118,6 +121,7 @@ function AppLayout() {
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/budget" element={<BudgetCalculator />} />
           <Route path="/budget-calculator" element={<BudgetCalculator />} />
+          <Route path="/chat" element={<AiChatPage />} />
           <Route path="/login" element={<Auth />} />
           <Route path="/signup" element={<Auth />} />
           <Route path="/listing/:id" element={<ListingDetails />} />
@@ -179,6 +183,8 @@ function AppLayout() {
           />
         </Routes>
       </main>
+      <InstallAppPrompt />
+      <AiFloatingAssistant />
       <BottomNav />
     </div>
   );

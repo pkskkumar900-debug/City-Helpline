@@ -79,14 +79,26 @@ export function Footer() {
           
           {/* Brand Col (3 cols) */}
           <div className="lg:col-span-3 space-y-4">
-            <Link to="/" className="inline-flex items-center gap-2.5 group">
-              <div className="p-2 rounded-xl bg-white/[0.06] border border-white/10 group-hover:border-[#00E5FF]/50 transition-colors shadow-[0_0_15px_rgba(0,229,255,0.15)]">
-                <Building2 className="h-6 w-6 text-[#00E5FF]" />
+            <Link to="/" className="inline-flex items-center gap-3 group">
+              <div className="relative p-0.5 rounded-full bg-gradient-to-tr from-[#E5AA38]/40 via-transparent to-[#38BDF8]/40 border border-[#F5B731]/40 group-hover:border-[#FFE58F] transition-all duration-300 shadow-[0_0_18px_rgba(245,183,49,0.3)] group-hover:shadow-[0_0_28px_rgba(245,183,49,0.6)] group-hover:scale-105">
+                <img
+                  src="/logo.png"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = '/logo.svg';
+                  }}
+                  alt="City Helpline 3D Logo"
+                  className="h-9 w-9 object-contain rounded-full"
+                  referrerPolicy="no-referrer"
+                />
               </div>
-              <span className="text-xl font-black text-white tracking-tight">City Helpline</span>
-              <span className="px-2 py-0.5 text-[10px] font-extrabold uppercase rounded-full bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30">
-                Official
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xl font-black text-white tracking-tight">
+                  City <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00E5FF] to-[#8A2BE2]">Helpline</span>
+                </span>
+                <span className="px-2 py-0.5 text-[9px] font-black uppercase rounded-full bg-[#F5B731]/10 text-[#F5B731] border border-[#F5B731]/30">
+                  OFFICIAL 3D
+                </span>
+              </div>
             </Link>
 
             <p className="text-xs text-gray-400 leading-relaxed">
@@ -162,6 +174,12 @@ export function Footer() {
               <li>
                 <Link to="/budget" className="hover:text-[#00E5FF] transition-colors">
                   Budget Calculator
+                </Link>
+              </li>
+              <li>
+                <Link to="/chat" className="hover:text-[#00E5FF] transition-colors flex items-center gap-1.5 font-bold text-white">
+                  <span className="text-[#00E5FF]">✨ AI Mitra Guide</span>
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-gradient-to-r from-[#8A2BE2] to-[#00E5FF] text-white">24/7</span>
                 </Link>
               </li>
             </ul>

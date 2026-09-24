@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Building2, LogOut, PlusCircle, User, ShieldCheck, Search, Home, ShoppingBag, Calculator } from 'lucide-react';
+import { Building2, LogOut, PlusCircle, User, ShieldCheck, Search, Home, ShoppingBag, Calculator, Bot } from 'lucide-react';
 import { LiquidButton } from '../ui/LiquidButton';
 import { isSuperAdminEmail } from '../../types';
 
@@ -23,15 +23,29 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 gap-2">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-            <Link to="/" className="flex items-center gap-2 sm:gap-2.5 group shrink-0">
-              <div className="p-1.5 sm:p-2 rounded-xl bg-[rgba(255,255,255,0.06)] border border-white/10 group-hover:border-[#00E5FF]/50 transition-colors shadow-[0_0_15px_rgba(0,229,255,0.1)] group-hover:shadow-[0_0_20px_rgba(0,229,255,0.3)]">
-                <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-[#00E5FF]" />
+            <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group shrink-0">
+              <div className="relative p-0.5 rounded-full bg-gradient-to-tr from-[#E5AA38]/40 via-transparent to-[#38BDF8]/40 border border-[#F5B731]/40 group-hover:border-[#FFE58F] transition-all duration-300 shadow-[0_0_15px_rgba(229,170,56,0.25)] group-hover:shadow-[0_0_24px_rgba(245,183,49,0.5)] group-hover:scale-105 active:scale-95">
+                <img
+                  src="/logo.png"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = '/logo.svg';
+                  }}
+                  alt="City Helpline 3D Logo"
+                  className="w-8 h-8 sm:w-9 sm:h-9 object-contain rounded-full"
+                  referrerPolicy="no-referrer"
+                />
               </div>
-              <span className="text-base sm:text-xl font-black text-white tracking-wide whitespace-nowrap">City Helpline</span>
-              <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded-full bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30 shadow-[0_0_12px_rgba(0,229,255,0.25)] select-none">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] animate-pulse" />
-                BETA
-              </span>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-base sm:text-xl font-black text-white tracking-tight whitespace-nowrap">
+                    City <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00E5FF] to-[#8A2BE2]">Helpline</span>
+                  </span>
+                  <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.2 text-[9px] font-black tracking-wider uppercase rounded-full bg-[#F5B731]/10 text-[#F5B731] border border-[#F5B731]/30 select-none">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#F5B731] animate-pulse" />
+                    OFFICIAL
+                  </span>
+                </div>
+              </div>
             </Link>
           </div>
           
@@ -66,6 +80,16 @@ export function Navbar() {
             >
               <Calculator className="h-4 w-4" />
               <span>Budget</span>
+            </Link>
+            <Link
+              to="/chat"
+              className={`flex items-center gap-1.5 text-sm font-medium transition-colors relative ${isActive('/chat') ? 'text-[#00E5FF]' : 'text-gray-400 hover:text-white'}`}
+            >
+              <Bot className="h-4 w-4 text-[#00E5FF]" />
+              <span>AI Mitra</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-gradient-to-r from-[#8A2BE2] to-[#00E5FF] text-white uppercase tracking-wider shadow-sm">
+                AI
+              </span>
             </Link>
 
             {/* Always visible List Service button on Desktop */}
