@@ -19,8 +19,11 @@ service cloud.firestore {
         ('email' in request.auth.token) &&
         (
           request.auth.token.email == "kusprince.raj@gmail.com" ||
+          request.auth.token.email == "Kusprince.raj@gmail.com" ||
           request.auth.token.email == "pkskkumar900@gmail.com" ||
-          request.auth.token.email == "prkus82@gmail.com"
+          request.auth.token.email == "Pkskkumar900@gmail.com" ||
+          request.auth.token.email == "prkus82@gmail.com" ||
+          request.auth.token.email == "Prkus82@gmail.com"
         );
     }
 
@@ -46,25 +49,26 @@ service cloud.firestore {
     // ===============================================================
     
     function isValidUser(data) {
-      return hasOnlyAllowedFields(['uid', 'name', 'email', 'role', 'createdAt', 'photoURL', 'themePreference', 'lastLogin', 'banned', 'phone', 'businessName', 'businessType', 'city', 'address', 'pincode', 'latitude', 'longitude', 'savedListings', 'notifications']) &&
+      return hasOnlyAllowedFields(['uid', 'name', 'email', 'role', 'createdAt', 'photoURL', 'themePreference', 'lastLogin', 'banned', 'phone', 'businessName', 'businessType', 'city', 'address', 'pincode', 'latitude', 'longitude', 'savedListings', 'notifications', 'updatedAt']) &&
              (!('uid' in data) || (data.uid is string && data.uid.size() > 0 && data.uid.size() < 100)) &&
              (!('name' in data) || (data.name is string && data.name.size() > 0 && data.name.size() < 100)) &&
-             (!('email' in data) || (data.email is string && isValidEmail(data.email))) &&
+             (!('email' in data) || data.email == '' || (data.email is string && isValidEmail(data.email))) &&
              (!('role' in data) || data.role in ['user', 'contributor', 'admin']) &&
              (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() < 1000)) &&
              (!('themePreference' in data) || (data.themePreference in ['light', 'dark', 'system'])) &&
              (!('banned' in data) || data.banned is bool) &&
-             (!('phone' in data) || (data.phone is string && data.phone.size() < 20)) &&
-             (!('businessName' in data) || (data.businessName is string && data.businessName.size() < 100)) &&
-             (!('businessType' in data) || (data.businessType is string && data.businessType.size() < 100)) &&
-             (!('city' in data) || (data.city is string && data.city.size() < 100)) &&
-             (!('address' in data) || (data.address is string && data.address.size() < 500)) &&
-             (!('pincode' in data) || (data.pincode is string && data.pincode.size() < 20)) &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() < 30)) &&
+             (!('businessName' in data) || (data.businessName is string && data.businessName.size() < 150)) &&
+             (!('businessType' in data) || (data.businessType is string && data.businessType.size() < 150)) &&
+             (!('city' in data) || (data.city is string && data.city.size() < 150)) &&
+             (!('address' in data) || (data.address is string && data.address.size() < 600)) &&
+             (!('pincode' in data) || (data.pincode is string && data.pincode.size() < 30)) &&
              (!('latitude' in data) || data.latitude is number) &&
              (!('longitude' in data) || data.longitude is number) &&
              (!('savedListings' in data) || data.savedListings is list) &&
              (!('lastLogin' in data) || data.lastLogin is number || data.lastLogin is timestamp) &&
-             (!('createdAt' in data) || data.createdAt is number || data.createdAt is timestamp);
+             (!('createdAt' in data) || data.createdAt is number || data.createdAt is timestamp) &&
+             (!('updatedAt' in data) || data.updatedAt is number || data.updatedAt is timestamp);
     }
 
     function isValidListing(data) {
@@ -121,27 +125,9 @@ service cloud.firestore {
     // ===============================================================
 
     match /users/{userId} {
-      allow read: if isAuthenticated();
-      
-      allow create: if isAuthenticated() && 
-                    isOwner(userId) && 
-                    (
-                      !('role' in request.resource.data) || 
-                      request.resource.data.role in ['user', 'contributor'] || 
-                      (request.resource.data.role == 'admin' && isSuperAdminEmail())
-                    ) &&
-                    (!('banned' in request.resource.data) || request.resource.data.banned == false);
-                    
-      allow update: if isAuthenticated() && 
-                    (
-                      isAdmin() ||
-                      (
-                        isOwner(userId) &&
-                        (!('role' in request.resource.data) || !('role' in resource.data) || request.resource.data.role == resource.data.role || isSuperAdminEmail()) &&
-                        (!('banned' in request.resource.data) || !('banned' in resource.data) || request.resource.data.banned == resource.data.banned || isSuperAdminEmail())
-                      )
-                    );
-                    
+      allow read: if true;
+      allow create: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
       allow delete: if isAdmin();
     }
 

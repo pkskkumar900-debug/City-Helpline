@@ -9,6 +9,7 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   logout: () => Promise<void>;
+  updateLocalProfile: (profile: Partial<UserProfile>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -74,12 +75,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const updateLocalProfile = (updates: Partial<UserProfile>) => {
+    setUserProfile((prev) => {
+      const updated = prev ? { ...prev, ...updates } : (updates as UserProfile);
+      localStorage.setItem('userProfile', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const logout = async () => {
     await signOut(auth);
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, userProfile, loading, logout }}>
+    <AuthContext.Provider value={{ currentUser, userProfile, loading, logout, updateLocalProfile }}>
       {!loading && children}
     </AuthContext.Provider>
   );

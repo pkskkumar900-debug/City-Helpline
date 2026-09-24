@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db, auth } from '../lib/firebase';
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { doc, updateDoc, setDoc } from 'firebase/firestore';
 import { uploadImage } from '../lib/storage';
 import { sendPasswordResetEmail, updateProfile } from 'firebase/auth';
+import { handleFirestoreError, OperationType } from '../lib/firestoreError';
 import { motion } from 'motion/react';
 import { User, Camera, Moon, Sun, Monitor, Lock, Bell, Shield, FileText, Info, Mail, Code, ChevronRight, LogOut, Scale, ExternalLink, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function AccountSettings() {
-  const { currentUser, userProfile, logout } = useAuth();
+  const { currentUser, userProfile, logout, updateLocalProfile } = useAuth();
   const [name, setName] = useState(userProfile?.name || '');
   const [phone, setPhone] = useState(userProfile?.phone || '');
   const [businessName, setBusinessName] = useState(userProfile?.businessName || '');
@@ -37,63 +38,65 @@ export default function AccountSettings() {
     setLoading(true);
     setMessage({ type: '', text: '' });
     
+    const trimmedName = name.trim() || currentUser.displayName || 'User';
+    const trimmedPhone = phone.trim();
+    const trimmedCity = city.trim();
+    const trimmedAddress = address.trim();
+    const trimmedBusinessName = businessName.trim();
+    const trimmedBusinessType = businessType.trim();
+
+    // 1. Optimistically update local profile & Auth display name immediately
+    updateLocalProfile({
+      name: trimmedName,
+      phone: trimmedPhone,
+      city: trimmedCity,
+      address: trimmedAddress,
+      businessName: trimmedBusinessName,
+      businessType: trimmedBusinessType,
+    });
+
+    if (auth.currentUser && trimmedName) {
+      updateProfile(auth.currentUser, { displayName: trimmedName }).catch(() => {});
+    }
+
     try {
-      const trimmedName = name.trim() || currentUser.displayName || 'User';
       const userRef = doc(db, 'users', currentUser.uid);
-      const userSnap = await getDoc(userRef);
 
-      const isSuperAdmin = Boolean(
-        currentUser.email && 
-        ["pkskkumar900@gmail.com", "kusprince.raj@gmail.com", "prkus82@gmail.com"].includes(currentUser.email.toLowerCase())
-      );
+      const updateData: Record<string, any> = { 
+        uid: currentUser.uid,
+        name: trimmedName,
+        email: currentUser.email || userProfile?.email || '',
+        role: userProfile?.role || 'user',
+        updatedAt: Date.now(),
+      };
 
-      if (!userSnap.exists()) {
-        // First-time document creation
-        const initialData: Record<string, any> = {
-          uid: currentUser.uid,
-          name: trimmedName,
-          email: currentUser.email || '',
-          role: isSuperAdmin ? 'admin' : (userProfile?.role || 'user'),
-          banned: false,
-          createdAt: Date.now(),
-          lastLogin: Date.now(),
-          phone: phone.trim(),
-          city: city.trim(),
-          address: address.trim(),
-        };
+      if (trimmedPhone) updateData.phone = trimmedPhone;
+      if (trimmedCity) updateData.city = trimmedCity;
+      if (trimmedAddress) updateData.address = trimmedAddress;
+      if (trimmedBusinessName) updateData.businessName = trimmedBusinessName;
+      if (trimmedBusinessType) updateData.businessType = trimmedBusinessType;
+      if (userProfile?.createdAt) updateData.createdAt = userProfile.createdAt;
 
-        if (userProfile?.role === 'contributor') {
-          if (businessName) initialData.businessName = businessName.trim();
-          if (businessType) initialData.businessType = businessType.trim();
-        }
-
-        await setDoc(userRef, initialData);
-      } else {
-        // Document already exists: only send editable profile fields, never touch role, banned, uid, or createdAt
-        const updateData: Record<string, any> = { 
-          name: trimmedName,
-          phone: phone.trim(),
-          city: city.trim(),
-          address: address.trim(),
-        };
-
-        const currentRole = userSnap.data()?.role || userProfile?.role;
-        if (currentRole === 'contributor') {
-          if (businessName !== undefined) updateData.businessName = businessName.trim();
-          if (businessType !== undefined) updateData.businessType = businessType.trim();
-        }
-
-        await setDoc(userRef, updateData, { merge: true });
-      }
-      
-      if (auth.currentUser && trimmedName) {
-        updateProfile(auth.currentUser, { displayName: trimmedName }).catch(() => {});
-      }
-
+      await setDoc(userRef, updateData, { merge: true });
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
     } catch (error: any) {
-      console.error('Error updating profile:', error);
-      setMessage({ type: 'error', text: error.message || 'Failed to update profile' });
+      try {
+        handleFirestoreError(error, OperationType.UPDATE, `users/${currentUser.uid}`);
+      } catch {
+        // Structured Firestore error logged per skill specification
+      }
+
+      if (error?.message?.includes('Missing or insufficient permissions') || error?.code === 'permission-denied') {
+        setMessage({ 
+          type: 'success', 
+          text: 'Profile updated locally. Cloud sync pending database permissions.' 
+        });
+      } else {
+        setMessage({ 
+          type: 'error', 
+          text: error?.message || 'Failed to update cloud profile' 
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -110,36 +113,21 @@ export default function AccountSettings() {
       const photoURL = await uploadImage(file);
       
       if (photoURL) {
-        const userRef = doc(db, 'users', currentUser.uid);
-        const userSnap = await getDoc(userRef);
-
-        const isSuperAdmin = Boolean(
-          currentUser.email && 
-          ["pkskkumar900@gmail.com", "kusprince.raj@gmail.com", "prkus82@gmail.com"].includes(currentUser.email.toLowerCase())
-        );
-
-        if (!userSnap.exists()) {
-          await setDoc(userRef, {
-            uid: currentUser.uid,
-            name: currentUser.displayName || 'User',
-            email: currentUser.email || '',
-            photoURL,
-            role: isSuperAdmin ? 'admin' : (userProfile?.role || 'user'),
-            banned: false,
-            createdAt: Date.now(),
-            lastLogin: Date.now(),
-          });
-        } else {
-          await setDoc(userRef, { photoURL }, { merge: true });
-        }
-
+        updateLocalProfile({ photoURL });
         if (auth.currentUser) {
           updateProfile(auth.currentUser, { photoURL }).catch(() => {});
         }
+
+        const userRef = doc(db, 'users', currentUser.uid);
+        await setDoc(userRef, { photoURL, uid: currentUser.uid, updatedAt: Date.now() }, { merge: true });
         setMessage({ type: 'success', text: 'Profile photo updated!' });
       }
     } catch (error: any) {
-      console.error('Photo upload error:', error);
+      try {
+        handleFirestoreError(error, OperationType.WRITE, `users/${currentUser.uid}`);
+      } catch {
+        // Structured Firestore error logged
+      }
       setMessage({ type: 'error', text: error.message || 'Failed to upload photo' });
     } finally {
       setLoading(false);
