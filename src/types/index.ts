@@ -103,3 +103,64 @@ export interface MarketplaceItem {
   featured?: boolean;
 }
 
+// Flatmate / Roommate Finder Types
+export type RoomType = 'Private Room' | 'Shared Room' | 'Looking for 1RK/1BHK Flatmate' | 'Any';
+export type StudyHabit = 'Night Owl (10 PM - 4 AM)' | 'Early Bird (5 AM - 11 PM)' | 'Flexible';
+export type DietHabit = 'Strict Vegetarian' | 'Non-Vegetarian' | 'No Preference';
+
+export interface RoommateHabits {
+  studyTime: StudyHabit;
+  dietary: DietHabit;
+  cleanliness: 'High / Very Neat' | 'Moderate / Casual';
+  smokingDrinking: 'Strict No' | 'No Smoking in Room';
+}
+
+export interface RoommateProfile {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail?: string;
+  userPhone: string;
+  whatsappNumber?: string;
+  gender: 'male' | 'female' | 'other';
+  city: string;
+  locality: string;
+  budgetMin: number;
+  budgetMax: number;
+  roomType: RoomType;
+  targetExam: string;
+  habits: RoommateHabits;
+  bio: string;
+  moveInDate?: string;
+  status: 'active' | 'found';
+  createdAt: number;
+  updatedAt?: number;
+  photoURL?: string;
+}
+
+// Emergency Contacts Types
+export interface EmergencyContact {
+  title: string;
+  number: string;
+  category: 'suicide_distress' | 'police' | 'hospital' | 'women_safety' | 'ambulance' | 'cyber';
+  description: string;
+  is24x7?: boolean;
+  priority?: number;
+}
+
+export interface CityEmergencyInfo {
+  city: string;
+  state: string;
+  studentDistressHelpline?: EmergencyContact;
+  localContacts: EmergencyContact[];
+  policeControl: EmergencyContact;
+  primaryHospital: EmergencyContact;
+  womenHelpline: EmergencyContact;
+}
+
+export interface UserSosContact {
+  name: string;
+  relation: string;
+  phone: string;
+}
+

@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Building2, LogOut, PlusCircle, User, ShieldCheck, Search, Home, ShoppingBag, Calculator, Bot } from 'lucide-react';
+import { Building2, LogOut, PlusCircle, User, ShieldCheck, Search, Home, ShoppingBag, Calculator, Bot, BedDouble } from 'lucide-react';
 import { LiquidButton } from '../ui/LiquidButton';
 import { isSuperAdminEmail } from '../../types';
 
@@ -73,6 +73,13 @@ export function Navbar() {
               <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-gradient-to-r from-rose-500 to-amber-500 text-white uppercase tracking-wider shadow-sm">
                 New
               </span>
+            </Link>
+            <Link
+              to="/roommates"
+              className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${isActive('/roommates') ? 'text-[#00E5FF]' : 'text-gray-400 hover:text-white'}`}
+            >
+              <BedDouble className="h-4 w-4 text-[#00E5FF]" />
+              <span>Roommates</span>
             </Link>
             <Link
               to="/budget"

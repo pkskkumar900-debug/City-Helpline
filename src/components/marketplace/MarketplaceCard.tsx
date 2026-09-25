@@ -22,7 +22,9 @@ export const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ item, onOpenDe
     const fullPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
     const itemUrl = APP_CONFIG.getMarketplaceUrl(item.id);
     const text = encodeURIComponent(
-      `Hi ${item.sellerName}, maine City Helpline Student Marketplace (${itemUrl}) par aapka item "${item.title}" dekha. Kya ye abhi available hai?`
+      item.price === 0
+        ? `Hi ${item.sellerName}, maine City Helpline par aapka Free Study Material Giveaway "${item.title}" dekha. Kya ye abhi available hai collect karne ke liye?`
+        : `Hi ${item.sellerName}, maine City Helpline Student Marketplace (${itemUrl}) par aapka item "${item.title}" dekha. Kya ye abhi available hai?`
     );
     window.open(`https://wa.me/${fullPhone}?text=${text}`, '_blank', 'noopener,noreferrer');
   };
@@ -73,10 +75,16 @@ export const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ item, onOpenDe
 
           {/* Condition Badge */}
           <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10">
-            <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border backdrop-blur-md shadow-sm ${getConditionColor(item.condition)}`}>
-              {item.condition}
-            </span>
-            {discountPercent && (
+            {item.price === 0 ? (
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-500 text-slate-950 shadow-[0_0_12px_rgba(16,185,129,0.5)] border border-emerald-300 animate-pulse">
+                🎁 100% FREE GIFT
+              </span>
+            ) : (
+              <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border backdrop-blur-md shadow-sm ${getConditionColor(item.condition)}`}>
+                {item.condition}
+              </span>
+            )}
+            {discountPercent && item.price > 0 && (
               <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-rose-500/90 text-white backdrop-blur-md shadow-sm animate-pulse">
                 {discountPercent}% OFF
               </span>
@@ -94,7 +102,7 @@ export const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ item, onOpenDe
           {item.status === 'sold' && (
             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-20">
               <span className="px-4 py-1.5 rounded-xl bg-rose-600/90 text-white font-extrabold tracking-wider text-sm uppercase shadow-xl border border-rose-400/40">
-                Sold Out
+                {item.price === 0 ? 'Handed Over' : 'Sold Out'}
               </span>
             </div>
           )}
@@ -105,13 +113,23 @@ export const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ item, onOpenDe
           <div>
             {/* Price Tag */}
             <div className="flex items-baseline gap-2 mb-2">
-              <span className="text-2xl font-black text-white tracking-tight">
-                ₹{item.price.toLocaleString('en-IN')}
-              </span>
-              {item.originalPrice && item.originalPrice > item.price && (
-                <span className="text-xs text-gray-400 line-through font-medium">
-                  ₹{item.originalPrice.toLocaleString('en-IN')}
-                </span>
+              {item.price === 0 ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-black text-emerald-400 tracking-tight bg-emerald-500/15 px-2.5 py-0.5 rounded-lg border border-emerald-500/30">
+                    ₹0 (FREE GIVEAWAY)
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <span className="text-2xl font-black text-white tracking-tight">
+                    ₹{item.price.toLocaleString('en-IN')}
+                  </span>
+                  {item.originalPrice && item.originalPrice > item.price && (
+                    <span className="text-xs text-gray-400 line-through font-medium">
+                      ₹{item.originalPrice.toLocaleString('en-IN')}
+                    </span>
+                  )}
+                </>
               )}
             </div>
 

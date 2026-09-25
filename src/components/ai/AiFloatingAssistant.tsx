@@ -74,8 +74,8 @@ export const AiFloatingAssistant: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // If already on the dedicated /chat page, don't show the floating widget
-  const isChatPage = location.pathname === '/chat';
+  // Only show the floating assistant popup on the home page ('/')
+  const isHomePage = location.pathname === '/';
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -202,7 +202,7 @@ export const AiFloatingAssistant: React.FC = () => {
     ]);
   };
 
-  if (isChatPage) return null;
+  if (!isHomePage) return null;
 
   return (
     <>

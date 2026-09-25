@@ -84,6 +84,33 @@
         "featured": { "type": "boolean" }
       },
       "required": ["title", "description", "price", "category", "condition", "city", "images", "sellerId", "sellerName", "sellerPhone", "status", "createdAt"]
+    },
+    "RoommateProfile": {
+      "title": "RoommateProfile",
+      "description": "Student roommate and flatmate profiles for room sharing",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "userPhone": { "type": "string" },
+        "whatsappNumber": { "type": "string" },
+        "gender": { "type": "string", "enum": ["male", "female", "other"] },
+        "city": { "type": "string" },
+        "locality": { "type": "string" },
+        "budgetMin": { "type": "number" },
+        "budgetMax": { "type": "number" },
+        "roomType": { "type": "string" },
+        "targetExam": { "type": "string" },
+        "habits": { "type": "object" },
+        "bio": { "type": "string" },
+        "moveInDate": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "found"] },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" },
+        "photoURL": { "type": "string" }
+      },
+      "required": ["userId", "userName", "userPhone", "city", "locality", "budgetMin", "budgetMax", "roomType", "targetExam", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -102,6 +129,10 @@
     "/marketplace_items/{itemId}": {
       "schema": { "$ref": "#/entities/MarketplaceItem" },
       "description": "Student marketplace items"
+    },
+    "/roommate_profiles/{profileId}": {
+      "schema": { "$ref": "#/entities/RoommateProfile" },
+      "description": "Student flatmate / roommate profiles"
     }
   }
 }

@@ -34,6 +34,7 @@ import AccountSettingsPage from './pages/AccountSettingsPage';
 import SavedListingsPage from './pages/SavedListingsPage';
 import MyMarketplacePage from './pages/MyMarketplacePage';
 import MyListingsPage from './pages/MyListingsPage';
+import RoommatesPage from './pages/RoommatesPage';
 import { AiFloatingAssistant } from './components/ai/AiFloatingAssistant';
 import { InstallAppPrompt } from './components/common/InstallAppPrompt';
 
@@ -123,6 +124,8 @@ function AppLayout() {
           <Route path="/" element={<Home />} />
           <Route path="/search" element={<Search />} />
           <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/roommates" element={<RoommatesPage />} />
+          <Route path="/flatmates" element={<RoommatesPage />} />
           <Route path="/budget" element={<BudgetCalculator />} />
           <Route path="/budget-calculator" element={<BudgetCalculator />} />
           <Route path="/chat" element={<AiChatPage />} />
@@ -236,7 +239,7 @@ function AppLayout() {
         </Routes>
       </main>
       <InstallAppPrompt />
-      <AiFloatingAssistant />
+      {location.pathname === '/' && <AiFloatingAssistant />}
       <BottomNav />
     </div>
   );

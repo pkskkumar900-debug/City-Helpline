@@ -8,10 +8,10 @@ import { MarketplaceCard } from '../components/marketplace/MarketplaceCard';
 import { MarketplaceDetailModal } from '../components/marketplace/MarketplaceDetailModal';
 import { useLocationContext } from '../contexts/LocationContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { 
   ShoppingBag, Search, PlusCircle, MapPin, Navigation, 
-  Filter, Tag, Sparkles, X, Loader2, ArrowUpDown, ShieldCheck, BookOpen, Wind, Bike, Armchair
+  Filter, Tag, Sparkles, X, Loader2, ArrowUpDown, ShieldCheck, BookOpen, Wind, Bike, Armchair, Gift, Heart
 } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { LiquidGlassCard } from '../components/ui/LiquidGlassCard';
@@ -19,13 +19,21 @@ import { LiquidButton } from '../components/ui/LiquidButton';
 import { motion } from 'motion/react';
 
 export default function Marketplace() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialCategoryParam = searchParams.get('category');
+
   const { userLocation, openLocationModal, requestLiveLocation, isLoadingLocation } = useLocationContext();
   const { currentUser } = useAuth();
 
   const [items, setItems] = useState<MarketplaceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedCategory, setSelectedCategory] = useState<string>(() => {
+    if (initialCategoryParam === 'FreeStudy' || initialCategoryParam === 'Free Books & Notes') {
+      return 'FreeStudy';
+    }
+    return 'All';
+  });
   const [selectedCondition, setSelectedCondition] = useState<string>('All');
   const [sortBy, setSortBy] = useState<'newest' | 'price_asc' | 'price_desc'>('newest');
   
@@ -90,7 +98,10 @@ export default function Marketplace() {
       }
 
       // 2. Category Filter
-      if (selectedCategory !== 'All' && item.category !== selectedCategory) {
+      if (selectedCategory === 'FreeStudy') {
+        const isFree = item.price === 0 || item.title.toLowerCase().includes('free');
+        if (!isFree) return false;
+      } else if (selectedCategory !== 'All' && item.category !== selectedCategory) {
         return false;
       }
 
@@ -125,6 +136,7 @@ export default function Marketplace() {
 
   const categoryChips = [
     { label: 'All Items', value: 'All', icon: Sparkles },
+    { label: '🎁 Free Notes & Books (₹0)', value: 'FreeStudy', icon: Gift },
     { label: 'Books & Notes', value: 'Books & Notes', icon: BookOpen },
     { label: 'Coolers & Fans', value: 'Coolers & Fans', icon: Wind },
     { label: 'Cycles & Bikes', value: 'Cycles & Bikes', icon: Bike },
@@ -269,6 +281,40 @@ export default function Marketplace() {
           })}
         </div>
       </LiquidGlassCard>
+
+      {/* Free Books & Notes Giveaway Special Banner */}
+      {selectedCategory === 'FreeStudy' && (
+        <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-emerald-500/15 via-purple-500/10 to-cyan-500/15 border border-emerald-400/30 mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-300 shrink-0">
+              <Gift className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <h3 className="text-base font-black text-white">
+                  Free Books & Coaching Notes Exchange (₹0)
+                </h3>
+                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  Student Giveaway
+                </span>
+              </div>
+              <p className="text-xs text-gray-300 max-w-xl leading-relaxed">
+                All study materials listed here are 100% Free! Donated by seniors, rankers, and ex-students to help juniors in need. Contact donors on WhatsApp to collect directly.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 w-full md:w-auto shrink-0">
+            <Link
+              to="/sell-item?type=free"
+              className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5"
+            >
+              <Heart className="w-3.5 h-3.5 fill-current" />
+              <span>Donate Free Study Material</span>
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Results Header */}
       <div className="flex items-center justify-between mb-6">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocationContext } from '../contexts/LocationContext';
 import { db } from '../lib/firebase';
@@ -14,20 +14,23 @@ import { SearchableSelect } from '../components/ui/SearchableSelect';
 import { PersonalPageHeader } from '../components/layout/PersonalPageHeader';
 import { 
   ShoppingBag, ArrowLeft, UploadCloud, X, AlertCircle, 
-  CheckCircle, Sparkles, MapPin, Tag, IndianRupee, Phone, MessageCircle, Info
+  CheckCircle, Sparkles, MapPin, Tag, IndianRupee, Phone, MessageCircle, Info, Gift, Heart
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export default function SellItem() {
+  const [searchParams] = useSearchParams();
+  const isFreeParam = searchParams.get('type') === 'free';
+
   const { currentUser, userProfile } = useAuth();
   const { userLocation } = useLocationContext();
   const navigate = useNavigate();
 
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState(isFreeParam ? 'FREE: ' : '');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<MarketplaceCategory>('Books & Notes');
   const [condition, setCondition] = useState<ItemCondition>('Good Condition');
-  const [price, setPrice] = useState('');
+  const [price, setPrice] = useState(isFreeParam ? '0' : '');
   const [originalPrice, setOriginalPrice] = useState('');
   const [city, setCity] = useState(userLocation?.city || 'Kota');
   const [area, setArea] = useState('');
@@ -90,7 +93,7 @@ export default function SellItem() {
       return;
     }
 
-    if (!title.trim() || !description.trim() || !price || !city || !phone) {
+    if (!title.trim() || !description.trim() || price.trim() === '' || !city || !phone) {
       setError('Please fill in all required fields.');
       return;
     }

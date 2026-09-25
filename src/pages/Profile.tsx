@@ -1,19 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { collection, query, where, getDocs, orderBy, getDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, doc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Listing, MarketplaceItem } from '../types';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
-  User, LogOut, Settings, PlusCircle, Building2, MapPin, 
-  Star, ShoppingBag, Calculator, ChevronRight, Sparkles, 
-  ShieldCheck, ArrowRight, ExternalLink, RefreshCw, Heart, 
-  Tag, Compass, CheckCircle2
+  User, LogOut, Settings, Building2, MapPin, 
+  Star, ShoppingBag, Calculator, 
+  ShieldCheck, ArrowRight
 } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { LiquidGlassCard } from '../components/ui/LiquidGlassCard';
 import { useLocationContext } from '../contexts/LocationContext';
+import { ProfileRoommateSection } from '../components/profile/ProfileRoommateSection';
+import { ProfileFreeNotesSection } from '../components/profile/ProfileFreeNotesSection';
+import { ProfileEmergencySection } from '../components/profile/ProfileEmergencySection';
 
 export default function Profile() {
   const { currentUser, userProfile, logout } = useAuth();
@@ -292,226 +294,14 @@ export default function Profile() {
         </Link>
       </div>
 
-      {/* Main Feature Sections: Clean, categorized cards leading to dedicated personal pages */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
-        
-        {/* Category 1: Student Accommodations & Living */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 px-1">
-            <Building2 className="w-4 h-4 text-[#00E5FF]" />
-            <h2 className="text-xs font-black uppercase tracking-wider text-gray-400">
-              Accommodations & Living
-            </h2>
-          </div>
+      {/* Feature 1: Flatmate / Roommate Finder (Book or List Yourself) */}
+      <ProfileRoommateSection />
 
-          <div className="grid grid-cols-1 gap-3">
-            {/* Student Budget Planner Card */}
-            <Link
-              to="/budget"
-              className="group p-4 sm:p-5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-[#00E5FF]/40 transition-all duration-200 shadow-md flex items-center justify-between gap-4"
-            >
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-300 shrink-0 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(16,185,129,0.2)]">
-                  <Calculator className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-[#00E5FF] transition-colors truncate">
-                      Student Living Budget Planner
-                    </h3>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">
-                      Monthly Tool
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
-                    Calculate monthly room rent, mess food, AC library, and travel costs.
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0" />
-            </Link>
+      {/* Feature 4: Free Books & Coaching Notes Exchange (Give or Take) */}
+      <ProfileFreeNotesSection />
 
-            {/* Saved Bookmarks Card */}
-            <Link
-              to="/saved-listings"
-              className="group p-4 sm:p-5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-[#00E5FF]/40 transition-all duration-200 shadow-md flex items-center justify-between gap-4"
-            >
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-300 shrink-0 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(245,158,11,0.2)]">
-                  <Star className="w-5 h-5 fill-amber-400/30 text-amber-400" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-[#00E5FF] transition-colors truncate">
-                      Saved & Bookmarked Places
-                    </h3>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">
-                      {savedListings.length} Saved
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
-                    Quickly access shortlisted student PGs, hostels, flats, and libraries.
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0" />
-            </Link>
-
-            {/* My Hosted Listings Card */}
-            <Link
-              to="/my-listings"
-              className="group p-4 sm:p-5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-[#00E5FF]/40 transition-all duration-200 shadow-md flex items-center justify-between gap-4"
-            >
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-11 h-11 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-[#00E5FF] shrink-0 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(0,229,255,0.2)]">
-                  <Building2 className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-[#00E5FF] transition-colors truncate">
-                      My Hosted Accommodations
-                    </h3>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">
-                      {myListings.length} Listed
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
-                    Manage and update your listed PG, hostel, silent library, or mess.
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0" />
-            </Link>
-
-            {/* Post Accommodation Card */}
-            <Link
-              to="/add-listing"
-              className="group p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-cyan-500/10 to-indigo-500/10 hover:from-cyan-500/20 hover:to-indigo-500/20 border border-cyan-400/30 hover:border-cyan-400/60 transition-all duration-200 shadow-md flex items-center justify-between gap-4"
-            >
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-11 h-11 rounded-xl bg-[#00E5FF] text-slate-950 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-[0_0_15px_rgba(0,229,255,0.4)]">
-                  <PlusCircle className="w-6 h-6" />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-sm sm:text-base font-black text-white group-hover:text-[#00E5FF] transition-colors truncate">
-                    List New PG / Room / Mess
-                  </h3>
-                  <p className="text-xs text-gray-300 mt-0.5 line-clamp-1">
-                    Reach thousands of students searching for rooms and study spaces.
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Category 2: Student Marketplace & Pre-owned Goods */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 px-1">
-            <ShoppingBag className="w-4 h-4 text-[#00E5FF]" />
-            <h2 className="text-xs font-black uppercase tracking-wider text-gray-400">
-              Campus Marketplace & Second-hand Items
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3">
-            {/* My Marketplace Ads Card */}
-            <Link
-              to="/my-marketplace"
-              className="group p-4 sm:p-5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-[#00E5FF]/40 transition-all duration-200 shadow-md flex items-center justify-between gap-4"
-            >
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-11 h-11 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-300 shrink-0 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(168,85,247,0.2)]">
-                  <ShoppingBag className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-[#00E5FF] transition-colors truncate">
-                      My Marketplace Ads
-                    </h3>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">
-                      {myMarketplaceItems.length} Active Ads
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
-                    Manage your books, cycles, study desks, and coolers listed for sale.
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0" />
-            </Link>
-
-            {/* Sell Student Item Card */}
-            <Link
-              to="/sell-item"
-              className="group p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-purple-500/10 to-cyan-500/10 hover:from-purple-500/20 hover:to-cyan-500/20 border border-purple-400/30 hover:border-purple-400/60 transition-all duration-200 shadow-md flex items-center justify-between gap-4"
-            >
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-11 h-11 rounded-xl bg-purple-500 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-[0_0_15px_rgba(168,85,247,0.4)]">
-                  <Tag className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-sm sm:text-base font-black text-white group-hover:text-[#00E5FF] transition-colors truncate">
-                      Sell Student Item
-                    </h3>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">
-                      Zero Commission
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-300 mt-0.5 line-clamp-1">
-                    Post study notes, books, room cooler, mattress, or cycle.
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0" />
-            </Link>
-
-            {/* Browse Campus Marketplace Card */}
-            <Link
-              to="/marketplace"
-              className="group p-4 sm:p-5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-[#00E5FF]/40 transition-all duration-200 shadow-md flex items-center justify-between gap-4"
-            >
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-11 h-11 rounded-xl bg-cyan-400/15 border border-cyan-400/30 flex items-center justify-center text-cyan-300 shrink-0 group-hover:scale-105 transition-transform">
-                  <Compass className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-[#00E5FF] transition-colors truncate">
-                    Browse All Campus Marketplace
-                  </h3>
-                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
-                    Explore pre-owned study essentials sold by fellow students.
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0" />
-            </Link>
-
-            {/* Account Settings Card */}
-            <Link
-              to="/settings"
-              className="group p-4 sm:p-5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-[#00E5FF]/40 transition-all duration-200 shadow-md flex items-center justify-between gap-4"
-            >
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-11 h-11 rounded-xl bg-slate-700/40 border border-white/10 flex items-center justify-center text-gray-200 shrink-0 group-hover:scale-105 transition-transform">
-                  <Settings className="w-5 h-5 text-[#00E5FF]" />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-[#00E5FF] transition-colors truncate">
-                    Account & Profile Settings
-                  </h3>
-                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
-                    Edit name, phone, email, theme mode, and security password.
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0" />
-            </Link>
-          </div>
-        </div>
-      </div>
+      {/* Feature 3: Location-Aware 24/7 Emergency & SOS Directory */}
+      <ProfileEmergencySection />
 
       {/* Safety & Help Footer Banner */}
       <div className="p-5 sm:p-6 rounded-3xl bg-white/[0.03] border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

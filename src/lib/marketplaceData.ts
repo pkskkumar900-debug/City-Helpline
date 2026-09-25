@@ -2,6 +2,49 @@ import { MarketplaceItem } from '../types';
 
 export const INITIAL_MARKETPLACE_ITEMS: MarketplaceItem[] = [
   {
+    id: 'm-free-chemistry-notes-kota',
+    title: 'FREE: Complete Organic Chemistry Revision Short Notes & Mindmaps (AIR 148 Senior)',
+    description: 'Passing on my handwritten reaction mechanism summary charts, named reactions handbook, and mindmaps for JEE/NEET. Free giveaway to help hardworking juniors who cannot afford expensive test series!',
+    price: 0,
+    originalPrice: 1500,
+    category: 'Books & Notes',
+    condition: 'Good Condition',
+    city: 'Kota',
+    area: 'Vigyan Nagar, Near Allen Sangyan',
+    images: [
+      'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80'
+    ],
+    sellerId: 'student-ex-allen-senior',
+    sellerName: 'Kunal Choudhary (MBBS Govt)',
+    sellerPhone: '9876541122',
+    whatsappNumber: '9876541122',
+    status: 'available',
+    createdAt: Date.now() - 3600000 * 2,
+    featured: true
+  },
+  {
+    id: 'm-free-pw-physics-formula-patna',
+    title: 'FREE: Physics Wallah Complete Formula Handbook + 15 Years PYQ Book (PCB & PCM)',
+    description: '100% Free Donation! Formulas, derivation sheets, and error-less solved question bank for physics 11th & 12th. Collect in person from Boring Road.',
+    price: 0,
+    originalPrice: 1200,
+    category: 'Books & Notes',
+    condition: 'Like New',
+    city: 'Patna',
+    area: 'Boring Canal Road',
+    images: [
+      'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=800&q=80'
+    ],
+    sellerId: 'student-patna-notes',
+    sellerName: 'Deepak Raj',
+    sellerPhone: '9876543344',
+    whatsappNumber: '9876543344',
+    status: 'available',
+    createdAt: Date.now() - 3600000 * 6,
+    featured: true
+  },
+  {
     id: 'm-allen-neet-modules',
     title: 'Allen NEET Full Study Material (PCB 2024-25) + PYQ Bank',
     description: 'Complete 32 Modules of Physics, Chemistry & Biology with solved examples and chapter-wise 15 years solved question papers. Unmarked, crisp pages. Passing to juniors as I got selected!',
