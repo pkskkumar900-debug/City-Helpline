@@ -20,7 +20,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from
 import { 
   LogIn, UserPlus, Eye, EyeOff, Mail, Lock, User, AlertCircle, Phone, 
   Building2, MapPin, Briefcase, Github, ChevronRight, ExternalLink, 
-  Copy, Check, ShieldAlert, KeyRound, X, RefreshCw
+  Copy, Check, ShieldAlert, KeyRound, X, RefreshCw, CheckCircle2
 } from 'lucide-react';
 import { CATEGORIES, STATE_CITIES } from '../lib/constants';
 import { toast } from 'sonner';
@@ -96,6 +96,8 @@ export default function Auth() {
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSuccess, setForgotSuccess] = useState(false);
+  const [forgotNotice, setForgotNotice] = useState<string | null>(null);
 
   // First Time User State
   const [showRoleModal, setShowRoleModal] = useState(false);
@@ -226,18 +228,43 @@ export default function Auth() {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!forgotEmail.trim()) {
+    const cleanEmail = forgotEmail.trim();
+    if (!cleanEmail) {
       toast.error('Please enter your email address');
       return;
     }
 
     setForgotLoading(true);
     setDomainError(null);
+    setForgotNotice(null);
+
     try {
-      await sendPasswordResetEmail(auth, forgotEmail.trim());
-      toast.success('Password reset link sent! Please check your email inbox.');
-      setShowForgotModal(false);
-      setForgotEmail('');
+      // Check sign in methods first to give accurate guidance
+      let isGoogleOnly = false;
+      try {
+        const methods = await fetchSignInMethodsForEmail(auth, cleanEmail);
+        if (methods.includes('google.com') && !methods.includes('password')) {
+          isGoogleOnly = true;
+        }
+      } catch {
+        // Email enumeration protection might suppress error/methods
+      }
+
+      if (isGoogleOnly) {
+        setForgotNotice('This email was registered using Google Sign-In. Password reset is not needed—please log in using "Continue with Google".');
+        toast.info('Account uses Google Sign-In');
+        setForgotLoading(false);
+        return;
+      }
+
+      const actionCodeSettings = {
+        url: typeof window !== 'undefined' ? `${window.location.origin}/login` : 'https://app.imprince.me/login',
+        handleCodeInApp: true,
+      };
+
+      await sendPasswordResetEmail(auth, cleanEmail, actionCodeSettings);
+      setForgotSuccess(true);
+      toast.success('Password reset link sent!');
     } catch (err: any) {
       const parsed = parseAuthError(err);
       if (parsed.isUnauthorizedDomain) {
@@ -1151,7 +1178,11 @@ export default function Auth() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setShowForgotModal(false)}
+              onClick={() => {
+                setShowForgotModal(false);
+                setForgotSuccess(false);
+                setForgotNotice(null);
+              }}
               className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             />
             <motion.div
@@ -1163,55 +1194,117 @@ export default function Auth() {
             >
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#00E5FF] to-[#8A2BE2]" />
               
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 rounded-2xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center mx-auto mb-4">
-                  <KeyRound className="w-8 h-8 text-[#00E5FF]" />
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-2">Reset Password</h3>
-                <p className="text-gray-400 text-sm">
-                  Enter your email address and we'll send you instructions to reset your password.
-                </p>
-              </div>
+              {forgotSuccess ? (
+                <div className="text-center space-y-4">
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto mb-2">
+                    <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white">Reset Link Sent!</h3>
+                  <p className="text-gray-300 text-sm">
+                    We've sent a password reset email to <strong className="text-[#00E5FF] font-mono break-all">{forgotEmail}</strong>.
+                  </p>
 
-              <form onSubmit={handleForgotPassword} className="space-y-5">
-                <div className="relative group">
-                  <label className="block text-sm font-medium text-gray-300 mb-2 transition-colors group-focus-within:text-[#00E5FF]">Email Address</label>
-                  <LiquidInput
-                    type="email"
-                    required
-                    placeholder="you@example.com"
-                    value={forgotEmail}
-                    onChange={(e) => setForgotEmail(e.target.value)}
-                    icon={<Mail className="h-5 w-5" />}
-                    glowColor="rgba(0, 229, 255, 0.5)"
-                  />
-                </div>
+                  <div className="p-4 rounded-2xl bg-black/40 border border-white/10 text-left space-y-2.5 text-xs text-gray-300">
+                    <div className="font-bold text-white text-xs uppercase tracking-wider mb-1">Checklist & Troubleshooting:</div>
+                    <div className="flex items-start gap-2">
+                      <Mail className="w-4 h-4 text-[#00E5FF] shrink-0 mt-0.5" />
+                      <span>Check your <strong>Inbox</strong> and <strong>Spam / Junk</strong> folder.</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <KeyRound className="w-4 h-4 text-[#8A2BE2] shrink-0 mt-0.5" />
+                      <span>Click the link inside the email to set your new password.</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <span>If you registered via <strong>Google Sign-In</strong>, reset email won't arrive. Please log in using <strong>"Continue with Google"</strong>.</span>
+                    </div>
+                  </div>
 
-                <div className="golden-wrapper w-full mt-4">
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setForgotSuccess(false)}
+                      className="flex-1 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-semibold transition-colors cursor-pointer"
+                    >
+                      Resend Link
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowForgotModal(false);
+                        setForgotSuccess(false);
+                        setForgotNotice(null);
+                      }}
+                      className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#00E5FF] to-[#8A2BE2] text-black font-black text-xs transition-colors cursor-pointer shadow-[0_0_20px_rgba(0,229,255,0.3)]"
+                    >
+                      Back to Login
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 rounded-2xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center mx-auto mb-4">
+                      <KeyRound className="w-8 h-8 text-[#00E5FF]" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-2">Reset Password</h3>
+                    <p className="text-gray-400 text-sm">
+                      Enter your email address and we'll send you instructions to reset your password.
+                    </p>
+                  </div>
+
+                  {forgotNotice && (
+                    <div className="mb-4 p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-blue-200 text-xs flex items-start gap-2.5">
+                      <AlertCircle className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+                      <p>{forgotNotice}</p>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleForgotPassword} className="space-y-5">
+                    <div className="relative group">
+                      <label className="block text-sm font-medium text-gray-300 mb-2 transition-colors group-focus-within:text-[#00E5FF]">Email Address</label>
+                      <LiquidInput
+                        type="email"
+                        required
+                        placeholder="you@example.com"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        icon={<Mail className="h-5 w-5" />}
+                        glowColor="rgba(0, 229, 255, 0.5)"
+                      />
+                    </div>
+
+                    <div className="golden-wrapper w-full mt-4">
+                      <button
+                        type="submit"
+                        disabled={forgotLoading}
+                        className="golden-button w-full flex items-center justify-center py-3.5"
+                      >
+                        {forgotLoading ? (
+                          <span className="flex items-center gap-2">
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                            <span>Sending Link...</span>
+                          </span>
+                        ) : (
+                          'Send Reset Link'
+                        )}
+                      </button>
+                    </div>
+                  </form>
+
                   <button
-                    type="submit"
-                    disabled={forgotLoading}
-                    className="golden-button w-full flex items-center justify-center py-3.5"
+                    type="button"
+                    onClick={() => {
+                      setShowForgotModal(false);
+                      setForgotSuccess(false);
+                      setForgotNotice(null);
+                    }}
+                    className="mt-6 w-full text-sm text-gray-400 hover:text-white transition-colors"
                   >
-                    {forgotLoading ? (
-                      <span className="flex items-center gap-2">
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                        <span>Sending Link...</span>
-                      </span>
-                    ) : (
-                      'Send Reset Link'
-                    )}
+                    Back to Login
                   </button>
-                </div>
-              </form>
-
-              <button
-                type="button"
-                onClick={() => setShowForgotModal(false)}
-                className="mt-6 w-full text-sm text-gray-400 hover:text-white transition-colors"
-              >
-                Back to Login
-              </button>
+                </>
+              )}
             </motion.div>
           </div>
         )}

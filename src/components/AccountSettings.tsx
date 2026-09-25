@@ -5,6 +5,7 @@ import { doc, updateDoc, setDoc } from 'firebase/firestore';
 import { uploadImage } from '../lib/storage';
 import { sendPasswordResetEmail, updateProfile } from 'firebase/auth';
 import { handleFirestoreError, OperationType } from '../lib/firestoreError';
+import { parseAuthError } from '../lib/authError';
 import { motion } from 'motion/react';
 import { User, Camera, Moon, Sun, Monitor, Lock, Bell, Shield, FileText, Info, Mail, Code, ChevronRight, LogOut, Scale, ExternalLink, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -139,10 +140,15 @@ export default function AccountSettings() {
     setLoading(true);
     setMessage({ type: '', text: '' });
     try {
-      await sendPasswordResetEmail(auth, currentUser.email);
-      setMessage({ type: 'success', text: 'Password reset email sent!' });
+      const actionCodeSettings = {
+        url: typeof window !== 'undefined' ? `${window.location.origin}/login` : 'https://app.imprince.me/login',
+        handleCodeInApp: true,
+      };
+      await sendPasswordResetEmail(auth, currentUser.email, actionCodeSettings);
+      setMessage({ type: 'success', text: `Password reset link sent to ${currentUser.email}! Please check your Inbox and Spam/Junk folder.` });
     } catch (error: any) {
-      setMessage({ type: 'error', text: error.message || 'Failed to send reset email' });
+      const parsed = parseAuthError(error);
+      setMessage({ type: 'error', text: parsed.message || 'Failed to send reset email' });
     } finally {
       setLoading(false);
     }
@@ -354,27 +360,34 @@ export default function AccountSettings() {
           <div className="flex items-center justify-between p-4 bg-gray-800/30 rounded-xl border border-gray-700/50">
             <div>
               <p className="text-white font-medium">Login Provider</p>
-              <p className="text-sm text-gray-400">You are logged in using {isGoogleProvider ? 'Google' : 'Email/Password'}.</p>
+              <p className="text-sm text-gray-400">You are logged in using {isGoogleProvider ? 'Google Authentication' : 'Email & Password'}.</p>
             </div>
             {isGoogleProvider ? (
-              <span className="px-3 py-1 bg-gray-700 rounded-full text-xs font-medium text-white">Google</span>
+              <span className="px-3 py-1 bg-cyan-500/20 text-[#00E5FF] border border-cyan-500/30 rounded-full text-xs font-bold">Google Auth</span>
             ) : (
-              <span className="px-3 py-1 bg-gray-700 rounded-full text-xs font-medium text-white">Email</span>
+              <span className="px-3 py-1 bg-purple-500/20 text-[#8A2BE2] border border-purple-500/30 rounded-full text-xs font-bold">Email/Password</span>
             )}
           </div>
           
-          {!isGoogleProvider && (
-            <div className="flex items-center justify-between p-4 bg-gray-800/30 rounded-xl border border-gray-700/50">
+          {isGoogleProvider ? (
+            <div className="p-4 bg-gray-800/20 rounded-xl border border-gray-700/40 text-xs text-gray-300 space-y-1">
+              <p className="font-semibold text-white">Google Account Authentication:</p>
+              <p className="text-gray-400 leading-relaxed">
+                Your account is linked to Google (<strong className="text-white">{currentUser?.email}</strong>). Your password is managed securely by Google and cannot be reset through this app. Simply use <strong>"Continue with Google"</strong> to log in.
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-800/30 rounded-xl border border-gray-700/50 gap-4">
               <div>
-                <p className="text-white font-medium">Password</p>
-                <p className="text-sm text-gray-400">Receive an email to reset your password.</p>
+                <p className="text-white font-medium">Password Reset</p>
+                <p className="text-sm text-gray-400">Receive an email with a secure link to reset your account password.</p>
               </div>
               <button
                 onClick={handlePasswordReset}
                 disabled={loading}
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors"
+                className="px-4 py-2.5 bg-gradient-to-r from-[#00E5FF] to-[#8A2BE2] text-black font-extrabold rounded-xl text-xs transition-all shadow-[0_0_15px_rgba(0,229,255,0.2)] hover:brightness-110 active:scale-95 disabled:opacity-50 shrink-0 cursor-pointer"
               >
-                Reset Password
+                Send Reset Email
               </button>
             </div>
           )}
