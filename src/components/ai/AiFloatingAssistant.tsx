@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, X, Send, Sparkles, Maximize2, ShieldAlert, RotateCcw, Mic, MicOff } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'sonner';
 import { sendChatMessage, ChatMessage } from '../../services/aiChatService';
 import { AiMessageRenderer } from './AiMessageRenderer';
 
@@ -20,7 +21,7 @@ export const AiFloatingAssistant: React.FC = () => {
   const toggleListening = () => {
     const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRec) {
-      alert("Voice input is supported in Google Chrome, Edge, and Android browsers.");
+      toast.info("Voice input is supported in Google Chrome, Edge, and Android browsers.");
       return;
     }
 

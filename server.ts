@@ -118,30 +118,24 @@ async function startServer() {
       });
 
       let replyText = '';
-      let usedModel = 'gemini-3.1-flash-lite';
+      let usedModel = 'gemini-3.6-flash';
 
-      // Robust multi-model failover chain:
-      // Try high-speed 3.1-flash-lite first, then flash-latest, then 3.8-flash
-      const candidateModels = ['gemini-3.1-flash-lite', 'gemini-flash-latest', 'gemini-3.8-flash'];
-
-      for (const candidate of candidateModels) {
-        try {
-          const response = await ai.models.generateContent({
-            model: candidate,
-            contents,
-            config: {
-              systemInstruction: SYSTEM_INSTRUCTION,
-              temperature: 0.7,
-            },
-          });
-          if (response.text && response.text.trim()) {
-            replyText = response.text;
-            usedModel = candidate;
-            break;
-          }
-        } catch (modelError: any) {
-          console.warn(`Model ${candidate} error (trying next):`, modelError?.message || modelError);
+      // Exclusively use Gemini 3.6 Flash as requested
+      try {
+        const response = await ai.models.generateContent({
+          model: 'gemini-3.6-flash',
+          contents,
+          config: {
+            systemInstruction: SYSTEM_INSTRUCTION,
+            temperature: 0.7,
+          },
+        });
+        if (response.text && response.text.trim()) {
+          replyText = response.text;
+          usedModel = 'gemini-3.6-flash';
         }
+      } catch (modelError: any) {
+        console.warn('Gemini 3.6 Flash error:', modelError?.message || modelError);
       }
 
       if (!replyText) {

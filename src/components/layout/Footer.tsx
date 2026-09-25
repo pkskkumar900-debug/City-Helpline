@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import { 
   Building2, ShieldCheck, CheckCircle2, Zap, HeartHandshake, 
   MapPin, ArrowUp, Mail, Phone, Lock, Sparkles, 
-  ShoppingBag, Calculator, PlusCircle, ExternalLink, Globe, Scale, FileText
+  ShoppingBag, Calculator, PlusCircle, ExternalLink, Globe, Scale, FileText, HelpCircle, Wrench
 } from 'lucide-react';
 import { useLocationContext } from '../../contexts/LocationContext';
+import { APP_CONFIG } from '../../lib/appConfig';
 
 export function Footer() {
   const { userLocation, openLocationModal } = useLocationContext();
@@ -226,9 +227,16 @@ export function Footer() {
           <div className="lg:col-span-2 space-y-3">
             <h5 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
               <Scale className="w-3.5 h-3.5 text-[#00E5FF]" />
-              <span>Legal & Trust</span>
+              <span>Legal & Support</span>
             </h5>
             <ul className="space-y-2 text-xs">
+              <li>
+                <Link to="/help" className="hover:text-[#00E5FF] transition-colors flex items-center gap-1.5 font-bold text-white">
+                  <HelpCircle className="w-3.5 h-3.5 text-[#00E5FF]" />
+                  <span>Help & Support</span>
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-[#00E5FF]/20 text-[#00E5FF]">24x7</span>
+                </Link>
+              </li>
               <li>
                 <Link to="/privacy" className="hover:text-[#00E5FF] transition-colors flex items-center gap-1.5">
                   <Lock className="w-3 h-3 text-[#00E5FF]" />
@@ -317,10 +325,15 @@ export function Footer() {
             </span>
           </div>
 
-          <div className="flex items-center gap-4 text-gray-400">
+          <div className="flex items-center gap-4 text-gray-400 flex-wrap justify-center">
             <span className="flex items-center gap-1.5">
               <Mail className="w-3.5 h-3.5 text-[#00E5FF]" />
-              <span>Helpline: <a href="mailto:support@imprince.me" className="text-white hover:underline">support@imprince.me</a></span>
+              <span>Support: <a href={`mailto:${APP_CONFIG.supportEmail}`} className="text-white hover:underline">{APP_CONFIG.supportEmail}</a></span>
+            </span>
+            <span className="text-gray-600 hidden sm:inline">•</span>
+            <span className="flex items-center gap-1.5">
+              <Wrench className="w-3.5 h-3.5 text-purple-400" />
+              <span>App Issues: <a href={`mailto:${APP_CONFIG.developerEmail}`} className="text-white hover:underline">{APP_CONFIG.developerEmail}</a></span>
             </span>
             <span className="text-gray-600 hidden sm:inline">•</span>
             <span className="flex items-center gap-1 text-gray-400">
@@ -344,6 +357,7 @@ export function Footer() {
         </div>
 
         <div className="flex items-center gap-4 flex-wrap justify-center">
+          <Link to="/help" className="text-[#00E5FF] font-bold hover:underline transition-colors">Help & FAQs</Link>
           <Link to="/privacy" className="hover:text-[#00E5FF] transition-colors">Privacy Policy</Link>
           <Link to="/terms" className="hover:text-[#00E5FF] transition-colors">Terms of Service</Link>
           <Link to="/safety" className="hover:text-amber-300 transition-colors">Safety Advisory</Link>

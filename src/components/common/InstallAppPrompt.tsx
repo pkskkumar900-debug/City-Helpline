@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Download, X, Sparkles, Smartphone, Check } from 'lucide-react';
+import { toast } from 'sonner';
 import { CityHelplineLogo } from '../brand/CityHelplineLogo';
 
 export const InstallAppPrompt: React.FC = () => {
@@ -32,7 +33,9 @@ export const InstallAppPrompt: React.FC = () => {
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) {
-      alert("To add shortcut: Tap your browser menu (⋮ or Share icon) and select 'Add to Home Screen' / 'Install App'.");
+      toast.info("To add shortcut: Tap your browser menu (⋮ or Share icon) and select 'Add to Home Screen' / 'Install App'.", {
+        duration: 5000,
+      });
       return;
     }
 

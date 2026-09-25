@@ -588,7 +588,7 @@ export default function AccountSettings() {
                 Covering educational hubs in Kota, Patna, Delhi NCR, Sikar, Prayagraj, Indore, Bengaluru, Lucknow, and Jaipur.
               </p>
               <p className="text-gray-400">
-                Official Inquiries: <a href="mailto:support@imprince.me" className="text-[#00E5FF] hover:underline">support@imprince.me</a> | <a href="mailto:imprince.dev@gmail.com" className="text-[#00E5FF] hover:underline">imprince.dev@gmail.com</a>
+                Official Inquiries: <a href="mailto:Support@imprince.me" className="text-[#00E5FF] hover:underline">Support@imprince.me</a> | Tech Issues: <a href="mailto:Developer@imprince.me" className="text-[#00E5FF] hover:underline">Developer@imprince.me</a>
               </p>
               <p className="text-[11px] text-gray-500 pt-1">Built with ❤️ in India for students.</p>
             </div>
@@ -613,7 +613,7 @@ export default function AccountSettings() {
           © 2026 City Helpline • Official Portal: <a href="https://app.imprince.me" target="_blank" rel="noopener noreferrer" className="text-[#00E5FF] hover:underline font-semibold">app.imprince.me</a>
         </p>
         <p className="text-xs text-gray-500">
-          Developed by Prince Kushwaha | Support: <a href="mailto:imprince.dev@gmail.com" className="text-blue-400 hover:underline">imprince.dev@gmail.com</a>
+          Developed by Prince Kushwaha | Support: <a href="mailto:Support@imprince.me" className="text-blue-400 hover:underline">Support@imprince.me</a> | App Issues: <a href="mailto:Developer@imprince.me" className="text-[#00E5FF] hover:underline">Developer@imprince.me</a>
         </p>
       </div>
     </div>

@@ -311,12 +311,20 @@ export default function Profile() {
             </p>
           </div>
         </div>
-        <Link
-          to="/safety"
-          className="px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-cyan-300 border border-white/10 transition-colors shrink-0"
-        >
-          View Safety Guidelines
-        </Link>
+        <div className="flex items-center gap-2 flex-wrap shrink-0">
+          <Link
+            to="/help"
+            className="px-4 py-2 rounded-xl bg-[#00E5FF]/10 hover:bg-[#00E5FF] text-[#00E5FF] hover:text-black text-xs font-bold border border-[#00E5FF]/30 transition-colors"
+          >
+            Help & Support
+          </Link>
+          <Link
+            to="/safety"
+            className="px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-gray-300 border border-white/10 transition-colors"
+          >
+            Safety Guidelines
+          </Link>
+        </div>
       </div>
 
       {/* Logout Confirmation Modal */}

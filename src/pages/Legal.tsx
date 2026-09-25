@@ -592,12 +592,12 @@ export default function Legal({ defaultTab = 'privacy' }: LegalProps) {
                     <p className="text-gray-400">Platform Administrator & Intermediary Compliance</p>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-1">
-                    <span className="text-gray-400">Direct Email:</span>
+                    <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-1">
+                    <span className="text-gray-400">Direct Emails:</span>
                     <p className="text-[#00E5FF] font-bold text-sm">
-                      <a href="mailto:support@imprince.me" className="hover:underline">support@imprince.me</a>
+                      <a href="mailto:Support@imprince.me" className="hover:underline">Support@imprince.me</a>
                     </p>
-                    <p className="text-gray-400">Alternative: <a href="mailto:imprince.dev@gmail.com" className="hover:underline">imprince.dev@gmail.com</a></p>
+                    <p className="text-gray-400 text-xs">App & Tech Support: <a href="mailto:Developer@imprince.me" className="text-[#00E5FF] hover:underline">Developer@imprince.me</a></p>
                   </div>
                 </div>
 

@@ -35,6 +35,7 @@ import SavedListingsPage from './pages/SavedListingsPage';
 import MyMarketplacePage from './pages/MyMarketplacePage';
 import MyListingsPage from './pages/MyListingsPage';
 import RoommatesPage from './pages/RoommatesPage';
+import Help from './pages/Help';
 import { AiFloatingAssistant } from './components/ai/AiFloatingAssistant';
 import { InstallAppPrompt } from './components/common/InstallAppPrompt';
 
@@ -138,6 +139,10 @@ function AppLayout() {
           <Route path="/privacy" element={<Legal defaultTab="privacy" />} />
           <Route path="/terms" element={<Legal defaultTab="terms" />} />
           <Route path="/safety" element={<Legal defaultTab="safety" />} />
+
+          {/* Help & Support Hub */}
+          <Route path="/help" element={<Help />} />
+          <Route path="/support" element={<Help />} />
           
           {/* Protected Routes */}
           <Route 

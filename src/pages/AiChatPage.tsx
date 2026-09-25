@@ -5,6 +5,7 @@ import {
   MapPin, CheckCircle2, PhoneCall, Mic, MicOff
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { sendChatMessage, ChatMessage } from '../services/aiChatService';
 import { AiMessageRenderer } from '../components/ai/AiMessageRenderer';
 
@@ -91,7 +92,7 @@ export default function AiChatPage() {
   const toggleListening = () => {
     const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRec) {
-      alert("Voice input is supported in Google Chrome, Edge, and Android browsers.");
+      toast.info("Voice input is supported in Google Chrome, Edge, and Android browsers.");
       return;
     }
 

@@ -7,7 +7,8 @@ export const APP_CONFIG = {
   name: 'City Helpline',
   domain: 'app.imprince.me',
   baseUrl: 'https://app.imprince.me',
-  supportEmail: 'imprince.dev@gmail.com',
+  supportEmail: 'Support@imprince.me',
+  developerEmail: 'Developer@imprince.me',
 
   /**
    * Generates a fully qualified production URL for any path

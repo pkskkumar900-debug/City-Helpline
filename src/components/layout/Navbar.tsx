@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Building2, LogOut, PlusCircle, ShieldCheck, Search, Home, ShoppingBag, Calculator, Bot, BedDouble } from 'lucide-react';
+import { Building2, LogOut, PlusCircle, ShieldCheck, Search, Home, ShoppingBag, Calculator, Bot, BedDouble, HelpCircle } from 'lucide-react';
 import { LiquidButton } from '../ui/LiquidButton';
 import { isSuperAdminEmail } from '../../types';
 import { UserAvatar } from '../common/UserAvatar';
@@ -100,6 +100,14 @@ export function Navbar() {
               </span>
             </Link>
 
+            <Link
+              to="/help"
+              className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${isActive('/help') ? 'text-[#00E5FF]' : 'text-gray-400 hover:text-white'}`}
+            >
+              <HelpCircle className="h-4 w-4" />
+              <span>Help</span>
+            </Link>
+
             {/* Always visible List Service button on Desktop */}
             <Link
               to="/add-listing"
@@ -173,7 +181,19 @@ export function Navbar() {
           </div>
 
           {/* Mobile Right Action */}
-          <div className="flex md:hidden items-center gap-2">
+          <div className="flex md:hidden items-center gap-1.5">
+            <Link
+              to="/help"
+              className={`p-1.5 rounded-xl border transition-colors ${
+                isActive('/help') 
+                  ? 'bg-[#00E5FF]/20 text-[#00E5FF] border-[#00E5FF]/40' 
+                  : 'bg-white/[0.04] text-gray-400 border-white/10 hover:text-white'
+              }`}
+              title="Help & Support"
+            >
+              <HelpCircle className="h-4 w-4" />
+            </Link>
+
             <Link
               to="/add-listing"
               className="flex items-center gap-1 px-2.5 py-1 text-xs font-black rounded-xl bg-gradient-to-r from-[#00E5FF]/20 to-[#8A2BE2]/20 border border-[#00E5FF]/40 text-[#00E5FF] hover:brightness-110 active:scale-95 transition-all shadow-[0_0_10px_rgba(0,229,255,0.2)]"
