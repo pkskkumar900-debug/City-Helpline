@@ -132,16 +132,156 @@ body::before {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Instant Light Mode using CSS Filters */
+/* Premium Light Mode Architecture (Zero Inversion Filter) */
 html.light {
-  filter: invert(1) hue-rotate(180deg);
-  background-color: #fff;
+  color-scheme: light;
+  background-color: #f8fafc;
+  color: #0f172a;
 }
 
-html.light img, 
-html.light video, 
-html.light .no-invert {
-  filter: invert(1) hue-rotate(180deg);
+html.light body {
+  background-color: #f8fafc;
+  color: #0f172a;
+  background-image: 
+    radial-gradient(circle at 0% 0%, rgba(0, 180, 216, 0.08), transparent 50%),
+    radial-gradient(circle at 100% 100%, rgba(124, 58, 237, 0.08), transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.05), transparent 50%);
+}
+
+/* Light Mode Glassmorphism & Cards */
+html.light .glass {
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(25px) !important;
+  -webkit-backdrop-filter: blur(25px) !important;
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05) !important;
+}
+
+html.light .glass-card {
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(25px) !important;
+  -webkit-backdrop-filter: blur(25px) !important;
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.07), 0 4px 12px -2px rgba(15, 23, 42, 0.03) !important;
+}
+
+html.light .glass-card:hover {
+  border-color: rgba(0, 180, 216, 0.4) !important;
+  box-shadow: 0 20px 40px -10px rgba(0, 180, 216, 0.15), 0 8px 20px -4px rgba(124, 58, 237, 0.08) !important;
+}
+
+html.light .glass-nav {
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(25px) !important;
+  -webkit-backdrop-filter: blur(25px) !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04) !important;
+}
+
+html.light .glass-bottom-nav {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(25px) !important;
+  -webkit-backdrop-filter: blur(25px) !important;
+  border-top: 1px solid rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 -8px 25px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* Light Mode Background Overrides for Hardcoded Dark Containers */
+html.light .bg-\[\#0B0E14\],
+html.light .bg-\[\#07090E\],
+html.light .bg-\[\#0a0d14\],
+html.light .bg-\[\#0d111a\],
+html.light .bg-\[\#131927\],
+html.light .bg-\[\#161f33\],
+html.light .bg-\[\#0F172A\],
+html.light .bg-\[\#0b0e17\],
+html.light .bg-slate-900,
+html.light .bg-slate-950,
+html.light .bg-gray-900,
+html.light .bg-gray-950,
+html.light .bg-black {
+  background-color: #ffffff !important;
+}
+
+html.light .bg-white\/\[0\.02\],
+html.light .bg-white\/\[0\.03\],
+html.light .bg-white\/\[0\.05\],
+html.light .bg-white\/\[0\.06\],
+html.light .bg-white\/\[0\.08\],
+html.light .bg-white\/10,
+html.light .bg-white\/5,
+html.light .bg-white\/15,
+html.light .bg-white\/20 {
+  background-color: rgba(241, 245, 249, 0.85) !important;
+}
+
+html.light .border-white\/5,
+html.light .border-white\/10,
+html.light .border-white\/15,
+html.light .border-white\/20,
+html.light .border-white\/30,
+html.light .border-white\/40 {
+  border-color: rgba(226, 232, 240, 0.9) !important;
+}
+
+/* Light Mode Typography Hierarchy */
+html.light .text-white {
+  color: #0f172a !important;
+}
+
+html.light .text-gray-100,
+html.light .text-gray-200,
+html.light .text-gray-300,
+html.light .text-slate-100,
+html.light .text-slate-200,
+html.light .text-slate-300 {
+  color: #1e293b !important;
+}
+
+html.light .text-gray-400,
+html.light .text-slate-400 {
+  color: #64748b !important;
+}
+
+html.light .text-gray-500,
+html.light .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Accent Color Adjustments for High Contrast on White Surfaces */
+html.light .text-\[\#00E5FF\] {
+  color: #0088CC !important;
+}
+
+html.light .text-\[\#8A2BE2\] {
+  color: #7C3AED !important;
+}
+
+html.light .text-\[\#F5B731\] {
+  color: #D97706 !important;
+}
+
+/* Light Mode Form Elements */
+html.light input,
+html.light select,
+html.light textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Light Mode Modal Overlays */
+html.light .fixed.inset-0.bg-black\/80,
+html.light .fixed.inset-0.bg-black\/70,
+html.light .fixed.inset-0.bg-black\/60,
+html.light .fixed.inset-0.bg-black\/50 {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(8px) !important;
 }
 
 /* From Uiverse.io by elijahgummer */

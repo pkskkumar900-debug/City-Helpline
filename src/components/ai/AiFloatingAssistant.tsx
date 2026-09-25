@@ -206,29 +206,39 @@ export const AiFloatingAssistant: React.FC = () => {
 
   return (
     <>
-      {/* Floating Trigger Button */}
+      {/* Floating Trigger Button - Premium Circle Design (No Text) */}
       {!isOpen && (
         <div className="fixed bottom-24 md:bottom-7 right-4 md:right-7 z-[60] group">
           <button
             onClick={() => setIsOpen(true)}
-            aria-label="Open AI Student Assistant"
-            className="relative flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-[#8A2BE2] via-[#6B11FF] to-[#00E5FF] text-white font-bold text-sm shadow-[0_0_25px_rgba(138,43,226,0.55)] hover:shadow-[0_0_35px_rgba(0,229,255,0.7)] hover:scale-105 active:scale-95 transition-all duration-300 border border-white/20 backdrop-blur-md"
+            aria-label="AI Mitra Assistant"
+            title="Ask AI Mitra"
+            className="relative flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95 focus:outline-none"
           >
-            {/* Glowing pulse ring */}
-            <span className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#8A2BE2] to-[#00E5FF] opacity-40 blur-sm group-hover:opacity-75 transition duration-500 animate-pulse pointer-events-none" />
-            
-            <div className="relative flex items-center justify-center w-7 h-7 rounded-full bg-black/30 border border-white/30">
-              <Bot className="w-4 h-4 text-[#00E5FF] animate-bounce" />
-            </div>
-            
-            <div className="relative flex flex-col text-left">
-              <span className="text-[10px] text-[#00E5FF] font-black uppercase tracking-wider leading-none">
-                Student AI Guide
+            {/* Outer animated rotating / breathing gradient aura */}
+            <span className="absolute -inset-1 rounded-full bg-gradient-to-tr from-[#00E5FF] via-[#8A2BE2] to-[#F5B731] opacity-70 blur-md group-hover:opacity-100 group-hover:blur-lg animate-pulse transition duration-500 pointer-events-none" />
+
+            {/* Premium Metallic Gradient Ring */}
+            <span className="absolute inset-0 rounded-full p-[2px] bg-gradient-to-tr from-[#00E5FF] via-[#8A2BE2] to-[#F5B731] shadow-[0_0_25px_rgba(0,229,255,0.4),0_0_15px_rgba(138,43,226,0.35)]">
+              {/* Dark Glass Inner Circle */}
+              <span className="relative flex items-center justify-center w-full h-full rounded-full bg-[#0B0F19]/90 backdrop-blur-xl border border-white/20 transition-all duration-300 group-hover:bg-[#121829]/95 overflow-hidden">
+                {/* Subtle Inner Radial Glow */}
+                <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,rgba(0,229,255,0.25),transparent_60%)] pointer-events-none" />
+                
+                {/* Central AI Bot Icon & Sparkle */}
+                <div className="relative flex items-center justify-center">
+                  <Bot className="w-6 h-6 sm:w-7 sm:h-7 text-[#00E5FF] group-hover:scale-110 group-hover:text-white transition-all duration-300 drop-shadow-[0_0_8px_rgba(0,229,255,0.8)]" />
+                  <Sparkles className="w-3 h-3 text-[#F5B731] absolute -top-1 -right-1 animate-ping opacity-75 pointer-events-none" />
+                  <Sparkles className="w-3 h-3 text-[#F5B731] absolute -top-1 -right-1 drop-shadow-[0_0_4px_rgba(245,183,49,0.9)]" />
+                </div>
               </span>
-              <span className="text-xs font-black tracking-tight text-white flex items-center gap-1">
-                Ask AI Mitra <Sparkles className="w-3 h-3 text-[#FFD700]" />
-              </span>
-            </div>
+            </span>
+
+            {/* Online Live Status Dot */}
+            <span className="absolute top-0 right-0 flex h-3.5 w-3.5 items-center justify-center">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-[#0B0F19]" />
+            </span>
           </button>
         </div>
       )}
