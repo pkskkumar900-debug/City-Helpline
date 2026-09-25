@@ -276,91 +276,7 @@ export default function Auth() {
     }
   };
 
-  const loginWithGithub = async () => {
-    setLoading(true);
-    try {
-      const result = await signInWithPopup(auth, githubProvider);
-      const user = result.user;
-      
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      if (!userDoc.exists()) {
-        // First Time User
-        setPendingUser(user);
-        setShowRoleModal(true);
-      } else {
-        // Returning User
-        const userData = userDoc.data();
-        if (userData.banned) {
-          await auth.signOut();
-          toast.error('Your account has been banned. Please contact support.');
-          setLoading(false);
-          return null;
-        }
-        
-        // Update lastLogin
-        await setDoc(doc(db, 'users', user.uid), { lastLogin: serverTimestamp() }, { merge: true });
-
-        toast.success('Logged in successfully');
-        if (userData.role === 'contributor') {
-          navigate('/profile');
-        } else {
-          navigate('/');
-        }
-      }
-      return user;
-    } catch (err: any) {
-      console.error("GitHub Login Error:", err);
-      const parsed = parseAuthError(err);
-      if (parsed.isUnauthorizedDomain) {
-        setDomainError(parsed);
-      }
-      if (err.code === 'auth/popup-blocked') {
-        toast.error('Popup blocked by browser. Please allow popups for this site.');
-        setLoading(false);
-        return;
-      }
-      if (err.code === 'auth/account-exists-with-different-credential') {
-        const email = err.customData?.email;
-        let pendingCredential = GithubAuthProvider.credentialFromError(err);
-
-        if (email && pendingCredential) {
-          try {
-            const methods = await fetchSignInMethodsForEmail(auth, email);
-            
-            let primaryProvider = '';
-            if (methods.includes('google.com')) {
-              primaryProvider = 'google.com';
-            } else if (methods.includes('password')) {
-              primaryProvider = 'password';
-            }
-
-            if (primaryProvider) {
-              setLinkEmail(email);
-              setLinkProvider(primaryProvider);
-              setPendingCred(pendingCredential);
-              setShowLinkModal(true);
-              setLoading(false);
-              return;
-            } else {
-              setLoading(false);
-              return;
-            }
-          } catch (fetchErr) {
-            console.error('Error fetching sign-in methods:', fetchErr);
-            setLoading(false);
-            return;
-          }
-        }
-      }
-      toast.error(parsed.message);
-    } finally {
-      if (!showLinkModal) {
-        setLoading(false);
-      }
-    }
-  };
-
-  const handleSocialAuth = async (provider: any) => {
+  const handleSocialAuth = async (provider: any, isRetry = false) => {
     setLoading(true);
     try {
       const result = await signInWithPopup(auth, provider);
@@ -393,9 +309,17 @@ export default function Auth() {
       }
       return user;
     } catch (err: any) {
-      console.error("Social Auth Error:", err);
+      console.warn("Social Auth notice:", err?.code || err?.message || err);
+
+      // Handle transient network request failure with an automatic retry
+      if (err?.code === 'auth/network-request-failed' && !isRetry) {
+        toast.loading('Connection interrupted, retrying...', { duration: 1200 });
+        await new Promise(resolve => setTimeout(resolve, 800));
+        return handleSocialAuth(provider, true);
+      }
+
       const parsed = parseAuthError(err);
-      if (parsed.isUnauthorizedDomain) {
+      if (parsed.isUnauthorizedDomain || parsed.isNetworkError || parsed.isProviderDisabled) {
         setDomainError(parsed);
       }
       if (err.code === 'auth/popup-blocked') {
@@ -413,34 +337,25 @@ export default function Auth() {
         }
 
         if (email && pendingCredential) {
+          let primaryProvider = 'google.com';
           try {
             const methods = await fetchSignInMethodsForEmail(auth, email);
-            
-            let primaryProvider = '';
-            if (methods.includes('google.com')) {
-              primaryProvider = 'google.com';
-            } else if (methods.includes('github.com')) {
-              primaryProvider = 'github.com';
-            } else if (methods.includes('password')) {
-              primaryProvider = 'password';
-            }
-
-            if (primaryProvider) {
-              setLinkEmail(email);
-              setLinkProvider(primaryProvider);
-              setPendingCred(pendingCredential);
-              setShowLinkModal(true);
-              setLoading(false);
-              return;
-            } else {
-              setLoading(false);
-              return;
+            if (methods && methods.length > 0) {
+              if (methods.includes('google.com')) primaryProvider = 'google.com';
+              else if (methods.includes('password')) primaryProvider = 'password';
+              else primaryProvider = methods[0];
             }
           } catch (fetchErr) {
-            console.error('Error fetching sign-in methods:', fetchErr);
-            setLoading(false);
-            return;
+            console.warn('Notice fetching sign-in methods:', fetchErr);
           }
+
+          setLinkEmail(email);
+          setLinkProvider(primaryProvider);
+          setPendingCred(pendingCredential);
+          setShowLinkModal(true);
+          setLoading(false);
+          toast.info(`Account with ${email} exists. Sign in with ${primaryProvider === 'google.com' ? 'Google' : 'your password'} to link your account.`);
+          return;
         }
       }
       toast.error(parsed.message);
@@ -449,6 +364,10 @@ export default function Auth() {
         setLoading(false);
       }
     }
+  };
+
+  const loginWithGithub = async () => {
+    return handleSocialAuth(githubProvider);
   };
 
   const handleLinkAccount = async (e?: React.FormEvent) => {
@@ -699,7 +618,7 @@ export default function Auth() {
             className="mt-10 space-y-6" 
             style={{ transform: "translateZ(50px)" }}
           >
-            {/* Domain Authorization Warning Banner */}
+            {/* Domain Authorization or Network Error Warning Banner */}
             {domainError && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -709,9 +628,13 @@ export default function Auth() {
                 <div className="flex items-start gap-2.5">
                   <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
                   <div className="flex-1">
-                    <h4 className="font-bold text-sm text-amber-300">Firebase Domain Authorization Required</h4>
+                    <h4 className="font-bold text-sm text-amber-300">
+                      {domainError.isProviderDisabled 
+                        ? 'GitHub Sign-In Setup Required' 
+                        : (domainError.isNetworkError ? 'Authentication Connection Blocked' : 'Firebase Domain Authorization Required')}
+                    </h4>
                     <p className="text-gray-300 mt-1 leading-relaxed">
-                      The domain <code className="px-1.5 py-0.5 rounded bg-black/50 text-amber-300 font-mono font-bold">{domainError.domain || (typeof window !== 'undefined' ? window.location.hostname : 'app.imprince.me')}</code> is not whitelisted in Firebase Auth settings.
+                      {domainError.message}
                     </p>
                   </div>
                   <button 
@@ -723,41 +646,114 @@ export default function Auth() {
                   </button>
                 </div>
 
-                <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1.5 text-[11px]">
-                  <div className="font-semibold text-white">How to fix in 1 minute:</div>
-                  <ol className="list-decimal pl-4 space-y-1 text-gray-300">
-                    <li>Open Firebase Console Settings below.</li>
-                    <li>Under <strong className="text-white">Authorized domains</strong>, click <strong className="text-white">Add domain</strong>.</li>
-                    <li>Enter <strong className="text-amber-300 font-mono">{domainError.domain || 'app.imprince.me'}</strong> and click Save.</li>
-                  </ol>
-                </div>
+                {domainError.isProviderDisabled ? (
+                  <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1.5 text-[11px]">
+                    <div className="font-semibold text-white">How to enable GitHub in Firebase (2 mins):</div>
+                    <ol className="list-decimal pl-4 space-y-1 text-gray-300">
+                      <li>Click <strong className="text-white">Open Firebase Providers</strong> below and enable <strong className="text-amber-300 font-semibold">GitHub</strong>.</li>
+                      <li>In <a href="https://github.com/settings/applications/new" target="_blank" rel="noreferrer" className="text-[#00E5FF] underline font-semibold">GitHub Developer Settings</a>, register a new OAuth App.</li>
+                      <li>Set Authorization callback URL to: <code className="px-1 py-0.5 rounded bg-black/50 text-amber-300 font-mono text-[10px] break-all">{domainError.callbackUrl}</code></li>
+                      <li>Paste the GitHub <strong className="text-white">Client ID</strong> and <strong className="text-white">Client Secret</strong> into Firebase and Save.</li>
+                    </ol>
+                    <div className="pt-1 text-[#00E5FF] font-medium">Tip: You can log in right now using Google or Email & Password!</div>
+                  </div>
+                ) : domainError.isNetworkError ? (
+                  <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1.5 text-[11px]">
+                    <div className="font-semibold text-white">Recommended solutions:</div>
+                    <ul className="list-disc pl-4 space-y-1 text-gray-300">
+                      <li>If using Brave, an Ad-Blocker, or Incognito, allow popups & cross-site cookies for this tab.</li>
+                      <li>Ensure <code className="px-1 py-0.5 rounded bg-black/50 text-amber-300 font-mono">{domainError.domain || (typeof window !== 'undefined' ? window.location.hostname : 'app.imprince.me')}</code> is whitelisted in Firebase Console authorized domains.</li>
+                      <li>Or log in directly using <strong className="text-white">Email & Password</strong> below.</li>
+                    </ul>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1.5 text-[11px]">
+                    <div className="font-semibold text-white">How to fix in 1 minute:</div>
+                    <ol className="list-decimal pl-4 space-y-1 text-gray-300">
+                      <li>Open Firebase Console Settings below.</li>
+                      <li>Under <strong className="text-white">Authorized domains</strong>, click <strong className="text-white">Add domain</strong>.</li>
+                      <li>Enter <strong className="text-amber-300 font-mono">{domainError.domain || 'app.imprince.me'}</strong> and click Save.</li>
+                    </ol>
+                  </div>
+                )}
 
                 <div className="flex items-center gap-2 pt-1 flex-wrap">
-                  {domainError.consoleUrl && (
-                    <a
-                      href={domainError.consoleUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs transition-colors shadow-sm"
-                    >
-                      <span>Open Firebase Console</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
+                  {domainError.isProviderDisabled ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleSocialAuth(googleProvider)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#00E5FF] to-[#8A2BE2] text-black font-black text-xs transition-all shadow-sm cursor-pointer hover:brightness-110"
+                      >
+                        <LogIn className="w-3.5 h-3.5" />
+                        <span>Sign In with Google Instead</span>
+                      </button>
+                      {domainError.consoleUrl && (
+                        <a
+                          href={domainError.consoleUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs transition-colors shadow-sm"
+                        >
+                          <span>Open Firebase Providers</span>
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      )}
+                      {domainError.callbackUrl && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(domainError.callbackUrl || '');
+                            setCopiedDomain(true);
+                            toast.success('Copied GitHub Callback URL');
+                            setTimeout(() => setCopiedDomain(false), 2000);
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs transition-colors cursor-pointer"
+                        >
+                          {copiedDomain ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                          <span>{copiedDomain ? 'Callback URL Copied!' : 'Copy Callback URL'}</span>
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {domainError.isNetworkError && (
+                        <button
+                          type="button"
+                          onClick={() => handleSocialAuth(googleProvider)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#00E5FF] hover:bg-[#00c8e0] text-black font-black text-xs transition-colors shadow-sm cursor-pointer"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          <span>Retry Google Login</span>
+                        </button>
+                      )}
+                      {domainError.consoleUrl && (
+                        <a
+                          href={domainError.consoleUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs transition-colors shadow-sm"
+                        >
+                          <span>Open Firebase Console</span>
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const domainToCopy = domainError.domain || (typeof window !== 'undefined' ? window.location.hostname : 'app.imprince.me');
+                          navigator.clipboard.writeText(domainToCopy);
+                          setCopiedDomain(true);
+                          toast.success(`Copied "${domainToCopy}" to clipboard`);
+                          setTimeout(() => setCopiedDomain(false), 2000);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs transition-colors cursor-pointer"
+                      >
+                        {copiedDomain ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedDomain ? 'Domain Copied!' : 'Copy Domain'}</span>
+                      </button>
+                    </>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const domainToCopy = domainError.domain || (typeof window !== 'undefined' ? window.location.hostname : 'app.imprince.me');
-                      navigator.clipboard.writeText(domainToCopy);
-                      setCopiedDomain(true);
-                      toast.success(`Copied "${domainToCopy}" to clipboard`);
-                      setTimeout(() => setCopiedDomain(false), 2000);
-                    }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs transition-colors"
-                  >
-                    {copiedDomain ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedDomain ? 'Domain Copied!' : 'Copy Domain'}</span>
-                  </button>
                 </div>
               </motion.div>
             )}

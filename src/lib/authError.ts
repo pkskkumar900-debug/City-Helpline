@@ -3,19 +3,27 @@
  * Provides user-friendly error messages and troubleshooting guides
  */
 
+import appletConfig from '../../firebase-applet-config.json';
+
 export interface AuthErrorInfo {
   title: string;
   message: string;
   isUnauthorizedDomain?: boolean;
+  isNetworkError?: boolean;
+  isProviderDisabled?: boolean;
+  providerName?: string;
   domain?: string;
   consoleUrl?: string;
+  callbackUrl?: string;
 }
 
 export function parseAuthError(error: any): AuthErrorInfo {
   const code = error?.code || '';
   const currentHost = typeof window !== 'undefined' ? window.location.hostname : 'app.imprince.me';
-  const projectId = 'gen-lang-client-0927462651';
+  const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || appletConfig.projectId || 'city-helpline-47c96';
   const consoleSettingsUrl = `https://console.firebase.google.com/project/${projectId}/authentication/settings`;
+  const consoleProvidersUrl = `https://console.firebase.google.com/project/${projectId}/authentication/providers`;
+  const callbackUrl = `https://${projectId}.firebaseapp.com/__/auth/handler`;
 
   switch (code) {
     case 'auth/unauthorized-domain':
@@ -72,8 +80,23 @@ export function parseAuthError(error: any): AuthErrorInfo {
 
     case 'auth/network-request-failed':
       return {
-        title: 'Network Error',
-        message: 'Unable to reach Firebase servers. Please check your internet connection and try again.'
+        title: 'Network / Cross-Origin Blocked',
+        message: 'Could not connect to Firebase Authentication. If you are using Brave, an ad-blocker, or incognito mode, please allow popups & cross-site cookies, or log in using Email & Password.',
+        isNetworkError: true,
+        domain: currentHost,
+        consoleUrl: consoleSettingsUrl
+      };
+
+    case 'auth/operation-not-allowed':
+    case 'auth/configuration-not-found':
+    case 'auth/admin-restricted-operation':
+      return {
+        title: 'GitHub Sign-in Not Configured in Firebase',
+        message: 'GitHub login is currently not enabled in Firebase Console. It requires a GitHub OAuth Client ID & Secret in Firebase Authentication > Sign-in method. Please use Google Sign-in or Email & Password to log in.',
+        isProviderDisabled: true,
+        providerName: 'GitHub',
+        consoleUrl: consoleProvidersUrl,
+        callbackUrl
       };
 
     case 'auth/too-many-requests':
@@ -85,7 +108,7 @@ export function parseAuthError(error: any): AuthErrorInfo {
     case 'auth/account-exists-with-different-credential':
       return {
         title: 'Account Exists With Different Provider',
-        message: 'An account already exists with this email using another sign-in method.'
+        message: 'An account already exists with this email address using Google or Email/Password. Please sign in with that method to link your accounts.'
       };
 
     default:
@@ -95,3 +118,4 @@ export function parseAuthError(error: any): AuthErrorInfo {
       };
   }
 }
+

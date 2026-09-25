@@ -137,12 +137,12 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             <ArrowUpRight className="w-3 h-3 text-gray-400 group-hover:text-white" />
           </button>
 
-          {/* Admin Profile Pill */}
+          {/* Admin Profile Pill & Logout Action */}
           <div className="flex items-center gap-2 pl-2 sm:pl-3 border-l border-white/10">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#00E5FF] to-[#8A2BE2] flex items-center justify-center text-black font-black text-xs shadow-md shrink-0">
               {userProfile?.name?.charAt(0).toUpperCase() || 'A'}
             </div>
-            <div className="hidden xl:block text-left leading-tight">
+            <div className="hidden xl:block text-left leading-tight mr-1">
               <p className="text-xs font-bold text-white truncate max-w-[120px]">{userProfile?.name || 'Administrator'}</p>
               <p className="text-[10px] font-semibold text-[#00E5FF] tracking-wider uppercase">
                 {isSuper ? 'Super Admin' : 'Admin'}
@@ -150,10 +150,11 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             </div>
             <button
               onClick={onLogout}
-              className="p-2 rounded-xl text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 hover:text-rose-100 border border-rose-500/30 hover:border-rose-500/50 transition-all active:scale-95 text-xs font-bold cursor-pointer shadow-sm"
               title="Sign Out of Admin Console"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3.5 h-3.5 text-rose-400" />
+              <span>Logout</span>
             </button>
           </div>
 

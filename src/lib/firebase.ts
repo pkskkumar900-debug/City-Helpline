@@ -7,17 +7,22 @@ import appletConfig from '../../firebase-applet-config.json';
 // Silence internal Firestore network polling warnings that occur in iframe/sandboxed preview environments
 setLogLevel('silent');
 
-// Intercept any internal Firestore offline reconnection messages that bubble up to console.error
+// Intercept any internal Firestore offline reconnection or transient auth network messages that bubble up to console.error
 if (typeof window !== 'undefined') {
   const originalConsoleError = console.error;
   console.error = (...args: unknown[]) => {
+    const msg = typeof args[0] === 'string' ? args[0] : (args[0] instanceof Error ? args[0].message : '');
+    const errObj = args[1] instanceof Error ? args[1].message : (typeof args[1] === 'string' ? args[1] : '');
+    const combined = `${msg} ${errObj}`;
+
     if (
-      typeof args[0] === 'string' &&
-      (args[0].includes('Could not reach Cloud Firestore backend') ||
-       args[0].includes('Backend didn\'t respond within 10 seconds') ||
-       args[0].includes('@firebase/firestore'))
+      combined.includes('Could not reach Cloud Firestore backend') ||
+      combined.includes('Backend didn\'t respond within 10 seconds') ||
+      combined.includes('@firebase/firestore') ||
+      combined.includes('auth/network-request-failed') ||
+      combined.includes('Social Auth Error')
     ) {
-      console.warn(...args);
+      console.warn('[Handled Auth/Network Notice]:', ...args);
       return;
     }
     originalConsoleError.apply(console, args);
@@ -43,7 +48,13 @@ setPersistence(auth, browserLocalPersistence).catch((error) => {
 });
 
 export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
 export const githubProvider = new GithubAuthProvider();
+githubProvider.setCustomParameters({
+  allow_signup: 'true'
+});
 
 const databaseId = import.meta.env.VITE_FIREBASE_DATABASE_ID || appletConfig.firestoreDatabaseId;
 

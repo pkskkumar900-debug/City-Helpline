@@ -263,6 +263,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSwitchToStudentVie
           totalMarketplaceCount={marketplaceItems.length}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          onLogout={handleLogout}
         />
 
         {/* Dynamic Content Canvas */}

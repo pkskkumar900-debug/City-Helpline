@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   LayoutDashboard, Building2, Users, ShoppingBag, MapPin, 
   Megaphone, History, ChevronRight, Sparkles, ShieldCheck,
-  ChevronLeft, Layers, ExternalLink
+  ChevronLeft, Layers, ExternalLink, LogOut
 } from 'lucide-react';
 
 export type AdminTab = 
@@ -23,6 +23,7 @@ interface AdminSidebarProps {
   totalMarketplaceCount: number;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  onLogout?: () => void;
 }
 
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({
@@ -34,6 +35,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   totalMarketplaceCount,
   isCollapsed,
   onToggleCollapse,
+  onLogout,
 }) => {
   const navItems: Array<{
     id: AdminTab;
@@ -182,7 +184,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
 
       {/* Sidebar Footer Info Card */}
       {!isCollapsed && (
-        <div className="p-4 border-t border-white/5 m-3 rounded-2xl bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/10">
+        <div className="p-3.5 border-t border-white/5 mx-3 mb-2 rounded-2xl bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/10">
           <div className="flex items-center gap-2 text-xs font-bold text-white mb-1">
             <ShieldCheck className="w-4 h-4 text-[#00E5FF]" />
             <span>Admin Guardrail</span>
@@ -194,11 +196,32 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             href="/legal"
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-2.5 text-[10px] font-bold text-[#00E5FF] hover:underline flex items-center gap-1"
+            className="mt-2 text-[10px] font-bold text-[#00E5FF] hover:underline flex items-center gap-1"
           >
-            <span>Legal, Privacy & Compliance Docs</span>
+            <span>Compliance & Legal Docs</span>
             <ExternalLink className="w-3 h-3" />
           </a>
+        </div>
+      )}
+
+      {/* Logout Action at bottom of Sidebar */}
+      {onLogout && (
+        <div className="p-3 border-t border-white/10 mt-auto">
+          <button
+            onClick={onLogout}
+            className={`w-full flex items-center gap-3 p-3 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-rose-100 border border-rose-500/25 transition-all text-xs font-bold active:scale-95 cursor-pointer shadow-sm ${
+              isCollapsed ? 'justify-center px-0' : ''
+            }`}
+            title="Sign Out of Admin Console"
+          >
+            <LogOut className="w-4 h-4 text-rose-400 shrink-0" />
+            {!isCollapsed && (
+              <div className="flex-1 text-left">
+                <span className="block font-bold">Log Out Admin</span>
+                <span className="block text-[10px] text-rose-400/80 font-normal">End session</span>
+              </div>
+            )}
+          </button>
         </div>
       )}
     </aside>
