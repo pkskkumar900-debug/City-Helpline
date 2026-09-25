@@ -16,26 +16,32 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Role, isSuperAdminEmail } from '../types';
-import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
-  LogIn, UserPlus, Eye, EyeOff, Mail, Lock, User, AlertCircle, Phone, 
-  Building2, MapPin, Briefcase, Github, ChevronRight, ExternalLink, 
+  Eye, EyeOff, Lock, User, AlertCircle, Phone, 
+  Building2, MapPin, Briefcase, Github, ExternalLink, 
   Copy, Check, ShieldAlert, KeyRound, X, RefreshCw, CheckCircle2
 } from 'lucide-react';
 import { CATEGORIES, STATE_CITIES } from '../lib/constants';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
 import { parseAuthError, AuthErrorInfo } from '../lib/authError';
-import { LiquidInput } from '../components/ui/LiquidInput';
-import { LiquidButton } from '../components/ui/LiquidButton';
-import { LiquidCheckbox } from '../components/ui/LiquidCheckbox';
-import { GlassCard } from '../components/ui/GlassCard';
+import '../styles/auth-talanov.css';
+
+const GoogleIcon = () => (
+  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+  </svg>
+);
 
 export default function Auth() {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser, loading: authLoading } = useAuth();
-  const [isLogin, setIsLogin] = useState(location.pathname === '/login');
+  const [isLogin, setIsLogin] = useState(location.pathname !== '/signup');
 
   // Redirect if already logged in
   useEffect(() => {
@@ -46,40 +52,13 @@ export default function Auth() {
 
   // Update state if URL changes
   useEffect(() => {
-    setIsLogin(location.pathname === '/login');
+    setIsLogin(location.pathname !== '/signup');
   }, [location.pathname]);
 
-  // 3D Tilt Effect State
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  const mouseXSpring = useSpring(x, { stiffness: 300, damping: 30 });
-  const mouseYSpring = useSpring(y, { stiffness: 300, damping: 30 });
-
-  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["10deg", "-10deg"]);
-  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-10deg", "10deg"]);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    const xPct = mouseX / width - 0.5;
-    const yPct = mouseY / height - 0.5;
-    x.set(xPct);
-    y.set(yPct);
-  };
-
-  const handleMouseLeave = () => {
-    x.set(0);
-    y.set(0);
-  };
-
-  const toggleAuthMode = () => {
-    const newMode = !isLogin;
-    setIsLogin(newMode);
-    navigate(newMode ? '/login' : '/signup', { replace: true });
+  const toggleAuthMode = (targetIsLogin?: boolean) => {
+    const nextMode = targetIsLogin !== undefined ? targetIsLogin : !isLogin;
+    setIsLogin(nextMode);
+    navigate(nextMode ? '/login' : '/signup', { replace: true });
   };
 
   // Shared State
@@ -87,7 +66,6 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [domainError, setDomainError] = useState<AuthErrorInfo | null>(null);
   const [copiedDomain, setCopiedDomain] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
@@ -239,7 +217,6 @@ export default function Auth() {
     setForgotNotice(null);
 
     try {
-      // Check sign in methods first to give accurate guidance
       let isGoogleOnly = false;
       try {
         const methods = await fetchSignInMethodsForEmail(auth, cleanEmail);
@@ -247,7 +224,7 @@ export default function Auth() {
           isGoogleOnly = true;
         }
       } catch {
-        // Email enumeration protection might suppress error/methods
+        // Email enumeration protection
       }
 
       if (isGoogleOnly) {
@@ -311,7 +288,6 @@ export default function Auth() {
     } catch (err: any) {
       console.warn("Social Auth notice:", err?.code || err?.message || err);
 
-      // Handle transient network request failure with an automatic retry
       if (err?.code === 'auth/network-request-failed' && !isRetry) {
         toast.loading('Connection interrupted, retrying...', { duration: 1200 });
         await new Promise(resolve => setTimeout(resolve, 800));
@@ -328,7 +304,7 @@ export default function Auth() {
         return;
       }
       if (err.code === 'auth/account-exists-with-different-credential') {
-        const email = err.customData?.email;
+        const emailVal = err.customData?.email;
         let pendingCredential;
         if (provider.providerId === 'google.com') {
           pendingCredential = GoogleAuthProvider.credentialFromError(err);
@@ -336,10 +312,10 @@ export default function Auth() {
           pendingCredential = GithubAuthProvider.credentialFromError(err);
         }
 
-        if (email && pendingCredential) {
+        if (emailVal && pendingCredential) {
           let primaryProvider = 'google.com';
           try {
-            const methods = await fetchSignInMethodsForEmail(auth, email);
+            const methods = await fetchSignInMethodsForEmail(auth, emailVal);
             if (methods && methods.length > 0) {
               if (methods.includes('google.com')) primaryProvider = 'google.com';
               else if (methods.includes('password')) primaryProvider = 'password';
@@ -349,12 +325,12 @@ export default function Auth() {
             console.warn('Notice fetching sign-in methods:', fetchErr);
           }
 
-          setLinkEmail(email);
+          setLinkEmail(emailVal);
           setLinkProvider(primaryProvider);
           setPendingCred(pendingCredential);
           setShowLinkModal(true);
           setLoading(false);
-          toast.info(`Account with ${email} exists. Sign in with ${primaryProvider === 'google.com' ? 'Google' : 'your password'} to link your account.`);
+          toast.info(`Account with ${emailVal} exists. Sign in with ${primaryProvider === 'google.com' ? 'Google' : 'your password'} to link your account.`);
           return;
         }
       }
@@ -407,7 +383,6 @@ export default function Auth() {
             navigate('/');
           }
         } else {
-          // If the linked account was somehow incomplete, show role modal
           setPendingUser(userCredential.user);
           setShowRoleModal(true);
         }
@@ -457,569 +432,361 @@ export default function Auth() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+      <div className="min-h-screen flex items-center justify-center bg-[#07090E]">
         <div className="flex flex-col items-center">
-          <svg className="animate-spin h-8 w-8 text-purple-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <svg className="animate-spin h-8 w-8 text-[#00E5FF] mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <p className="text-gray-400 font-medium">Loading...</p>
+          <p className="text-gray-400 font-medium text-sm">Loading City Helpline Authentication...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div 
-      className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-transparent"
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{ perspective: 1200 }}
-    >
-      {/* 3D Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div style={{ x: useTransform(mouseXSpring, [-0.5, 0.5], [30, -30]), y: useTransform(mouseYSpring, [-0.5, 0.5], [30, -30]) }} className="absolute inset-0">
-          <motion.div 
-            animate={{ 
-              y: [0, -20, 0],
-              rotate: [0, 5, 0],
-              scale: [1, 1.05, 1]
-            }}
-            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-[#00E5FF]/10 rounded-full blur-[120px]"
-          />
-        </motion.div>
-        <motion.div style={{ x: useTransform(mouseXSpring, [-0.5, 0.5], [-40, 40]), y: useTransform(mouseYSpring, [-0.5, 0.5], [-40, 40]) }} className="absolute inset-0">
-          <motion.div 
-            animate={{ 
-              y: [0, 30, 0],
-              rotate: [0, -5, 0],
-              scale: [1, 1.1, 1]
-            }}
-            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-            className="absolute bottom-[-10%] right-[-10%] w-[40rem] h-[40rem] bg-[#8A2BE2]/10 rounded-full blur-[120px]"
-          />
-        </motion.div>
-        <motion.div style={{ x: useTransform(mouseXSpring, [-0.5, 0.5], [20, -20]), y: useTransform(mouseYSpring, [-0.5, 0.5], [-20, 20]) }} className="absolute inset-0">
-          <motion.div 
-            animate={{ 
-              x: [0, 40, 0],
-              y: [0, 20, 0]
-            }}
-            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-            className="absolute top-[20%] right-[20%] w-[20rem] h-[20rem] bg-[#FF3B3B]/10 rounded-full blur-[80px]"
-          />
-        </motion.div>
+    <div className="auth-page-container">
+      <p className="tip">
+        Direct & Zero-Brokerage Student Housing • City Helpline
+      </p>
 
-        {/* Light Particles */}
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-white rounded-full"
-            initial={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
-              opacity: Math.random() * 0.5 + 0.1,
-              scale: Math.random() * 2 + 0.5,
-            }}
-            animate={{
-              y: [null, Math.random() * -100 - 50],
-              opacity: [null, 0],
-            }}
-            transition={{
-              duration: Math.random() * 5 + 5,
-              repeat: Infinity,
-              ease: "linear",
-              delay: Math.random() * 5,
-            }}
-          />
-        ))}
-      </div>
-
-      <GlassCard
-        initial={{ opacity: 0, y: 30, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6, type: "spring", bounce: 0.4 }}
-        className="max-w-md w-full space-y-8 p-10 relative z-10"
-        intensity="high"
-        glowColor={isLogin ? 'rgba(0, 229, 255, 0.2)' : 'rgba(138, 43, 226, 0.2)'}
-        style={{
-          rotateX,
-          rotateY,
-          transformStyle: "preserve-3d",
-        }}
-      >
-        {/* Toggle Switch */}
-        <div className="flex p-1 bg-[rgba(255,255,255,0.03)] rounded-[40px] border border-white/10 mb-8 backdrop-blur-sm relative z-10" style={{ transform: "translateZ(30px)" }}>
-          <div className={`flex-1 ${isLogin ? 'golden-wrapper' : ''}`}>
-            <button
-              type="button"
-              onClick={() => !isLogin && toggleAuthMode()}
-              className={`w-full py-3 text-sm font-bold rounded-[36px] transition-all uppercase tracking-widest ${
-                isLogin 
-                  ? 'golden-button' 
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              Login
-            </button>
-          </div>
-          <div className={`flex-1 ${!isLogin ? 'golden-wrapper' : ''}`}>
-            <button
-              type="button"
-              onClick={() => isLogin && toggleAuthMode()}
-              className={`w-full py-3 text-sm font-bold rounded-[36px] transition-all uppercase tracking-widest ${
-                !isLogin 
-                  ? 'golden-button' 
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              Sign Up
-            </button>
-          </div>
+      {/* Main Sliding Double Card */}
+      <div className={`cont ${!isLogin ? 's--signup' : ''}`}>
+        
+        {/* Mobile Tab Switcher (< 940px) */}
+        <div className="mobile-tab-switch">
+          <button
+            type="button"
+            className={isLogin ? 'active' : ''}
+            onClick={() => toggleAuthMode(true)}
+          >
+            Sign In
+          </button>
+          <button
+            type="button"
+            className={!isLogin ? 'active' : ''}
+            onClick={() => toggleAuthMode(false)}
+          >
+            Sign Up
+          </button>
         </div>
 
-        <div className="text-center relative" style={{ transform: "translateZ(40px)" }}>
-          <motion.div 
-            key={isLogin ? 'login-icon' : 'signup-icon'}
-            initial={{ scale: 0.5, opacity: 0, rotate: -10 }}
-            animate={{ scale: 1, opacity: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 200, damping: 20 }}
-            whileHover={{ scale: 1.1, rotate: isLogin ? 10 : -10, translateZ: 20 }}
-            whileTap={{ scale: 0.95 }}
-            className={`mx-auto h-20 w-20 bg-gradient-to-br ${isLogin ? 'from-[#00E5FF] to-[#8A2BE2]' : 'from-[#8A2BE2] to-[#FF3B3B]'} rounded-3xl flex items-center justify-center shadow-[0_0_30px_rgba(0,229,255,0.5)] mb-8 relative group cursor-pointer`}
-            style={{ 
-              transformStyle: "preserve-3d",
-              boxShadow: isLogin ? '0 0 30px rgba(0,229,255,0.5)' : '0 0 30px rgba(138,43,226,0.5)'
-            }}
-          >
-            <div className="absolute inset-0 bg-white/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
-            {isLogin ? (
-              <LogIn className="h-10 w-10 text-white relative z-10" />
-            ) : (
-              <UserPlus className="h-10 w-10 text-white relative z-10" />
-            )}
-          </motion.div>
-          <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 drop-shadow-sm tracking-tight" style={{ transform: "translateZ(30px)" }}>
-            {isLogin ? 'Welcome Back' : 'Create Account'}
-          </h2>
-          <p className="mt-3 text-sm text-gray-400 font-medium" style={{ transform: "translateZ(20px)" }}>
-            {isLogin ? 'Log in to access your account' : 'Join the City Helpline community'}
-          </p>
-        </div>
+        {/* 1. Form: Sign In */}
+        <form className="form sign-in" onSubmit={handleLoginSubmit}>
+          <h2>Welcome Back,</h2>
+          <p className="form-subtitle">Log in to manage rooms, bookings & preferences</p>
 
-        <AnimatePresence mode="wait">
-          <motion.div 
-            key={isLogin ? 'login-form' : 'signup-form'}
-            initial={{ opacity: 0, x: isLogin ? -20 : 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: isLogin ? 20 : -20 }}
-            transition={{ duration: 0.3 }}
-            className="mt-10 space-y-6" 
-            style={{ transform: "translateZ(50px)" }}
-          >
-            {/* Domain Authorization or Network Error Warning Banner */}
-            {domainError && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-3 backdrop-blur-md shadow-[0_0_25px_rgba(245,158,11,0.2)]"
-              >
-                <div className="flex items-start gap-2.5">
-                  <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <h4 className="font-bold text-sm text-amber-300">
-                      {domainError.isProviderDisabled 
-                        ? 'GitHub Sign-In Setup Required' 
-                        : (domainError.isNetworkError ? 'Authentication Connection Blocked' : 'Firebase Domain Authorization Required')}
-                    </h4>
-                    <p className="text-gray-300 mt-1 leading-relaxed">
-                      {domainError.message}
-                    </p>
-                  </div>
-                  <button 
-                    type="button" 
-                    onClick={() => setDomainError(null)} 
-                    className="text-gray-400 hover:text-white p-1"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {domainError.isProviderDisabled ? (
-                  <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1.5 text-[11px]">
-                    <div className="font-semibold text-white">How to enable GitHub in Firebase (2 mins):</div>
-                    <ol className="list-decimal pl-4 space-y-1 text-gray-300">
-                      <li>Click <strong className="text-white">Open Firebase Providers</strong> below and enable <strong className="text-amber-300 font-semibold">GitHub</strong>.</li>
-                      <li>In <a href="https://github.com/settings/applications/new" target="_blank" rel="noreferrer" className="text-[#00E5FF] underline font-semibold">GitHub Developer Settings</a>, register a new OAuth App.</li>
-                      <li>Set Authorization callback URL to: <code className="px-1 py-0.5 rounded bg-black/50 text-amber-300 font-mono text-[10px] break-all">{domainError.callbackUrl}</code></li>
-                      <li>Paste the GitHub <strong className="text-white">Client ID</strong> and <strong className="text-white">Client Secret</strong> into Firebase and Save.</li>
-                    </ol>
-                    <div className="pt-1 text-[#00E5FF] font-medium">Tip: You can log in right now using Google or Email & Password!</div>
-                  </div>
-                ) : domainError.isNetworkError ? (
-                  <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1.5 text-[11px]">
-                    <div className="font-semibold text-white">Recommended solutions:</div>
-                    <ul className="list-disc pl-4 space-y-1 text-gray-300">
-                      <li>If using Brave, an Ad-Blocker, or Incognito, allow popups & cross-site cookies for this tab.</li>
-                      <li>Ensure <code className="px-1 py-0.5 rounded bg-black/50 text-amber-300 font-mono">{domainError.domain || (typeof window !== 'undefined' ? window.location.hostname : 'app.imprince.me')}</code> is whitelisted in Firebase Console authorized domains.</li>
-                      <li>Or log in directly using <strong className="text-white">Email & Password</strong> below.</li>
-                    </ul>
-                  </div>
-                ) : (
-                  <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1.5 text-[11px]">
-                    <div className="font-semibold text-white">How to fix in 1 minute:</div>
-                    <ol className="list-decimal pl-4 space-y-1 text-gray-300">
-                      <li>Open Firebase Console Settings below.</li>
-                      <li>Under <strong className="text-white">Authorized domains</strong>, click <strong className="text-white">Add domain</strong>.</li>
-                      <li>Enter <strong className="text-amber-300 font-mono">{domainError.domain || 'app.imprince.me'}</strong> and click Save.</li>
-                    </ol>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-2 pt-1 flex-wrap">
-                  {domainError.isProviderDisabled ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => handleSocialAuth(googleProvider)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#00E5FF] to-[#8A2BE2] text-black font-black text-xs transition-all shadow-sm cursor-pointer hover:brightness-110"
-                      >
-                        <LogIn className="w-3.5 h-3.5" />
-                        <span>Sign In with Google Instead</span>
-                      </button>
-                      {domainError.consoleUrl && (
-                        <a
-                          href={domainError.consoleUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs transition-colors shadow-sm"
-                        >
-                          <span>Open Firebase Providers</span>
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
-                      )}
-                      {domainError.callbackUrl && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigator.clipboard.writeText(domainError.callbackUrl || '');
-                            setCopiedDomain(true);
-                            toast.success('Copied GitHub Callback URL');
-                            setTimeout(() => setCopiedDomain(false), 2000);
-                          }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs transition-colors cursor-pointer"
-                        >
-                          {copiedDomain ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                          <span>{copiedDomain ? 'Callback URL Copied!' : 'Copy Callback URL'}</span>
-                        </button>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      {domainError.isNetworkError && (
-                        <button
-                          type="button"
-                          onClick={() => handleSocialAuth(googleProvider)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#00E5FF] hover:bg-[#00c8e0] text-black font-black text-xs transition-colors shadow-sm cursor-pointer"
-                        >
-                          <RefreshCw className="w-3.5 h-3.5" />
-                          <span>Retry Google Login</span>
-                        </button>
-                      )}
-                      {domainError.consoleUrl && (
-                        <a
-                          href={domainError.consoleUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs transition-colors shadow-sm"
-                        >
-                          <span>Open Firebase Console</span>
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const domainToCopy = domainError.domain || (typeof window !== 'undefined' ? window.location.hostname : 'app.imprince.me');
-                          navigator.clipboard.writeText(domainToCopy);
-                          setCopiedDomain(true);
-                          toast.success(`Copied "${domainToCopy}" to clipboard`);
-                          setTimeout(() => setCopiedDomain(false), 2000);
-                        }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs transition-colors cursor-pointer"
-                      >
-                        {copiedDomain ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                        <span>{copiedDomain ? 'Domain Copied!' : 'Copy Domain'}</span>
-                      </button>
-                    </>
-                  )}
-                </div>
-              </motion.div>
-            )}
-
-            <form onSubmit={isLogin ? handleLoginSubmit : handleSignupSubmit} className="space-y-6">
-              {!isLogin && (
-              <div className="flex p-1 bg-[rgba(255,255,255,0.03)] rounded-[40px] border border-white/10 mb-6 backdrop-blur-sm" style={{ transform: "translateZ(20px)" }}>
-                <div className={`flex-1 ${role === 'user' ? 'golden-wrapper' : ''}`}>
-                  <button
-                    type="button"
-                    onClick={() => setRole('user')}
-                    className={`w-full py-2.5 text-sm font-medium rounded-[36px] transition-all ${
-                      role === 'user' 
-                        ? 'golden-button' 
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    User
-                    <span className="block text-[10px] opacity-70 mt-0.5">Explore services</span>
-                  </button>
-                </div>
-                <div className={`flex-1 ${role === 'contributor' ? 'golden-wrapper' : ''}`}>
-                  <button
-                    type="button"
-                    onClick={() => setRole('contributor')}
-                    className={`w-full py-2.5 text-sm font-medium rounded-[36px] transition-all ${
-                      role === 'contributor' 
-                        ? 'golden-button' 
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    Contributor
-                    <span className="block text-[10px] opacity-70 mt-0.5">Add your business</span>
-                  </button>
-                </div>
+          {/* Domain Error Notice */}
+          {domainError && (
+            <div className="p-3 mb-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs space-y-2 text-left">
+              <div className="flex items-start gap-2">
+                <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div className="flex-1 font-medium">{domainError.message}</div>
+                <button type="button" onClick={() => setDomainError(null)} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
-            )}
-
-              <div className="space-y-5" style={{ transform: "translateZ(30px)" }}>
-              {!isLogin && (
-                <div className="relative group" style={{ transform: "translateZ(10px)" }}>
-                  <label className="block text-sm font-medium text-gray-300 mb-2 transition-colors group-focus-within:text-purple-400">Full Name</label>
-                  <LiquidInput
-                    type="text"
-                    required
-                    placeholder="John Doe"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    icon={<User className="h-5 w-5" />}
-                    glowColor="rgba(138, 43, 226, 0.5)"
-                  />
-                </div>
+              {domainError.consoleUrl && (
+                <a
+                  href={domainError.consoleUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 underline"
+                >
+                  <span>Open Firebase Settings</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
               )}
+            </div>
+          )}
 
-              <div className="relative group" style={{ transform: "translateZ(10px)" }}>
-                <label className={`block text-sm font-medium text-gray-300 mb-2 transition-colors group-focus-within:${isLogin ? 'text-[#00E5FF]' : 'text-[#8A2BE2]'}`}>Email address</label>
-                <LiquidInput
-                  type="email"
-                  required
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  icon={<Mail className="h-5 w-5" />}
-                  glowColor={isLogin ? 'rgba(0, 229, 255, 0.5)' : 'rgba(138, 43, 226, 0.5)'}
-                />
-              </div>
+          <label>
+            <span>Email Address</span>
+            <input
+              type="email"
+              required
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </label>
 
-              <div className="relative group" style={{ transform: "translateZ(10px)" }}>
-                <div className="flex justify-between items-center mb-2">
-                  <label className={`block text-sm font-medium text-gray-300 transition-colors group-focus-within:${isLogin ? 'text-[#00E5FF]' : 'text-[#8A2BE2]'}`}>Password</label>
-                  {isLogin && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setForgotEmail(email);
-                        setShowForgotModal(true);
-                      }}
-                      className="text-xs font-medium text-[#00E5FF] hover:text-white transition-colors cursor-pointer"
-                      style={{ textShadow: '0 0 10px rgba(0, 229, 255, 0.5)' }}
-                    >
-                      Forgot password?
-                    </button>
-                  )}
-                </div>
-                <LiquidInput
-                  type="password"
+          <label>
+            <span>Password</span>
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '6px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '28px',
+                  height: '28px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#718096',
+                }}
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </label>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '280px', margin: '12px auto 0' }}>
+            <label className="remember-wrap" style={{ margin: 0, width: 'auto' }}>
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={() => setRememberMe(!rememberMe)}
+              />
+              <span>Remember me</span>
+            </label>
+
+            <span
+              className="forgot-pass"
+              style={{ margin: 0 }}
+              onClick={() => {
+                setForgotEmail(email);
+                setShowForgotModal(true);
+              }}
+            >
+              Forgot password?
+            </span>
+          </div>
+
+          <button type="submit" className="submit" disabled={loading}>
+            {loading ? 'Signing In...' : 'Sign In'}
+          </button>
+
+          <div className="or-divider">
+            <span>Or continue with</span>
+          </div>
+
+          <button
+            type="button"
+            className="social-btn google-btn"
+            onClick={() => handleSocialAuth(googleProvider)}
+            disabled={loading}
+          >
+            <GoogleIcon />
+            <span>Continue with Google</span>
+          </button>
+
+          <button
+            type="button"
+            className="social-btn github-btn"
+            onClick={loginWithGithub}
+            disabled={loading}
+          >
+            <Github size={16} />
+            <span>Continue with GitHub</span>
+          </button>
+        </form>
+
+        {/* 2. Sub-Container (Sliding Overlay Image + Sign-Up Form) */}
+        <div className="sub-cont">
+          <div className="img">
+            <div className="img__text m--up">
+              <h2>New here?</h2>
+              <p>Sign up and discover verified zero-brokerage student rooms, mess & marketplace!</p>
+            </div>
+            <div className="img__text m--in">
+              <h2>One of us?</h2>
+              <p>If you already have an account, just sign in. We've missed you!</p>
+            </div>
+            <div className="img__btn" onClick={() => toggleAuthMode(!isLogin)}>
+              <span className="m--up">Sign Up</span>
+              <span className="m--in">Sign In</span>
+            </div>
+          </div>
+
+          {/* Form: Sign Up */}
+          <form className="form sign-up" onSubmit={handleSignupSubmit}>
+            <h2>Create Account,</h2>
+            <p className="form-subtitle">Join thousands of students and verified owners</p>
+
+            {/* Role Switcher */}
+            <div className="role-pill-switch">
+              <button
+                type="button"
+                className={role === 'user' ? 'active' : ''}
+                onClick={() => setRole('user')}
+              >
+                Student / Aspirant
+              </button>
+              <button
+                type="button"
+                className={role === 'contributor' ? 'active' : ''}
+                onClick={() => setRole('contributor')}
+              >
+                Hostel / PG Owner
+              </button>
+            </div>
+
+            <label>
+              <span>Full Name</span>
+              <input
+                type="text"
+                required
+                placeholder="Rahul Kumar"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </label>
+
+            <label>
+              <span>Email Address</span>
+              <input
+                type="email"
+                required
+                placeholder="rahul@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </label>
+
+            <label>
+              <span>Password</span>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
                   required
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  icon={<Lock className="h-5 w-5" />}
-                  glowColor={isLogin ? 'rgba(0, 229, 255, 0.5)' : 'rgba(138, 43, 226, 0.5)'}
                 />
-              </div>
-
-              {!isLogin && role === 'contributor' && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="space-y-5 overflow-hidden"
-                >
-                  <div className="relative group">
-                    <label className="block text-sm font-medium text-gray-300 mb-2 transition-colors group-focus-within:text-[#8A2BE2]">Phone Number</label>
-                    <LiquidInput
-                      type="tel"
-                      required={role === 'contributor'}
-                      placeholder="+91 98765 43210"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      icon={<Phone className="h-5 w-5" />}
-                      glowColor="rgba(138, 43, 226, 0.5)"
-                    />
-                  </div>
-
-                  <div className="relative group">
-                    <label className="block text-sm font-medium text-gray-300 mb-2 transition-colors group-focus-within:text-[#8A2BE2]">Business Name</label>
-                    <LiquidInput
-                      type="text"
-                      required={role === 'contributor'}
-                      placeholder="My Awesome PG"
-                      value={businessName}
-                      onChange={(e) => setBusinessName(e.target.value)}
-                      icon={<Building2 className="h-5 w-5" />}
-                      glowColor="rgba(138, 43, 226, 0.5)"
-                    />
-                  </div>
-
-                  <div className="relative group">
-                    <label className="block text-sm font-medium text-gray-300 mb-2 transition-colors group-focus-within:text-[#8A2BE2]">Business Type</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <Briefcase className={`h-5 w-5 transition-colors ${focusedInput === 'businessType' ? 'text-[#8A2BE2]' : 'text-gray-500'}`} />
-                      </div>
-                      <select
-                        required={role === 'contributor'}
-                        className="appearance-none block w-full pl-11 pr-4 py-3.5 bg-[rgba(255,255,255,0.06)] border border-white/10 text-white rounded-2xl focus:border-[#8A2BE2]/50 outline-none transition-all backdrop-blur-md"
-                        value={businessType}
-                        onChange={(e) => setBusinessType(e.target.value)}
-                        onFocus={() => setFocusedInput('businessType')}
-                        onBlur={() => setFocusedInput(null)}
-                      >
-                        <option value="" disabled className="bg-gray-900">Select Business Type</option>
-                        {CATEGORIES.map(cat => (
-                          <option key={cat} value={cat} className="bg-gray-900">{cat}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="relative group">
-                    <label className="block text-sm font-medium text-gray-300 mb-2 transition-colors group-focus-within:text-[#8A2BE2]">City</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <MapPin className={`h-5 w-5 transition-colors ${focusedInput === 'city' ? 'text-[#8A2BE2]' : 'text-gray-500'}`} />
-                      </div>
-                      <select
-                        required={role === 'contributor'}
-                        className="appearance-none block w-full pl-11 pr-4 py-3.5 bg-[rgba(255,255,255,0.06)] border border-white/10 text-white rounded-2xl focus:border-[#8A2BE2]/50 outline-none transition-all backdrop-blur-md"
-                        value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                        onFocus={() => setFocusedInput('city')}
-                        onBlur={() => setFocusedInput(null)}
-                      >
-                        <option value="" disabled className="bg-gray-900">Select City</option>
-                        {cityOptions.map(opt => (
-                          <option key={opt.value} value={opt.value} className="bg-gray-900">{opt.label} ({opt.group})</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="relative group">
-                    <label className="block text-sm font-medium text-gray-300 mb-2 transition-colors group-focus-within:text-[#8A2BE2]">Full Address</label>
-                    <div className="relative">
-                      <div className="absolute top-3.5 left-0 pl-4 flex items-start pointer-events-none">
-                        <MapPin className={`h-5 w-5 transition-colors ${focusedInput === 'address' ? 'text-[#8A2BE2]' : 'text-gray-500'}`} />
-                      </div>
-                      <textarea
-                        required={role === 'contributor'}
-                        rows={3}
-                        className="appearance-none block w-full pl-11 pr-4 py-3.5 bg-[rgba(255,255,255,0.06)] border border-white/10 text-white rounded-2xl focus:border-[#8A2BE2]/50 outline-none transition-all placeholder-gray-500 backdrop-blur-md resize-none"
-                        placeholder="123 Main St, Near Landmark"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        onFocus={() => setFocusedInput('address')}
-                        onBlur={() => setFocusedInput(null)}
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-              
-              {isLogin && (
-                <div className="flex items-center">
-                  <LiquidCheckbox
-                    checked={rememberMe}
-                    onChange={() => setRememberMe(!rememberMe)}
-                    label="Remember me"
-                  />
-                </div>
-              )}
-            </div>
-
-            <div style={{ transform: "translateZ(40px)" }} className="flex justify-center w-full">
-              <div className="golden-wrapper w-full">
                 <button
-                  type="submit"
-                  disabled={loading}
-                  className="golden-button w-full flex items-center justify-center py-4"
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '6px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: '28px',
+                    height: '28px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#718096',
+                  }}
+                  title={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {loading ? (
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                  ) : (
-                    isLogin ? 'Log in securely' : 'Sign up'
-                  )}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
-            </div>
-            </form>
-            
-            <div className="relative my-8" style={{ transform: "translateZ(20px)" }}>
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/10"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-transparent backdrop-blur-md text-gray-400 rounded-full border border-white/10 text-xs uppercase tracking-wider font-semibold">
-                  Or continue with
-                </span>
-              </div>
+            </label>
+
+            {role === 'contributor' && (
+              <>
+                <label>
+                  <span>Phone Number</span>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="+91 98765 43210"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </label>
+
+                <label>
+                  <span>Hostel / Business Name</span>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Shree Ram Student PG"
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                  />
+                </label>
+
+                <label>
+                  <span>Category</span>
+                  <select
+                    required
+                    value={businessType}
+                    onChange={(e) => setBusinessType(e.target.value)}
+                  >
+                    <option value="" disabled>Select Property Type</option>
+                    {CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  <span>City</span>
+                  <select
+                    required
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                  >
+                    <option value="" disabled>Select City</option>
+                    {cityOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label} ({opt.group})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  <span>Full Address</span>
+                  <textarea
+                    rows={2}
+                    required
+                    placeholder="Street, Landmark, Area"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
+                </label>
+              </>
+            )}
+
+            <button type="submit" className="submit" disabled={loading}>
+              {loading ? 'Creating...' : 'Sign Up'}
+            </button>
+
+            <div className="or-divider">
+              <span>Or join with</span>
             </div>
 
-            <div className="space-y-4" style={{ transform: "translateZ(30px)" }}>
-              <button
-                type="button"
-                onClick={loginWithGithub}
-                disabled={loading}
-                className="w-full flex items-center justify-center py-3.5 px-4 bg-[#24292e] hover:bg-[#2f363d] text-white font-semibold rounded-xl transition-colors border border-gray-700 shadow-sm"
-              >
-                <Github className="h-5 w-5 mr-3" />
-                Continue with GitHub
-              </button>
+            <button
+              type="button"
+              className="social-btn google-btn"
+              onClick={() => handleSocialAuth(googleProvider)}
+              disabled={loading}
+            >
+              <GoogleIcon />
+              <span>Join with Google</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={() => handleSocialAuth(googleProvider)}
-                disabled={loading}
-                className="w-full flex items-center justify-center py-3.5 px-4 bg-white hover:bg-gray-50 text-gray-900 font-semibold rounded-xl transition-colors border border-gray-200 shadow-sm"
-              >
-                <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                </svg>
-                Continue with Google
-              </button>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      </GlassCard>
+            <button
+              type="button"
+              className="social-btn github-btn"
+              onClick={loginWithGithub}
+              disabled={loading}
+            >
+              <Github size={16} />
+              <span>Join with GitHub</span>
+            </button>
+          </form>
+        </div>
+      </div>
 
-      {/* Role Selection Modal */}
+      {/* Role Selection Modal (For First Time Social Login Users) */}
       <AnimatePresence>
         {showRoleModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -1027,46 +794,37 @@ export default function Auth() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: "spring", bounce: 0.4 }}
-              className="relative w-full max-w-2xl bg-gray-900/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden"
+              className="relative w-full max-w-lg bg-[#0e121b] border border-white/10 rounded-3xl p-8 shadow-2xl z-10 text-center"
             >
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
-              
-              <div className="text-center mb-10">
-                <h3 className="text-3xl font-bold text-white mb-3">Select Your Role</h3>
-                <p className="text-gray-400">Choose how you want to use the app</p>
-              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">Select Your Role</h3>
+              <p className="text-gray-400 text-xs mb-6">Choose how you plan to use City Helpline</p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="golden-wrapper w-full">
-                  <button
-                    onClick={() => handleRoleSelection('user')}
-                    className="golden-button w-full h-auto py-8 flex flex-col items-center justify-center text-center"
-                    style={{ whiteSpace: 'normal', lineHeight: '1.2' }}
-                  >
-                    <User className="w-8 h-8 mb-4" />
-                    <h4 className="text-xl font-bold mb-2">User</h4>
-                    <p className="text-sm opacity-80 normal-case">Browse listings, search, and view details</p>
-                  </button>
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => handleRoleSelection('user')}
+                  className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-[#00E5FF] hover:bg-[#00E5FF]/10 transition-all text-center group cursor-pointer flex flex-col items-center justify-center"
+                >
+                  <User className="w-8 h-8 text-[#00E5FF] mb-2 group-hover:scale-110 transition-transform" />
+                  <div className="font-bold text-white text-sm">Student / User</div>
+                  <div className="text-[11px] text-gray-400 mt-1">Search rooms, PGs & marketplace</div>
+                </button>
 
-                <div className="golden-wrapper w-full">
-                  <button
-                    onClick={() => handleRoleSelection('contributor')}
-                    className="golden-button w-full h-auto py-8 flex flex-col items-center justify-center text-center"
-                    style={{ whiteSpace: 'normal', lineHeight: '1.2' }}
-                  >
-                    <Building2 className="w-8 h-8 mb-4" />
-                    <h4 className="text-xl font-bold mb-2">Contributor</h4>
-                    <p className="text-sm opacity-80 normal-case">Add listings, manage business, and upload data</p>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRoleSelection('contributor')}
+                  className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-[#8A2BE2] hover:bg-[#8A2BE2]/10 transition-all text-center group cursor-pointer flex flex-col items-center justify-center"
+                >
+                  <Building2 className="w-8 h-8 text-purple-400 mb-2 group-hover:scale-110 transition-transform" />
+                  <div className="font-bold text-white text-sm">Hostel / Room Owner</div>
+                  <div className="text-[11px] text-gray-400 mt-1">Post listings & manage properties</div>
+                </button>
               </div>
             </motion.div>
           </div>
@@ -1081,83 +839,62 @@ export default function Auth() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: "spring", bounce: 0.4 }}
-              className="relative w-full max-w-md bg-gray-900/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden"
+              className="relative w-full max-w-md bg-[#0e121b] border border-white/10 rounded-3xl p-8 shadow-2xl z-10"
             >
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
-              
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto mb-6">
-                  <AlertCircle className="w-8 h-8 text-blue-400" />
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-3">Account Exists</h3>
-                <p className="text-gray-400 text-sm">
-                  Account already exists with another login method. Continue to link accounts.
+              <div className="text-center mb-6">
+                <AlertCircle className="w-12 h-12 text-[#00E5FF] mx-auto mb-3" />
+                <h3 className="text-xl font-bold text-white">Link Existing Account</h3>
+                <p className="text-gray-400 text-xs mt-1">
+                  An account with <strong>{linkEmail}</strong> already exists. Please verify your identity to link accounts.
                 </p>
               </div>
 
               {linkProvider === 'password' ? (
                 <form onSubmit={handleLinkAccount} className="space-y-4">
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-500" />
-                    </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-400 mb-1">Enter your password</label>
                     <input
-                      type={showPassword ? "text" : "password"}
+                      type={showPassword ? 'text' : 'password'}
                       value={linkPassword}
                       onChange={(e) => setLinkPassword(e.target.value)}
-                      className="block w-full pl-11 pr-10 py-3.5 border border-gray-700/50 rounded-xl bg-gray-900/50 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all sm:text-sm"
-                      placeholder="Enter your password"
+                      placeholder="••••••••"
                       required
+                      className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-white/20 text-white text-sm focus:outline-none focus:border-[#00E5FF]"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-white transition-colors"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
                   </div>
-                  <div className="golden-wrapper w-full mt-4">
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="golden-button w-full flex items-center justify-center py-3.5"
-                    >
-                      {loading ? 'Linking...' : 'Sign In & Link'}
-                    </button>
-                  </div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3 rounded-xl bg-[#00E5FF] hover:bg-[#00c8e0] text-black font-bold text-xs transition-colors cursor-pointer"
+                  >
+                    {loading ? 'Linking...' : 'Verify & Link Account'}
+                  </button>
                 </form>
               ) : (
-                <div className="space-y-4">
-                  <button
-                    onClick={() => handleLinkAccount()}
-                    disabled={loading}
-                    className="w-full flex items-center justify-center py-3.5 px-4 bg-white hover:bg-gray-50 text-gray-900 font-semibold rounded-xl transition-colors border border-gray-200 shadow-sm gap-3"
-                  >
-                    <svg className="w-5 h-5" viewBox="0 0 24 24">
-                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                    </svg>
-                    {loading ? 'Linking...' : 'Continue with Google'}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => handleLinkAccount()}
+                  disabled={loading}
+                  className="w-full py-3 rounded-xl bg-white hover:bg-gray-100 text-gray-900 font-bold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                >
+                  <GoogleIcon />
+                  <span>Verify with Google</span>
+                </button>
               )}
-              
+
               <button
+                type="button"
                 onClick={() => {
                   setShowLinkModal(false);
                   setPendingCred(null);
                 }}
-                className="mt-6 w-full text-sm text-gray-400 hover:text-white transition-colors"
+                className="w-full mt-4 text-xs text-gray-400 hover:text-white"
               >
                 Cancel
               </button>
@@ -1179,125 +916,88 @@ export default function Auth() {
                 setForgotSuccess(false);
                 setForgotNotice(null);
               }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: "spring", bounce: 0.4 }}
-              className="relative w-full max-w-md bg-gray-900/90 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-[0_0_50px_rgba(0,0,0,0.6)] overflow-hidden"
+              className="relative w-full max-w-md bg-[#0e121b] border border-white/10 rounded-3xl p-8 shadow-2xl z-10"
             >
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#00E5FF] to-[#8A2BE2]" />
-              
               {forgotSuccess ? (
                 <div className="text-center space-y-4">
-                  <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto mb-2">
-                    <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400">
+                    <CheckCircle2 className="w-8 h-8" />
                   </div>
-                  <h3 className="text-2xl font-bold text-white">Reset Link Sent!</h3>
-                  <p className="text-gray-300 text-sm">
-                    We've sent a password reset email to <strong className="text-[#00E5FF] font-mono break-all">{forgotEmail}</strong>.
+                  <h3 className="text-xl font-bold text-white">Reset Link Sent</h3>
+                  <p className="text-gray-300 text-xs">
+                    Password reset link email bhej diya gaya hai to <strong className="text-[#00E5FF]">{forgotEmail}</strong>.
                   </p>
-
-                  <div className="p-4 rounded-2xl bg-black/40 border border-white/10 text-left space-y-2.5 text-xs text-gray-300">
-                    <div className="font-bold text-white text-xs uppercase tracking-wider mb-1">Checklist & Troubleshooting:</div>
-                    <div className="flex items-start gap-2">
-                      <Mail className="w-4 h-4 text-[#00E5FF] shrink-0 mt-0.5" />
-                      <span>Check your <strong>Inbox</strong> and <strong>Spam / Junk</strong> folder.</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <KeyRound className="w-4 h-4 text-[#8A2BE2] shrink-0 mt-0.5" />
-                      <span>Click the link inside the email to set your new password.</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                      <span>If you registered via <strong>Google Sign-In</strong>, reset email won't arrive. Please log in using <strong>"Continue with Google"</strong>.</span>
-                    </div>
+                  <div className="p-3 rounded-xl bg-black/40 border border-white/10 text-left text-xs text-gray-400 space-y-1">
+                    <p>• Apna <strong>Inbox</strong> aur <strong>Spam</strong> folder check karein.</p>
+                    <p>• Email link par click karke naya password set karein.</p>
                   </div>
-
-                  <div className="flex gap-3 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setForgotSuccess(false)}
-                      className="flex-1 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-semibold transition-colors cursor-pointer"
-                    >
-                      Resend Link
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowForgotModal(false);
-                        setForgotSuccess(false);
-                        setForgotNotice(null);
-                      }}
-                      className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#00E5FF] to-[#8A2BE2] text-black font-black text-xs transition-colors cursor-pointer shadow-[0_0_20px_rgba(0,229,255,0.3)]"
-                    >
-                      Back to Login
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="text-center mb-6">
-                    <div className="w-16 h-16 rounded-2xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center mx-auto mb-4">
-                      <KeyRound className="w-8 h-8 text-[#00E5FF]" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">Reset Password</h3>
-                    <p className="text-gray-400 text-sm">
-                      Enter your email address and we'll send you instructions to reset your password.
-                    </p>
-                  </div>
-
-                  {forgotNotice && (
-                    <div className="mb-4 p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-blue-200 text-xs flex items-start gap-2.5">
-                      <AlertCircle className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-                      <p>{forgotNotice}</p>
-                    </div>
-                  )}
-
-                  <form onSubmit={handleForgotPassword} className="space-y-5">
-                    <div className="relative group">
-                      <label className="block text-sm font-medium text-gray-300 mb-2 transition-colors group-focus-within:text-[#00E5FF]">Email Address</label>
-                      <LiquidInput
-                        type="email"
-                        required
-                        placeholder="you@example.com"
-                        value={forgotEmail}
-                        onChange={(e) => setForgotEmail(e.target.value)}
-                        icon={<Mail className="h-5 w-5" />}
-                        glowColor="rgba(0, 229, 255, 0.5)"
-                      />
-                    </div>
-
-                    <div className="golden-wrapper w-full mt-4">
-                      <button
-                        type="submit"
-                        disabled={forgotLoading}
-                        className="golden-button w-full flex items-center justify-center py-3.5"
-                      >
-                        {forgotLoading ? (
-                          <span className="flex items-center gap-2">
-                            <RefreshCw className="w-4 h-4 animate-spin" />
-                            <span>Sending Link...</span>
-                          </span>
-                        ) : (
-                          'Send Reset Link'
-                        )}
-                      </button>
-                    </div>
-                  </form>
-
                   <button
                     type="button"
                     onClick={() => {
                       setShowForgotModal(false);
                       setForgotSuccess(false);
-                      setForgotNotice(null);
                     }}
-                    className="mt-6 w-full text-sm text-gray-400 hover:text-white transition-colors"
+                    className="w-full py-2.5 rounded-xl bg-[#00E5FF] hover:bg-[#00c8e0] text-black font-bold text-xs"
                   >
                     Back to Login
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="text-center mb-6">
+                    <KeyRound className="w-10 h-10 text-[#00E5FF] mx-auto mb-2" />
+                    <h3 className="text-xl font-bold text-white">Reset Password</h3>
+                    <p className="text-gray-400 text-xs mt-1">
+                      Enter your email address to receive password reset instructions.
+                    </p>
+                  </div>
+
+                  {forgotNotice && (
+                    <div className="mb-4 p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-200 text-xs">
+                      {forgotNotice}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleForgotPassword} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-400 mb-1">Email Address</label>
+                      <input
+                        type="email"
+                        required
+                        placeholder="you@example.com"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-white/20 text-white text-sm focus:outline-none focus:border-[#00E5FF]"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={forgotLoading}
+                      className="w-full py-3 rounded-xl bg-[#00E5FF] hover:bg-[#00c8e0] text-black font-bold text-xs flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      {forgotLoading ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>Sending Link...</span>
+                        </>
+                      ) : (
+                        'Send Reset Link'
+                      )}
+                    </button>
+                  </form>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotModal(false)}
+                    className="w-full mt-4 text-xs text-gray-400 hover:text-white"
+                  >
+                    Cancel
                   </button>
                 </>
               )}
