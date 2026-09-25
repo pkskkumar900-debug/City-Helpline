@@ -16,6 +16,7 @@ import { useLocationContext } from '../contexts/LocationContext';
 import { ProfileRoommateSection } from '../components/profile/ProfileRoommateSection';
 import { ProfileFreeNotesSection } from '../components/profile/ProfileFreeNotesSection';
 import { ProfileEmergencySection } from '../components/profile/ProfileEmergencySection';
+import { UserAvatar } from '../components/common/UserAvatar';
 
 export default function Profile() {
   const { currentUser, userProfile, logout } = useAuth();
@@ -139,18 +140,12 @@ export default function Profile() {
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             {/* User Identity Info */}
             <div className="flex items-center gap-4 sm:gap-6">
-              <div className="relative group shrink-0">
-                <div className="absolute -inset-1 bg-gradient-to-r from-[#00E5FF] via-cyan-400 to-indigo-500 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-500" />
-                <div className="relative h-20 w-20 sm:h-24 sm:w-24 bg-slate-900 rounded-full flex items-center justify-center shadow-2xl overflow-hidden border-2 border-white/20">
-                  {userProfile?.photoURL ? (
-                    <img src={userProfile.photoURL} alt="Profile" className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-[#00E5FF] to-indigo-400">
-                      {userProfile?.name?.charAt(0).toUpperCase() || 'U'}
-                    </span>
-                  )}
-                </div>
-              </div>
+              <UserAvatar
+                photoURL={userProfile?.photoURL || currentUser?.photoURL}
+                name={userProfile?.name || currentUser?.displayName}
+                email={userProfile?.email || currentUser?.email}
+                size="xl"
+              />
 
               <div className="min-w-0">
                 <div className="flex items-center gap-2.5 flex-wrap mb-1">

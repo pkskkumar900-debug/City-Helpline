@@ -3,6 +3,7 @@ import { Home, Search, ShoppingBag, PlusCircle, User, ShieldCheck } from 'lucide
 import { motion } from 'motion/react';
 import { useAuth } from '../../contexts/AuthContext';
 import { isSuperAdminEmail } from '../../types';
+import { UserAvatar } from '../common/UserAvatar';
 
 export function BottomNav() {
   const location = useLocation();
@@ -17,7 +18,12 @@ export function BottomNav() {
     { icon: Search, label: 'Services', path: '/search' },
     { icon: PlusCircle, label: 'List', path: '/add-listing', isSpecial: true },
     { icon: ShoppingBag, label: 'Market', path: '/marketplace' },
-    { icon: isAdmin ? ShieldCheck : User, label: isAdmin ? 'Admin' : 'Profile', path: isAdmin ? '/admin' : '/profile' },
+    { 
+      icon: isAdmin ? ShieldCheck : User, 
+      label: isAdmin ? 'Admin' : 'Profile', 
+      path: isAdmin ? '/admin' : '/profile',
+      isProfile: !isAdmin && !!currentUser
+    },
   ];
 
   return (
@@ -64,11 +70,23 @@ export function BottomNav() {
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                 />
               )}
-              <Icon
-                className={`h-5 w-5 mb-1 transition-colors ${
-                  isActive ? 'text-[#00E5FF] drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]' : 'text-gray-400'
-                }`}
-              />
+              {item.isProfile ? (
+                <div className="mb-0.5 mt-0.5">
+                  <UserAvatar
+                    photoURL={userProfile?.photoURL || currentUser?.photoURL}
+                    name={userProfile?.name || currentUser?.displayName}
+                    email={userProfile?.email || currentUser?.email}
+                    size="xs"
+                    showGlow={isActive}
+                  />
+                </div>
+              ) : (
+                <Icon
+                  className={`h-5 w-5 mb-1 transition-colors ${
+                    isActive ? 'text-[#00E5FF] drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]' : 'text-gray-400'
+                  }`}
+                />
+              )}
               <span
                 className={`text-[10px] font-semibold tracking-tight transition-colors ${
                   isActive ? 'text-[#00E5FF]' : 'text-gray-400'

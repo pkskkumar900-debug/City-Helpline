@@ -1,8 +1,9 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Building2, LogOut, PlusCircle, User, ShieldCheck, Search, Home, ShoppingBag, Calculator, Bot, BedDouble } from 'lucide-react';
+import { Building2, LogOut, PlusCircle, ShieldCheck, Search, Home, ShoppingBag, Calculator, Bot, BedDouble } from 'lucide-react';
 import { LiquidButton } from '../ui/LiquidButton';
 import { isSuperAdminEmail } from '../../types';
+import { UserAvatar } from '../common/UserAvatar';
 
 export function Navbar() {
   const { currentUser, userProfile, logout } = useAuth();
@@ -129,13 +130,20 @@ export function Navbar() {
                 )}
 
                 <div className="flex items-center gap-3 ml-2 pl-6 border-l border-white/10">
-                  <Link to="/profile" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
-                    <User className="h-5 w-5" />
-                    <span className="hidden sm:inline font-medium">{userProfile?.name || 'Profile'}</span>
+                  <Link to="/profile" className="flex items-center gap-2.5 text-sm text-gray-300 hover:text-white transition-colors group">
+                    <UserAvatar
+                      photoURL={userProfile?.photoURL || currentUser?.photoURL}
+                      name={userProfile?.name || currentUser?.displayName}
+                      email={userProfile?.email || currentUser?.email}
+                      size="sm"
+                    />
+                    <span className="hidden sm:inline font-bold text-white group-hover:text-[#00E5FF] transition-colors">
+                      {userProfile?.name || 'Profile'}
+                    </span>
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="p-2 text-gray-400 hover:text-[#FF3B3B] transition-colors rounded-full hover:bg-[rgba(255,255,255,0.06)]"
+                    className="p-2 text-gray-400 hover:text-[#FF3B3B] transition-colors rounded-full hover:bg-[rgba(255,255,255,0.06)] cursor-pointer"
                     title="Logout"
                   >
                     <LogOut className="h-5 w-5" />
@@ -177,10 +185,15 @@ export function Navbar() {
             {currentUser ? (
               <Link 
                 to="/profile" 
-                className="p-1.5 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:border-[#00E5FF]/40 transition-colors"
-                title="Profile"
+                className="flex items-center justify-center p-0.5 active:scale-95 transition-transform"
+                title={userProfile?.name || currentUser?.email || "Profile"}
               >
-                <User className="h-5 w-5 text-[#00E5FF]" />
+                <UserAvatar
+                  photoURL={userProfile?.photoURL || currentUser?.photoURL}
+                  name={userProfile?.name || currentUser?.displayName}
+                  email={userProfile?.email || currentUser?.email}
+                  size="sm"
+                />
               </Link>
             ) : (
               <Link
