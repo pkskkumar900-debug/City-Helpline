@@ -8,7 +8,7 @@ import { motion } from 'motion/react';
 import { 
   User, LogOut, Settings, Building2, MapPin, 
   Star, ShoppingBag, Calculator, 
-  ShieldCheck, ArrowRight
+  ShieldCheck, ArrowRight, Scale, AlertTriangle, FileText
 } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { LiquidGlassCard } from '../components/ui/LiquidGlassCard';
@@ -298,32 +298,83 @@ export default function Profile() {
       {/* Feature 3: Location-Aware 24/7 Emergency & SOS Directory */}
       <ProfileEmergencySection />
 
-      {/* Safety & Help Footer Banner */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-white/[0.03] border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-300 shrink-0">
-            <ShieldCheck className="w-5 h-5" />
+      {/* Safety & Legal Terms Protection Hub */}
+      <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-br from-white/[0.04] via-black/40 to-white/[0.02] border border-white/10 shadow-2xl space-y-5">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-base font-bold text-white">Student Safety & Platform Policy</h4>
+                <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  IT Act Sec. 79
+                </span>
+              </div>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Zero-brokerage directory, anti-scam rules, and intermediary legal guidelines.
+              </p>
+            </div>
           </div>
-          <div>
-            <h4 className="text-sm font-bold text-white">Student Safety First Guarantee</h4>
-            <p className="text-xs text-gray-400 mt-0.5">
-              Always inspect rooms and items in person before transferring advance payments.
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <Link
+              to="/terms"
+              className="px-3.5 py-1.5 rounded-xl bg-[#00E5FF]/15 hover:bg-[#00E5FF] text-[#00E5FF] hover:text-black text-xs font-bold border border-[#00E5FF]/30 transition-all"
+            >
+              Terms of Service &rarr;
+            </Link>
+            <Link
+              to="/safety"
+              className="px-3.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500 text-amber-300 hover:text-black text-xs font-bold border border-amber-500/30 transition-all"
+            >
+              Safety Advisory &rarr;
+            </Link>
+          </div>
+        </div>
+
+        {/* 3 Important Safety & Legal Bullet Points */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-1">
+            <span className="font-bold text-[#00E5FF] flex items-center gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+              Never Pay Token Online
+            </span>
+            <p className="text-gray-400 leading-relaxed">
+              Bina physically room dekhe WhatsApp ya call par kisi ko gate pass ya booking advance na bhejein.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-1">
+            <span className="font-bold text-purple-300 flex items-center gap-1.5">
+              <Scale className="w-3.5 h-3.5 text-purple-400" />
+              Intermediary Discovery Portal
+            </span>
+            <p className="text-gray-400 leading-relaxed">
+              City Helpline connects students and owners. Room lease, rent agreement aur offline dispute ki zimmedari landlord-tenant ki hoti hai.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-1">
+            <span className="font-bold text-emerald-300 flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              Emergency & Support
+            </span>
+            <p className="text-gray-400 leading-relaxed">
+              National Helpline: <strong className="text-white">112</strong> • Student Mental Health Tele-MANAS: <strong className="text-white">14416</strong> (24x7 Free).
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap shrink-0">
-          <Link
-            to="/help"
-            className="px-4 py-2 rounded-xl bg-[#00E5FF]/10 hover:bg-[#00E5FF] text-[#00E5FF] hover:text-black text-xs font-bold border border-[#00E5FF]/30 transition-colors"
-          >
-            Help & Support
-          </Link>
-          <Link
-            to="/safety"
-            className="px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-gray-300 border border-white/10 transition-colors"
-          >
-            Safety Guidelines
-          </Link>
+
+        {/* Quick Links */}
+        <div className="flex items-center justify-between flex-wrap gap-2 pt-2 text-[11px] text-gray-500 border-t border-white/5">
+          <span>By using City Helpline, you agree to our verified student habitat terms.</span>
+          <div className="flex items-center gap-3">
+            <Link to="/privacy" className="hover:text-white underline">Privacy Policy</Link>
+            <Link to="/legal?tab=grievance" className="hover:text-white underline">Grievance Cell</Link>
+            <Link to="/help" className="text-[#00E5FF] hover:underline font-bold">24x7 Help Center</Link>
+          </div>
         </div>
       </div>
 

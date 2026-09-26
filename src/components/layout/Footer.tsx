@@ -344,6 +344,21 @@ export function Footer() {
         </div>
       </div>
 
+      {/* 3.5 Intermediary Disclaimer Bar */}
+      <div className="border-t border-white/5 py-3 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-[11px] text-gray-500 text-center leading-relaxed">
+        <p>
+          <strong className="text-gray-400">Intermediary Notice:</strong> City Helpline is a technology directory connecting students with independent property owners under Section 79 of the Information Technology Act, 2000. We do not own, manage, or operate listed properties. Please physically inspect premises, verify identity, and review our{' '}
+          <Link to="/terms" className="text-[#00E5FF] hover:underline font-semibold">
+            Terms of Service
+          </Link>{' '}
+          and{' '}
+          <Link to="/safety" className="text-amber-400 hover:underline font-semibold">
+            Safety Advisory
+          </Link>{' '}
+          before paying deposits or moving in.
+        </p>
+      </div>
+
       {/* 4. Bottom Copyright, Legal Quick Links & Back to Top */}
       <div className="py-6 pb-24 md:pb-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400">
         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">

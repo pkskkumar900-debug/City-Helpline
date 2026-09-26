@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { auth, googleProvider, githubProvider, db } from '../lib/firebase';
 import { 
   signInWithEmailAndPassword, 
@@ -96,6 +96,7 @@ export default function Auth() {
   const [businessType, setBusinessType] = useState('');
   const [city, setCity] = useState('');
   const [address, setAddress] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const cityOptions = Object.entries(STATE_CITIES).flatMap(([state, cities]) => 
     cities.map(c => ({ value: c, label: c, group: state }))
@@ -152,6 +153,11 @@ export default function Auth() {
   const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setDomainError(null);
+
+    if (!acceptedTerms) {
+      toast.error('Please accept the Terms of Service & Safety Advisory to create an account.');
+      return;
+    }
     
     if (role === 'contributor') {
       if (!phone || !businessName || !businessType || !city || !address) {
@@ -592,6 +598,17 @@ export default function Auth() {
             <Github size={16} />
             <span>Continue with GitHub</span>
           </button>
+
+          <p className="terms-note-text">
+            By signing in, you agree to our{' '}
+            <Link to="/terms" target="_blank" rel="noopener noreferrer">
+              Terms of Service
+            </Link>{' '}
+            &{' '}
+            <Link to="/safety" target="_blank" rel="noopener noreferrer">
+              Safety Policy
+            </Link>.
+          </p>
         </form>
 
         {/* 2. Sub-Container (Sliding Overlay Image + Sign-Up Form) */}
@@ -755,6 +772,28 @@ export default function Auth() {
               </>
             )}
 
+            {/* Terms of Service & Safety Advisory Checkbox */}
+            <div className="terms-checkbox-wrap">
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', margin: 0, width: '100%' }}>
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  required
+                />
+                <span>
+                  I accept the{' '}
+                  <Link to="/terms" target="_blank" rel="noopener noreferrer">
+                    Terms of Service
+                  </Link>{' '}
+                  &{' '}
+                  <Link to="/safety" target="_blank" rel="noopener noreferrer">
+                    Safety Advisory
+                  </Link>
+                </span>
+              </label>
+            </div>
+
             <button type="submit" className="submit" disabled={loading}>
               {loading ? 'Creating...' : 'Sign Up'}
             </button>
@@ -826,6 +865,17 @@ export default function Auth() {
                   <div className="text-[11px] text-gray-400 mt-1">Post listings & manage properties</div>
                 </button>
               </div>
+
+              <p className="text-[11px] text-gray-400 mt-6 leading-relaxed">
+                By continuing, you agree to City Helpline's{' '}
+                <Link to="/terms" target="_blank" rel="noopener noreferrer" className="text-[#00E5FF] underline font-semibold">
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link to="/safety" target="_blank" rel="noopener noreferrer" className="text-[#00E5FF] underline font-semibold">
+                  Safety Advisory
+                </Link>.
+              </p>
             </motion.div>
           </div>
         )}

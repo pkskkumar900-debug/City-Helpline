@@ -384,16 +384,44 @@ export default function Legal({ defaultTab = 'privacy' }: LegalProps) {
               <div className="space-y-3">
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
                   <span className="w-6 h-6 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] text-xs font-black flex items-center justify-center">5</span>
-                  Limitation of Liability & Due Diligence
+                  Limitation of Liability, Safe Harbour & Offline Incident Disclaimer
                 </h3>
-                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-2">
-                  <strong className="text-white block font-bold">Mandatory In-Person Verification:</strong>
-                  <p>
-                    While our administration team moderates and vets listings for authenticity, students and parents are strictly advised to visit the PG/Hostel in person, inspect room amenities, check cleanliness, test water/electricity supplies, and execute written rent agreements with the property owner before paying any security deposits or advance rent.
-                  </p>
-                  <p>
-                    City Helpline is not liable for interpersonal landlord-tenant disputes, deposit refund disputes, service quality disagreements, or theft at third-party premises.
-                  </p>
+                <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-3">
+                  <div>
+                    <strong className="text-white block font-bold text-sm mb-1">
+                      1. Intermediary Status & Safe Harbour (IT Act, 2000 Section 79):
+                    </strong>
+                    <p className="text-gray-300 leading-relaxed">
+                      City Helpline (<code className="text-[#00E5FF] bg-black/40 px-1 rounded">app.imprince.me</code>) acts purely as an online technological intermediary and directory. The platform, its founder(s), directors, developers, and team members do NOT own, operate, manage, inspect, or police any listed PG, hostel, library, or mess facility.
+                    </p>
+                  </div>
+
+                  <div>
+                    <strong className="text-white block font-bold text-sm mb-1">
+                      2. Complete Disclaimer for Offline Incidents, Accidents & Disputes:
+                    </strong>
+                    <p className="text-gray-300 leading-relaxed">
+                      Any offline physical event, accident, personal injury, health issue, theft, interpersonal altercation, harassment, rental disagreement, refund dispute, or criminal act occurring at or near any property listed on City Helpline is exclusively the civil and criminal liability of the independent property owner, manager, tenant, or individual perpetrator under the Bharatiya Nyaya Sanhita (BNS) / Indian Penal Code (IPC). City Helpline and its founder(s) bear <strong>NO legal, financial, or criminal liability</strong> for actions or omissions occurring offline.
+                    </p>
+                  </div>
+
+                  <div>
+                    <strong className="text-white block font-bold text-sm mb-1">
+                      3. Mandatory Due Diligence by Students & Guardians:
+                    </strong>
+                    <p className="text-gray-300 leading-relaxed">
+                      Students and parents are strictly required to conduct daylight physical visits, verify landlord identification/Aadhaar, inspect safety amenities (CCTV, fire extinguishers, emergency exits, female warden in girls' hostels), and sign written tenancy contracts before transferring any token money or security deposit.
+                    </p>
+                  </div>
+
+                  <div>
+                    <strong className="text-white block font-bold text-sm mb-1">
+                      4. Law Enforcement & Police Cooperation:
+                    </strong>
+                    <p className="text-gray-300 leading-relaxed">
+                      In case of any reported grievance or criminal investigation, City Helpline provides full, prompt cooperation to Indian Police and Cyber Crime cells pursuant to lawful notices under Section 91 CrPC / BNSS, including providing verified owner phone numbers, listing timestamps, and digital logs.
+                    </p>
+                  </div>
                 </div>
               </div>
 
