@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { 
   Building2, Search, Filter, CheckCircle2, XCircle, 
   Star, Edit, Trash2, Eye, ExternalLink, ArrowUpDown, 
-  RefreshCw, CheckSquare, Square
+  RefreshCw, CheckSquare, Square, ShieldCheck, Clock
 } from 'lucide-react';
 import { Listing } from '../../types';
 import { CATEGORIES, STATE_CITIES } from '../../lib/constants';
+import { VerifiedPGBadge } from '../common/TrustBadge';
 
 interface AdminListingsTabProps {
   listings: Listing[];
@@ -16,6 +17,8 @@ interface AdminListingsTabProps {
   onEdit: (id: string) => void;
   onInspect: (listing: Listing) => void;
   onCreateNew: () => void;
+  onApprovePGVerification?: (id: string) => void;
+  onRejectPGVerification?: (id: string) => void;
 }
 
 export const AdminListingsTab: React.FC<AdminListingsTabProps> = ({
@@ -27,8 +30,10 @@ export const AdminListingsTab: React.FC<AdminListingsTabProps> = ({
   onEdit,
   onInspect,
   onCreateNew,
+  onApprovePGVerification,
+  onRejectPGVerification,
 }) => {
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'pg_pending' | 'pg_verified'>('all');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [cityFilter, setCityFilter] = useState('');
   const [search, setSearch] = useState('');
@@ -36,9 +41,20 @@ export const AdminListingsTab: React.FC<AdminListingsTabProps> = ({
 
   const cityOptions = Object.entries(STATE_CITIES).flatMap(([_, cities]) => cities);
 
+  const pgPendingCount = listings.filter(l => l.pgVerificationStatus === 'pending').length;
+  const pgVerifiedCount = listings.filter(l => l.isVerifiedPG).length;
+
   // Filter listings
   const filtered = listings.filter((item) => {
-    const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
+    let matchesStatus = true;
+    if (statusFilter === 'pg_pending') {
+      matchesStatus = item.pgVerificationStatus === 'pending';
+    } else if (statusFilter === 'pg_verified') {
+      matchesStatus = !!item.isVerifiedPG;
+    } else if (statusFilter !== 'all') {
+      matchesStatus = item.status === statusFilter;
+    }
+
     const matchesCat = categoryFilter === '' || item.category === categoryFilter;
     const matchesCity = cityFilter === '' || item.city?.toLowerCase() === cityFilter.toLowerCase();
     const query = search.toLowerCase();
@@ -134,6 +150,36 @@ export const AdminListingsTab: React.FC<AdminListingsTabProps> = ({
             }`}
           >
             Rejected ({rejectedCount})
+          </button>
+
+          {/* Verified PG Filter Pills */}
+          <button
+            onClick={() => setStatusFilter('pg_pending')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+              statusFilter === 'pg_pending'
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
+                : 'text-gray-400 hover:text-amber-300'
+            }`}
+          >
+            <Clock className="w-3.5 h-3.5 text-amber-400" />
+            <span>PG Review Pending</span>
+            {pgPendingCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-amber-500 text-black">
+                {pgPendingCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setStatusFilter('pg_verified')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+              statusFilter === 'pg_verified'
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.25)]'
+                : 'text-gray-400 hover:text-emerald-300'
+            }`}
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Verified PGs ({pgVerifiedCount})</span>
           </button>
         </div>
 
@@ -310,6 +356,18 @@ export const AdminListingsTab: React.FC<AdminListingsTabProps> = ({
                           {listing.status}
                         </span>
 
+                        {listing.isVerifiedPG ? (
+                          <VerifiedPGBadge size="sm" />
+                        ) : listing.pgVerificationStatus === 'pending' ? (
+                          <span 
+                            onClick={() => onInspect(listing)}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse cursor-pointer hover:bg-amber-500/30 transition-all"
+                            title="Click to inspect PG verification documents"
+                          >
+                            <Clock className="w-3 h-3" /> PG Review
+                          </span>
+                        ) : null}
+
                         {listing.featured && (
                           <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#8A2BE2]">
                             <Star className="w-3 h-3 fill-current" /> Featured
@@ -322,6 +380,17 @@ export const AdminListingsTab: React.FC<AdminListingsTabProps> = ({
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         
+                        {/* Quick PG Verification Approve Button */}
+                        {onApprovePGVerification && listing.pgVerificationStatus === 'pending' && (
+                          <button
+                            onClick={() => onApprovePGVerification(listing.id)}
+                            className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-400/40 hover:bg-emerald-500/30 transition-all"
+                            title="Approve Verified PG Badge"
+                          >
+                            <ShieldCheck className="w-4 h-4" />
+                          </button>
+                        )}
+
                         {/* Quick Inspect */}
                         <button
                           onClick={() => onInspect(listing)}

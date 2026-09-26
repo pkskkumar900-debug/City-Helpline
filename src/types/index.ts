@@ -7,6 +7,13 @@ export function isSuperAdminEmail(email?: string | null): boolean {
   return ADMIN_EMAILS.includes(email.toLowerCase().trim());
 }
 
+export function hasAdminPrivileges(user?: { email?: string | null } | null, profile?: { role?: Role; email?: string | null } | null): boolean {
+  if (isSuperAdminEmail(user?.email) || isSuperAdminEmail(profile?.email)) {
+    return true;
+  }
+  return profile?.role === 'admin';
+}
+
 export interface UserLocation {
   city: string;
   state?: string;
@@ -18,6 +25,33 @@ export interface UserLocation {
   formattedAddress?: string;
   isLiveDetected: boolean;
   updatedAt: number;
+}
+
+export type VerificationStatus = 'none' | 'pending' | 'verified' | 'rejected';
+
+export interface StudentVerificationData {
+  collegeOrCoaching: string;
+  rollOrIdNumber: string;
+  courseOrExam: string;
+  idProofUrl?: string;
+  isLiveCameraCaptured?: boolean;
+  submittedAt?: number;
+  verifiedAt?: number;
+  reviewedBy?: string;
+  note?: string;
+}
+
+export interface PGVerificationData {
+  electricityConsumerNumber?: string;
+  ownerGovtIdType?: string;
+  caretakerName?: string;
+  caretakerPhone?: string;
+  physicalInspectionDone?: boolean;
+  subMeterRateDeclared?: number;
+  submittedAt?: number;
+  verifiedAt?: number;
+  reviewedBy?: string;
+  note?: string;
 }
 
 export interface UserProfile {
@@ -40,6 +74,10 @@ export interface UserProfile {
   latitude?: number;
   longitude?: number;
   banned?: boolean;
+  isStudentVerified?: boolean;
+  studentVerificationStatus?: VerificationStatus;
+  studentVerificationData?: StudentVerificationData;
+  isOwnerVerified?: boolean;
 }
 
 export type ListingStatus = 'pending' | 'approved' | 'rejected';
@@ -61,6 +99,9 @@ export interface Listing {
   createdAt: number;
   averageRating?: number;
   reviewCount?: number;
+  isVerifiedPG?: boolean;
+  pgVerificationStatus?: VerificationStatus;
+  pgVerificationData?: PGVerificationData;
 }
 
 export interface Review {
@@ -103,6 +144,7 @@ export interface MarketplaceItem {
   status: ItemStatus;
   createdAt: number;
   featured?: boolean;
+  isStudentVerified?: boolean;
 }
 
 // Flatmate / Roommate Finder Types
@@ -138,6 +180,7 @@ export interface RoommateProfile {
   createdAt: number;
   updatedAt?: number;
   photoURL?: string;
+  isStudentVerified?: boolean;
 }
 
 // Emergency Contacts Types
@@ -165,4 +208,46 @@ export interface UserSosContact {
   relation: string;
   phone: string;
 }
+
+// In-App Chat Types
+export interface ChatListingContext {
+  id: string;
+  title: string;
+  price: number;
+  category?: string;
+  image?: string;
+  city?: string;
+}
+
+export interface ConversationParticipant {
+  uid: string;
+  name: string;
+  email: string;
+  photoURL?: string;
+  role?: string;
+}
+
+export interface Conversation {
+  id: string;
+  participants: string[];
+  participantData: Record<string, ConversationParticipant>;
+  listingContext?: ChatListingContext;
+  lastMessage?: string;
+  lastMessageSenderId?: string;
+  lastMessageTimestamp?: any;
+  unreadCount?: Record<string, number>;
+  createdAt?: any;
+  updatedAt?: any;
+}
+
+export interface ChatMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  senderName: string;
+  text: string;
+  createdAt: any;
+  read: boolean;
+}
+
 

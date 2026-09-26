@@ -2,85 +2,22 @@ import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  HelpCircle, Search, Mail, Wrench, ShieldCheck, 
+  HelpCircle, Search, Mail, Wrench, 
   PhoneCall, Bot, Sparkles, ChevronDown, 
-  ExternalLink, Building2, ShoppingBag, BedDouble, 
-  AlertTriangle, CheckCircle2, MessageSquare, Send, ArrowRight
+  Building2, ShoppingBag, BedDouble, 
+  CheckCircle2, Send, ArrowRight
 } from 'lucide-react';
 import { PersonalPageHeader } from '../components/layout/PersonalPageHeader';
+import { LanguageSelector } from '../components/common/LanguageSelector';
+import { useLanguage } from '../contexts/LanguageContext';
+import { LOCALIZED_FAQS, HELP_UI_TEXT } from '../lib/translations/helpTranslations';
 import { APP_CONFIG } from '../lib/appConfig';
 import { toast } from 'sonner';
 
-interface FaqItem {
-  id: string;
-  category: 'students' | 'owners' | 'marketplace' | 'roommates' | 'technical';
-  question: string;
-  answer: string;
-  action?: {
-    text: string;
-    url: string;
-  };
-}
-
-const FAQS: FaqItem[] = [
-  {
-    id: 'zero-brokerage',
-    category: 'students',
-    question: 'Kya City Helpline par koi brokerage ya commission lagta hai?',
-    answer: 'Nahi, bilkul nahi! City Helpline 100% zero-brokerage platform hai. Sabhi rooms, PGs, hostels aur mess listings verified property owners dwara directly post kiye jaate hain. Aap directly owner se call ya WhatsApp par baat kar sakte hain bina kisi middleman ke.',
-    action: { text: 'Browse Verified Rooms', url: '/search' }
-  },
-  {
-    id: 'advance-scam',
-    category: 'students',
-    question: 'Room lene se pehle advance token payment transfer karna chahiye?',
-    answer: 'KABHI NAHI! Kabhi bhi kisi owner ya broker ko online token amount ya gate pass fee transfer mat karein bina room physically din ke ujale me dekhe. Agar koi phone par bole "Advance transfer karo tab room dikhayenge", toh wo 100% fraud hai. Aise cases ko turant report karein.',
-    action: { text: 'Read Safety Policy', url: '/safety' }
-  },
-  {
-    id: 'post-listing-free',
-    category: 'owners',
-    question: 'Kya room owners aur landlords ke liye listing post karna free hai?',
-    answer: 'Haan, room owners, PG managers, hostel sanchalak aur library operators City Helpline par apni properties bilkul muft (FREE) me post kar sakte hain. Post karne ke baad hamari verification team 12-24 ghante ke andar listing verify kar deti hai.',
-    action: { text: 'Post a Listing', url: '/add-listing' }
-  },
-  {
-    id: 'marketplace-buy-sell',
-    category: 'marketplace',
-    question: 'Student Marketplace par second-hand items kaise bechein ya khareedein?',
-    answer: 'Aap apne puraane Allen/PW/Resonance study modules, reference books, study tables, room coolers ya cycle ko Marketplace me direct post kar sakte hain. Interested students aapse directly WhatsApp par deal kar sakte hain. Payment hamesha physically item check karne ke baad hi karein.',
-    action: { text: 'Explore Marketplace', url: '/marketplace' }
-  },
-  {
-    id: 'roommate-matching',
-    category: 'roommates',
-    question: 'Compatible flatmate ya roommate kaise dhoondein?',
-    answer: 'Roommate Finder section me aap apne study timings (night owl vs early bird), food preference (veg / non-veg), smoking/drinking habits aur budget ke hisab se verified student profiles filter kar sakte hain aur unse connect kar sakte hain.',
-    action: { text: 'Find Roommates', url: '/roommates' }
-  },
-  {
-    id: 'app-glitch-developer',
-    category: 'technical',
-    question: 'Agar app me koi technical issue, login error ya loading problem aaye toh?',
-    answer: 'Agar app slow chal rahi hai, page crash ho raha hai ya login/OTP me error aa rahi hai, toh aap direct hamare Technical Team ko Developer@imprince.me par email bhej sakte hain. Screenshot aur device model zaroor include karein taaki hum turant fix kar sakein.',
-  },
-  {
-    id: 'listing-edit-delete',
-    category: 'owners',
-    question: 'Apni listing ko edit ya delete kaise karein?',
-    answer: 'Profile me jaakar "My Listings" par click karein. Wahan aap rent update kar sakte hain, naye photos jod sakte hain ya room bhar jaane par listing ko temporarily unpublish ya delete kar sakte hain.',
-    action: { text: 'My Listings', url: '/my-listings' }
-  },
-  {
-    id: 'library-booking',
-    category: 'students',
-    question: 'Silent AC Libraries kaise find karein?',
-    answer: 'Search page par "Library" category select karein. Wahan aapko shift timings (Morning, Evening, Night 24x7), AC, Wi-Fi speed aur monthly charges (₹400 – ₹1,200) ke sath libraries mil jaayengi.',
-    action: { text: 'Find Libraries', url: '/search?category=Library' }
-  }
-];
-
 export default function Help() {
+  const { language } = useLanguage();
+  const ui = HELP_UI_TEXT[language] || HELP_UI_TEXT.hinglish;
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [expandedFaq, setExpandedFaq] = useState<string | null>('zero-brokerage');
@@ -93,20 +30,21 @@ export default function Help() {
 
   // Filter FAQs based on search & category
   const filteredFaqs = useMemo(() => {
-    return FAQS.filter(faq => {
+    return LOCALIZED_FAQS.filter(faq => {
       const matchesCategory = selectedCategory === 'all' || faq.category === selectedCategory;
       const q = searchQuery.toLowerCase().trim();
-      const matchesSearch = !q || 
-        faq.question.toLowerCase().includes(q) || 
-        faq.answer.toLowerCase().includes(q);
+      const currentQuestion = (faq.question[language] || faq.question.en).toLowerCase();
+      const currentAnswer = (faq.answer[language] || faq.answer.en).toLowerCase();
+      
+      const matchesSearch = !q || currentQuestion.includes(q) || currentAnswer.includes(q);
       return matchesCategory && matchesSearch;
     });
-  }, [searchQuery, selectedCategory]);
+  }, [searchQuery, selectedCategory, language]);
 
   const handleSendEmail = (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) {
-      toast.error('Kripya apna message ya samasya likhein.');
+      toast.error(language === 'hi' ? 'कृपया अपनी समस्या या संदेश लिखें।' : 'Please write your message or issue description.');
       return;
     }
 
@@ -129,12 +67,21 @@ export default function Help() {
     toast.success(`Opening your email client for ${targetEmail}...`);
   };
 
+  const categoriesList = [
+    { id: 'all', label: ui.categories.all },
+    { id: 'students', label: ui.categories.students },
+    { id: 'owners', label: ui.categories.owners },
+    { id: 'marketplace', label: ui.categories.marketplace },
+    { id: 'roommates', label: ui.categories.roommates },
+    { id: 'technical', label: ui.categories.technical },
+  ];
+
   return (
     <div className="min-h-screen bg-[#07090E] text-white">
       {/* Reusable Header */}
       <PersonalPageHeader
-        title="Help & Support Center"
-        subtitle="24x7 Student Support, Zero-Brokerage Assistance & Technical Help"
+        title={ui.heroTitle}
+        subtitle={ui.heroSubtitle}
         badge="Official Helpdesk"
         badgeColor="bg-[#00E5FF]/10 text-[#00E5FF] border-[#00E5FF]/30"
         icon={HelpCircle}
@@ -143,7 +90,11 @@ export default function Help() {
         backLabel="Home"
       />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+        
+        {/* Language Selection Banner */}
+        <LanguageSelector variant="banner" />
+
         {/* Hero Search Section */}
         <div className="relative rounded-3xl overflow-hidden p-6 sm:p-10 bg-gradient-to-br from-[#00E5FF]/10 via-purple-900/20 to-[#07090E] border border-white/10 shadow-2xl text-center">
           <div className="max-w-2xl mx-auto space-y-4">
@@ -152,10 +103,10 @@ export default function Help() {
               City Helpline Aspirant Care
             </span>
             <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
-              Aapki Kya Madad Kar Sakte Hain?
+              {ui.heroTitle}
             </h1>
-            <p className="text-sm text-gray-300">
-              Room booking queries, zero-brokerage guidance, second-hand marketplace, ya app me koi technical issue — sabka samadhan yahan hai.
+            <p className="text-xs sm:text-sm text-gray-300">
+              {ui.heroSubtitle}
             </p>
 
             {/* Search Input */}
@@ -165,8 +116,8 @@ export default function Help() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search topics (e.g. advance payment, room verification, app problem, rent)..."
-                className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-black/60 border border-white/20 text-white placeholder-gray-500 focus:outline-none focus:border-[#00E5FF] transition-all text-sm shadow-inner"
+                placeholder={ui.searchPlaceholder}
+                className="w-full pl-12 pr-12 py-3.5 rounded-2xl bg-black/60 border border-white/20 text-white placeholder-gray-500 focus:outline-none focus:border-[#00E5FF] transition-all text-xs sm:text-sm shadow-inner"
               />
               {searchQuery && (
                 <button
@@ -207,7 +158,7 @@ export default function Help() {
             </a>
           </div>
 
-          {/* Channel 2: Developer Support (In case of App working problem) */}
+          {/* Channel 2: Developer Support */}
           <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 hover:border-purple-500/40 transition-all flex flex-col justify-between group shadow-lg">
             <div className="space-y-3">
               <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:scale-105 transition-transform">
@@ -256,7 +207,7 @@ export default function Help() {
               </div>
               <div className="text-xs text-emerald-300 font-medium flex items-center gap-1.5 pt-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span>Powered by Gemini 3.6 Flash</span>
+                <span>Powered by Gemini 3.8 Flash</span>
               </div>
             </div>
             <Link
@@ -282,11 +233,11 @@ export default function Help() {
               </div>
               <div className="space-y-1 text-xs">
                 <div className="flex items-center justify-between text-gray-300">
-                  <span>Tele-MANAS (Mental Health):</span>
+                  <span>Tele-MANAS:</span>
                   <strong className="text-white font-mono">14416</strong>
                 </div>
                 <div className="flex items-center justify-between text-gray-300">
-                  <span>National Police Emergency:</span>
+                  <span>National Police:</span>
                   <strong className="text-white font-mono">112</strong>
                 </div>
               </div>
@@ -302,10 +253,6 @@ export default function Help() {
 
         {/* Quick Help Guides By Subject */}
         <div className="space-y-4">
-          <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-            <span>Essential Guides for Students & Owners</span>
-          </h2>
-          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-2">
               <div className="flex items-center gap-2 text-[#00E5FF] font-bold text-sm">
@@ -347,26 +294,20 @@ export default function Help() {
                 Frequently Asked Questions (FAQs)
               </h2>
               <p className="text-xs text-gray-400 mt-1">
-                Common sawaal aur unke vishwasniya jawab
+                {language === 'hi' ? 'सामान्य प्रश्न और उनके उत्तर' : 'Common questions and verified answers'}
               </p>
             </div>
 
             {/* Category Pills */}
             <div className="flex items-center gap-1.5 flex-wrap">
-              {[
-                { id: 'all', label: 'All' },
-                { id: 'students', label: 'Students & PGs' },
-                { id: 'owners', label: 'Room Owners' },
-                { id: 'marketplace', label: 'Marketplace' },
-                { id: 'technical', label: 'App & Tech' },
-              ].map((cat) => (
+              {categoriesList.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                     selectedCategory === cat.id
-                      ? 'bg-[#00E5FF] text-black shadow-[0_0_12px_rgba(0,229,255,0.3)]'
-                      : 'bg-white/[0.05] text-gray-400 hover:text-white hover:bg-white/[0.1]'
+                      ? 'bg-gradient-to-r from-[#00E5FF] to-[#8A2BE2] text-black shadow-md'
+                      : 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/5'
                   }`}
                 >
                   {cat.label}
@@ -375,54 +316,57 @@ export default function Help() {
             </div>
           </div>
 
-          {/* Accordion FAQ List */}
+          {/* Accordion List */}
           <div className="space-y-3">
-            {filteredFaqs.length === 0 ? (
-              <div className="text-center py-12 rounded-3xl bg-white/[0.02] border border-white/10 text-gray-400 text-sm">
-                Aapke search query ke liye koi FAQ nahi mila. Kripya neeche direct support email par sampark karein.
-              </div>
-            ) : (
+            {filteredFaqs.length > 0 ? (
               filteredFaqs.map((faq) => {
-                const isOpen = expandedFaq === faq.id;
+                const isExpanded = expandedFaq === faq.id;
+                const qText = faq.question[language] || faq.question.en;
+                const aText = faq.answer[language] || faq.answer.en;
+                const actionText = faq.action ? (faq.action.text[language] || faq.action.text.en) : '';
+
                 return (
                   <div
                     key={faq.id}
-                    className="rounded-2xl bg-white/[0.03] border border-white/10 overflow-hidden transition-colors"
+                    className={`rounded-2xl border transition-all overflow-hidden ${
+                      isExpanded
+                        ? 'bg-white/[0.04] border-[#00E5FF]/40 shadow-lg'
+                        : 'bg-white/[0.02] border-white/10 hover:border-white/20'
+                    }`}
                   >
                     <button
-                      type="button"
-                      onClick={() => setExpandedFaq(isOpen ? null : faq.id)}
-                      className="w-full p-4 sm:p-5 flex items-center justify-between text-left gap-4 cursor-pointer hover:bg-white/[0.02] transition-colors"
+                      onClick={() => setExpandedFaq(isExpanded ? null : faq.id)}
+                      className="w-full px-5 py-4 flex items-center justify-between text-left gap-4"
                     >
-                      <span className="font-bold text-sm sm:text-base text-white">
-                        {faq.question}
+                      <span className="font-bold text-sm text-white flex items-center gap-2.5">
+                        <CheckCircle2 className="w-4 h-4 text-[#00E5FF] shrink-0" />
+                        <span>{qText}</span>
                       </span>
                       <ChevronDown
-                        className={`w-5 h-5 text-gray-400 transition-transform shrink-0 ${
-                          isOpen ? 'rotate-180 text-[#00E5FF]' : ''
+                        className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-300 ${
+                          isExpanded ? 'rotate-180 text-[#00E5FF]' : ''
                         }`}
                       />
                     </button>
 
                     <AnimatePresence>
-                      {isOpen && (
+                      {isExpanded && (
                         <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="px-4 sm:px-5 pb-5 pt-1 text-xs sm:text-sm text-gray-300 leading-relaxed border-t border-white/5 space-y-3"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="px-5 pb-5 pt-1 text-xs text-gray-300 leading-relaxed border-t border-white/5 space-y-3"
                         >
-                          <p>{faq.answer}</p>
+                          <p>{aText}</p>
                           {faq.action && (
-                            <div>
-                              <Link
-                                to={faq.action.url}
-                                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#00E5FF] hover:underline"
-                              >
-                                <span>{faq.action.text}</span>
-                                <ExternalLink className="w-3.5 h-3.5" />
-                              </Link>
-                            </div>
+                            <Link
+                              to={faq.action.url}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#00E5FF]/10 text-[#00E5FF] hover:bg-[#00E5FF] hover:text-black font-bold text-xs transition-colors"
+                            >
+                              <span>{actionText}</span>
+                              <ArrowRight className="w-3 h-3" />
+                            </Link>
                           )}
                         </motion.div>
                       )}
@@ -430,123 +374,109 @@ export default function Help() {
                   </div>
                 );
               })
+            ) : (
+              <div className="text-center py-12 rounded-2xl bg-white/[0.02] border border-white/5">
+                <p className="text-gray-400 text-sm">Koi sawaal match nahi hua.</p>
+                <button
+                  onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }}
+                  className="mt-3 text-xs text-[#00E5FF] hover:underline"
+                >
+                  Clear search filters
+                </button>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Direct Email Dispatcher Form */}
-        <div className="rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/10 shadow-2xl">
-          <div className="max-w-2xl mx-auto space-y-6">
-            <div className="text-center space-y-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30">
-                <MessageSquare className="w-3.5 h-3.5" />
-                Fast Resolution Desk
-              </span>
-              <h3 className="text-xl sm:text-2xl font-black text-white">
-                Still Need Help? Send us a Direct Note
-              </h3>
-              <p className="text-xs text-gray-400">
-                Select category and send an email directly to the responsible team inbox.
-              </p>
-            </div>
+        {/* Contact Support Form Section */}
+        <div className="rounded-3xl p-6 sm:p-10 bg-white/[0.02] border border-white/10 shadow-2xl space-y-6">
+          <div className="border-b border-white/10 pb-4">
+            <h2 className="text-xl sm:text-2xl font-black text-white">
+              {ui.contactTitle}
+            </h2>
+            <p className="text-xs text-gray-400 mt-1">
+              {ui.contactSubtitle}
+            </p>
+          </div>
 
-            {/* Target Team Selector */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setIssueType('support')}
-                className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
-                  issueType === 'support'
-                    ? 'bg-[#00E5FF]/10 border-[#00E5FF] text-white shadow-[0_0_15px_rgba(0,229,255,0.2)]'
-                    : 'bg-white/[0.02] border-white/10 text-gray-400 hover:border-white/20'
-                }`}
-              >
-                <Mail className={`w-5 h-5 shrink-0 mt-0.5 ${issueType === 'support' ? 'text-[#00E5FF]' : 'text-gray-500'}`} />
-                <div>
-                  <div className="text-sm font-bold text-white">General / Student Support</div>
-                  <div className="text-[11px] text-gray-400 mt-0.5">Rooms, dispute, account help ({APP_CONFIG.supportEmail})</div>
-                </div>
-              </button>
+          <form onSubmit={handleSendEmail} className="space-y-4">
+            {/* Category Selector */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-300">{ui.typeLabel}</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIssueType('support')}
+                  className={`p-3.5 rounded-xl border text-left transition-all text-xs font-bold flex items-center justify-between ${
+                    issueType === 'support'
+                      ? 'bg-[#00E5FF]/15 border-[#00E5FF] text-[#00E5FF] shadow-sm'
+                      : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <span>{ui.typeGeneral}</span>
+                  <span className="text-[10px] text-gray-400 font-mono">support@imprince.me</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setIssueType('developer')}
-                className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
-                  issueType === 'developer'
-                    ? 'bg-purple-500/10 border-purple-500 text-white shadow-[0_0_15px_rgba(168,85,247,0.2)]'
-                    : 'bg-white/[0.02] border-white/10 text-gray-400 hover:border-white/20'
-                }`}
-              >
-                <Wrench className={`w-5 h-5 shrink-0 mt-0.5 ${issueType === 'developer' ? 'text-purple-400' : 'text-gray-500'}`} />
-                <div>
-                  <div className="text-sm font-bold text-white">Developer / App Problem</div>
-                  <div className="text-[11px] text-gray-400 mt-0.5">App crashes, bugs, errors ({APP_CONFIG.developerEmail})</div>
-                </div>
-              </button>
-            </div>
-
-            <form onSubmit={handleSendEmail} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                    Aapka Naam (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Rahul Sharma"
-                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-white/15 text-white placeholder-gray-500 text-xs focus:outline-none focus:border-[#00E5FF]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                    Aapka Email (Optional)
-                  </label>
-                  <input
-                    type="email"
-                    value={userEmail}
-                    onChange={(e) => setUserEmail(e.target.value)}
-                    placeholder="e.g. rahul@gmail.com"
-                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-white/15 text-white placeholder-gray-500 text-xs focus:outline-none focus:border-[#00E5FF]"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                  Samasya ya Sawaal (Description) *
-                </label>
-                <textarea
-                  rows={4}
-                  required
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder={
+                <button
+                  type="button"
+                  onClick={() => setIssueType('developer')}
+                  className={`p-3.5 rounded-xl border text-left transition-all text-xs font-bold flex items-center justify-between ${
                     issueType === 'developer'
-                      ? 'App me kya problem aa rahi hai? Kaun sa page kholne par error aati hai?'
-                      : 'Aapko kis shehar ya room me madad chahiye? Detailed jaankari likhein...'
-                  }
-                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-white/15 text-white placeholder-gray-500 text-xs focus:outline-none focus:border-[#00E5FF] resize-none"
+                      ? 'bg-purple-500/20 border-purple-400 text-purple-300 shadow-sm'
+                      : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <span>{ui.typeTech}</span>
+                  <span className="text-[10px] text-gray-400 font-mono">developer@imprince.me</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-300">{ui.nameLabel}</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Rahul Kumar"
+                  className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 text-white placeholder-gray-500 text-xs focus:outline-none focus:border-[#00E5FF] transition-all"
                 />
               </div>
 
-              <button
-                type="submit"
-                className={`w-full py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                  issueType === 'developer'
-                    ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]'
-                    : 'bg-[#00E5FF] hover:bg-[#00B8D4] text-black shadow-[0_0_15px_rgba(0,229,255,0.4)]'
-                }`}
-              >
-                <Send className="w-4 h-4" />
-                <span>
-                  Compose Email to {issueType === 'developer' ? APP_CONFIG.developerEmail : APP_CONFIG.supportEmail}
-                </span>
-              </button>
-            </form>
-          </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-300">{ui.emailLabel}</label>
+                <input
+                  type="email"
+                  value={userEmail}
+                  onChange={(e) => setUserEmail(e.target.value)}
+                  placeholder="e.g. student@gmail.com"
+                  className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 text-white placeholder-gray-500 text-xs focus:outline-none focus:border-[#00E5FF] transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-300">{ui.messageLabel}</label>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={4}
+                placeholder={ui.messagePlaceholder}
+                className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 text-white placeholder-gray-500 text-xs focus:outline-none focus:border-[#00E5FF] transition-all resize-none"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full sm:w-auto px-8 py-3 rounded-xl bg-gradient-to-r from-[#00E5FF] to-[#8A2BE2] text-black font-black text-xs hover:brightness-110 transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(0,229,255,0.3)] cursor-pointer"
+            >
+              <Send className="w-4 h-4" />
+              <span>{ui.submitBtn}</span>
+            </button>
+          </form>
         </div>
+
       </div>
     </div>
   );

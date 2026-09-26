@@ -7,11 +7,13 @@ import { sendPasswordResetEmail, updateProfile } from 'firebase/auth';
 import { handleFirestoreError, OperationType } from '../lib/firestoreError';
 import { parseAuthError } from '../lib/authError';
 import { motion } from 'motion/react';
-import { User, Camera, Moon, Sun, Monitor, Lock, Bell, Shield, FileText, Info, Mail, Code, ChevronRight, LogOut, Scale, ExternalLink, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { User, Camera, Moon, Sun, Monitor, Lock, Bell, Shield, FileText, Info, Mail, Code, ChevronRight, LogOut, Scale, ExternalLink, ShieldCheck, ShieldAlert, Languages } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage, LANGUAGE_OPTIONS } from '../contexts/LanguageContext';
 
 export default function AccountSettings() {
   const { currentUser, userProfile, logout, updateLocalProfile } = useAuth();
+  const { language, setLanguage } = useLanguage();
   const [name, setName] = useState(userProfile?.name || '');
   const [phone, setPhone] = useState(userProfile?.phone || '');
   const [businessName, setBusinessName] = useState(userProfile?.businessName || '');
@@ -316,6 +318,40 @@ export default function AccountSettings() {
               {loading ? 'Saving Profile...' : 'Save Changes'}
             </button>
           </form>
+        </div>
+      </div>
+
+      {/* Language Preferences */}
+      <div className="glass-card rounded-xl p-6">
+        <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+          <Languages className="h-5 w-5 text-[#00E5FF]" />
+          Language & Reading Preferences (भाषा चयन)
+        </h3>
+        <p className="text-xs text-gray-400 mb-4">
+          Choose the language you are most comfortable reading safety guidelines, legal terms, and help articles in.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {LANGUAGE_OPTIONS.map((opt) => {
+            const isSelected = language === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setLanguage(opt.id)}
+                className={`p-4 rounded-xl border transition-all text-left flex flex-col justify-between ${
+                  isSelected
+                    ? 'bg-gradient-to-br from-[#00E5FF]/20 to-[#8A2BE2]/20 border-[#00E5FF] text-white shadow-[0_0_15px_rgba(0,229,255,0.2)]'
+                    : 'bg-gray-800/40 border-gray-700/60 text-gray-400 hover:bg-gray-700/40 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center justify-between w-full mb-1">
+                  <span className="font-bold text-sm text-white">{opt.nativeName}</span>
+                  {isSelected && <span className="w-2 h-2 rounded-full bg-[#00E5FF] animate-pulse" />}
+                </div>
+                <span className="text-xs text-gray-400">{opt.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

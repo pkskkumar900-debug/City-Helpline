@@ -2,12 +2,15 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth, db } from '../lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser, signOut } from 'firebase/auth';
 import { doc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
-import { UserProfile, isSuperAdminEmail } from '../types';
+import { UserProfile, isSuperAdminEmail, hasAdminPrivileges } from '../types';
 
 interface AuthContextType {
   currentUser: FirebaseUser | null;
   userProfile: UserProfile | null;
   loading: boolean;
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
+  hasCustomClaimAdmin: boolean;
   logout: () => Promise<void>;
   updateLocalProfile: (profile: Partial<UserProfile>) => void;
 }
@@ -16,11 +19,26 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [hasCustomClaimAdmin, setHasCustomClaimAdmin] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(() => {
-    const cachedProfile = localStorage.getItem('userProfile');
-    return cachedProfile ? JSON.parse(cachedProfile) : null;
+    try {
+      const cachedProfile = localStorage.getItem('userProfile');
+      if (!cachedProfile) return null;
+      const parsed = JSON.parse(cachedProfile) as UserProfile;
+      // Sanitize privilege escalation in local cache: only authorized admin emails can be 'admin'
+      if (parsed.role === 'admin' && !isSuperAdminEmail(parsed.email)) {
+        parsed.role = 'user';
+        localStorage.setItem('userProfile', JSON.stringify(parsed));
+      }
+      return parsed;
+    } catch {
+      return null;
+    }
   });
   const [loading, setLoading] = useState(true);
+
+  const isSuperAdmin = isSuperAdminEmail(currentUser?.email) || isSuperAdminEmail(userProfile?.email);
+  const isAdmin = hasCustomClaimAdmin || hasAdminPrivileges(currentUser, userProfile);
 
   useEffect(() => {
     let unsubscribeProfile: () => void;
@@ -34,6 +52,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearTimeout(safetyTimeout);
       setCurrentUser(user);
       if (user) {
+        // Inspect Firebase Auth Custom Claims directly on user ID Token
+        user.getIdTokenResult().then((tokenResult) => {
+          const isAdminClaim = tokenResult.claims.admin === true || tokenResult.claims.role === 'admin';
+          setHasCustomClaimAdmin(Boolean(isAdminClaim));
+        }).catch(() => {
+          setHasCustomClaimAdmin(false);
+        });
+
         const docRef = doc(db, 'users', user.uid);
         unsubscribeProfile = onSnapshot(docRef, (docSnap) => {
           if (docSnap.exists()) {
@@ -44,6 +70,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setCurrentUser(null);
               localStorage.removeItem('userProfile');
             } else {
+              // Authoritatively ensure Super Admin email role is 'admin'
+              if (isSuperAdminEmail(user.email) || isSuperAdminEmail(data.email)) {
+                data.role = 'admin';
+              }
               setUserProfile(data);
               localStorage.setItem('userProfile', JSON.stringify(data));
             }
@@ -100,7 +130,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateLocalProfile = (updates: Partial<UserProfile>) => {
     setUserProfile((prev) => {
-      const updated = prev ? { ...prev, ...updates } : (updates as UserProfile);
+      if (!prev) return null;
+      const safeUpdates = { ...updates };
+      // Prevent local elevation to admin by non-superadmins
+      if (safeUpdates.role === 'admin' && !isSuperAdmin) {
+        delete safeUpdates.role;
+      }
+      const updated = { ...prev, ...safeUpdates };
       localStorage.setItem('userProfile', JSON.stringify(updated));
       return updated;
     });
@@ -111,7 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, userProfile, loading, logout, updateLocalProfile }}>
+    <AuthContext.Provider value={{ currentUser, userProfile, loading, isAdmin, isSuperAdmin, hasCustomClaimAdmin, logout, updateLocalProfile }}>
       {!loading && children}
     </AuthContext.Provider>
   );

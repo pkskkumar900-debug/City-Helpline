@@ -6,6 +6,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LocationProvider, useLocationContext } from './contexts/LocationContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import { Navbar } from './components/layout/Navbar';
 import { BottomNav } from './components/layout/BottomNav';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
@@ -36,17 +37,15 @@ import MyMarketplacePage from './pages/MyMarketplacePage';
 import MyListingsPage from './pages/MyListingsPage';
 import RoommatesPage from './pages/RoommatesPage';
 import Help from './pages/Help';
+import MessagesPage from './pages/MessagesPage';
 import { AiFloatingAssistant } from './components/ai/AiFloatingAssistant';
 import { InstallAppPrompt } from './components/common/InstallAppPrompt';
 
 function AppLayout() {
   const { isLocationModalOpen, closeLocationModal } = useLocationContext();
-  const { currentUser, userProfile } = useAuth();
+  const { currentUser, userProfile, isAdmin } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-
-  const isDefaultAdmin = isSuperAdminEmail(currentUser?.email);
-  const isAdmin = userProfile?.role === 'admin' || isDefaultAdmin;
 
   const [adminViewMode, setAdminViewMode] = useState<'admin' | 'student'>(() => {
     return (localStorage.getItem('admin_view_mode') as 'admin' | 'student') || 'admin';
@@ -143,6 +142,24 @@ function AppLayout() {
           {/* Help & Support Hub */}
           <Route path="/help" element={<Help />} />
           <Route path="/support" element={<Help />} />
+          
+          {/* Direct In-App Chat Routes */}
+          <Route 
+            path="/messages" 
+            element={
+              <ProtectedRoute>
+                <MessagesPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/messages/:conversationId" 
+            element={
+              <ProtectedRoute>
+                <MessagesPage />
+              </ProtectedRoute>
+            } 
+          />
           
           {/* Protected Routes */}
           <Route 
@@ -262,11 +279,13 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <LocationProvider>
-        <Router>
-          <AppLayout />
-        </Router>
-      </LocationProvider>
+      <LanguageProvider>
+        <LocationProvider>
+          <Router>
+            <AppLayout />
+          </Router>
+        </LocationProvider>
+      </LanguageProvider>
     </AuthProvider>
   );
 }

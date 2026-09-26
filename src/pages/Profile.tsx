@@ -17,6 +17,8 @@ import { ProfileRoommateSection } from '../components/profile/ProfileRoommateSec
 import { ProfileFreeNotesSection } from '../components/profile/ProfileFreeNotesSection';
 import { ProfileEmergencySection } from '../components/profile/ProfileEmergencySection';
 import { UserAvatar } from '../components/common/UserAvatar';
+import { VerifiedStudentBadge } from '../components/common/TrustBadge';
+import { StudentVerificationModal } from '../components/profile/StudentVerificationModal';
 
 export default function Profile() {
   const { currentUser, userProfile, logout } = useAuth();
@@ -26,6 +28,7 @@ export default function Profile() {
   const [myMarketplaceItems, setMyMarketplaceItems] = useState<MarketplaceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -153,8 +156,11 @@ export default function Profile() {
                     {userProfile?.name || 'Student User'}
                   </h1>
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#00E5FF]/15 text-[#00E5FF] border border-[#00E5FF]/30 shadow-[0_0_10px_rgba(0,229,255,0.15)]">
-                    {userProfile?.role === 'admin' ? 'Administrator' : userProfile?.role === 'contributor' ? 'Host / Contributor' : 'Verified Student'}
+                    {userProfile?.role === 'admin' ? 'Administrator' : userProfile?.role === 'contributor' ? 'Host / Contributor' : 'Student Aspirant'}
                   </span>
+                  {userProfile?.isStudentVerified && (
+                    <VerifiedStudentBadge size="md" />
+                  )}
                 </div>
 
                 <p className="text-xs sm:text-sm text-gray-300 font-medium truncate mb-2">
@@ -208,6 +214,49 @@ export default function Profile() {
           </div>
         </LiquidGlassCard>
       </motion.div>
+
+      {/* Student Verification Trust Banner */}
+      <div className="mb-8 p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-[#00E5FF]/10 via-[#8A2BE2]/10 to-[#00E5FF]/10 border border-[#00E5FF]/25 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="p-3 rounded-2xl bg-gradient-to-br from-[#00E5FF]/20 to-[#8A2BE2]/20 border border-[#00E5FF]/30 text-[#00E5FF] shrink-0">
+            <ShieldCheck className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h4 className="text-sm font-bold text-white">
+                {userProfile?.isStudentVerified ? (
+                  <span className="flex items-center gap-1.5 text-emerald-400 font-black">
+                    <span>Official "Verified Student" Badge Active</span>
+                  </span>
+                ) : userProfile?.studentVerificationStatus === 'pending' ? (
+                  <span className="text-amber-300 font-black">
+                    Student ID Verification is Under Review
+                  </span>
+                ) : (
+                  <span>Get Your Free "Verified Student" Badge</span>
+                )}
+              </h4>
+              {userProfile?.isStudentVerified && <VerifiedStudentBadge size="sm" />}
+            </div>
+            <p className="text-xs text-gray-300 mt-0.5">
+              {userProfile?.isStudentVerified 
+                ? `Verified with ${userProfile.studentVerificationData?.collegeOrCoaching || 'Coaching Institute'} • Higher trust on Roommate Finder & Marketplace`
+                : userProfile?.studentVerificationStatus === 'pending'
+                  ? 'Moderators verify coaching enrollment & college cards within 12-24 hours.'
+                  : 'Verify coaching or college enrollment to boost trust on Roommate matching & Marketplace.'}
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setShowVerificationModal(true)}
+          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#00E5FF] to-[#8A2BE2] text-black font-black text-xs hover:brightness-110 transition-all shadow-[0_0_15px_rgba(0,229,255,0.3)] shrink-0 cursor-pointer flex items-center justify-center gap-1.5"
+        >
+          <span>{userProfile?.isStudentVerified ? 'View Verification' : userProfile?.studentVerificationStatus === 'pending' ? 'Review Details' : 'Verify Student ID (Free)'}</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
 
       {/* Quick Stats Grid: 4 Metric Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8">
@@ -411,6 +460,16 @@ export default function Profile() {
             </div>
           </motion.div>
         </div>
+      )}
+
+      {/* Student Verification Application Modal */}
+      {showVerificationModal && (
+        <StudentVerificationModal
+          onClose={() => setShowVerificationModal(false)}
+          onSuccess={() => {
+            setShowVerificationModal(false);
+          }}
+        />
       )}
     </div>
   );

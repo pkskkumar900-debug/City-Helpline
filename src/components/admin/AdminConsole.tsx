@@ -113,6 +113,17 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSwitchToStudentVie
       } catch (mErr) {
         console.warn("Marketplace fetch skipped or empty:", mErr);
       }
+
+      // 4. Secure Database RBAC: Ensure active admin has verified record in roles_admins
+      if (currentUser && (isSuperAdminEmail(currentUser.email) || userProfile?.role === 'admin')) {
+        setDoc(doc(db, 'roles_admins', currentUser.uid), {
+          uid: currentUser.uid,
+          email: currentUser.email || '',
+          role: 'admin',
+          assignedBy: 'system_bootstrap',
+          assignedAt: Date.now(),
+        }, { merge: true }).catch(() => {});
+      }
     } catch (error) {
       console.error("Error fetching admin telemetry data:", error);
       toast.error("Failed to sync some admin data from Cloud Firestore");
@@ -182,10 +193,26 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSwitchToStudentVie
 
   // Handlers for Users
   const handleRoleChange = async (uid: string, newRole: Role) => {
+    const target = users.find(u => u.uid === uid);
+    if (isSuperAdminEmail(target?.email) && newRole !== 'admin') {
+      toast.error("Super Admin accounts cannot be demoted.");
+      return;
+    }
+
     try {
       await updateDoc(doc(db, 'users', uid), { role: newRole });
+      if (newRole === 'admin') {
+        await setDoc(doc(db, 'roles_admins', uid), {
+          uid,
+          email: target?.email || '',
+          role: 'admin',
+          assignedBy: currentUser?.email || 'admin',
+          assignedAt: Date.now(),
+        }, { merge: true }).catch(() => {});
+      } else {
+        await deleteDoc(doc(db, 'roles_admins', uid)).catch(() => {});
+      }
       setUsers(prev => prev.map(u => u.uid === uid ? { ...u, role: newRole } : u));
-      const target = users.find(u => u.uid === uid);
       addAuditLog('change_role', `Changed role of ${target?.name || uid} to "${newRole}"`);
       toast.success(`User role updated to ${newRole}`);
     } catch (error) {
@@ -195,10 +222,15 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSwitchToStudentVie
   };
 
   const handleBanToggle = async (uid: string, currentBanned: boolean) => {
+    const target = users.find(u => u.uid === uid);
+    if (isSuperAdminEmail(target?.email)) {
+      toast.error("Super Admin accounts cannot be banned.");
+      return;
+    }
+
     try {
       await updateDoc(doc(db, 'users', uid), { banned: !currentBanned });
       setUsers(prev => prev.map(u => u.uid === uid ? { ...u, banned: !currentBanned } : u));
-      const target = users.find(u => u.uid === uid);
       addAuditLog(!currentBanned ? 'ban_user' : 'unban_user', `${!currentBanned ? 'Banned' : 'Unbanned'} user "${target?.name || uid}"`);
       toast.success(`User account ${!currentBanned ? 'banned' : 'unbanned'}`);
     } catch (error) {
@@ -209,10 +241,16 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSwitchToStudentVie
 
   const handleDeleteUser = async (uid: string) => {
     const target = users.find(u => u.uid === uid);
+    if (isSuperAdminEmail(target?.email)) {
+      toast.error("Super Admin accounts cannot be deleted.");
+      return;
+    }
+
     if (!window.confirm(`Are you sure you want to permanently remove user "${target?.name || uid}"?`)) return;
 
     try {
       await deleteDoc(doc(db, 'users', uid));
+      await deleteDoc(doc(db, 'roles_admins', uid)).catch(() => {});
       setUsers(prev => prev.filter(u => u.uid !== uid));
       toast.success("User account deleted");
     } catch (error) {
@@ -258,6 +296,149 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSwitchToStudentVie
     } catch (err: any) {
       console.error("Error creating/linking user:", err);
       toast.error(err.message || "Failed to link user");
+    }
+  };
+
+  // Handlers for Student & PG Verification Badges
+  const handleApproveStudentVerification = async (uid: string) => {
+    const target = users.find(u => u.uid === uid);
+    try {
+      await updateDoc(doc(db, 'users', uid), {
+        isStudentVerified: true,
+        studentVerificationStatus: 'verified',
+        'studentVerificationData.verifiedAt': Date.now(),
+        'studentVerificationData.reviewedBy': currentUser?.email || 'Admin',
+        updatedAt: Date.now(),
+      });
+
+      setUsers(prev => prev.map(u => u.uid === uid ? {
+        ...u,
+        isStudentVerified: true,
+        studentVerificationStatus: 'verified',
+        studentVerificationData: {
+          ...(u.studentVerificationData || { collegeOrCoaching: '', rollOrIdNumber: '', courseOrExam: '' }),
+          verifiedAt: Date.now(),
+          reviewedBy: currentUser?.email || 'Admin',
+        }
+      } : u));
+
+      addAuditLog('approve_student_badge' as any, `Issued "Verified Student" Badge to ${target?.name || uid}`);
+      toast.success(`"Verified Student" Badge successfully issued to ${target?.name || 'student'}!`);
+    } catch (err: any) {
+      console.error("Error approving student verification:", err);
+      toast.error("Failed to approve student verification: " + (err.message || ''));
+    }
+  };
+
+  const handleRejectStudentVerification = async (uid: string, reason?: string) => {
+    const target = users.find(u => u.uid === uid);
+    try {
+      await updateDoc(doc(db, 'users', uid), {
+        isStudentVerified: false,
+        studentVerificationStatus: 'rejected',
+        'studentVerificationData.reviewedBy': currentUser?.email || 'Admin',
+        'studentVerificationData.note': reason || 'Verification documents could not be validated',
+        updatedAt: Date.now(),
+      });
+
+      setUsers(prev => prev.map(u => u.uid === uid ? {
+        ...u,
+        isStudentVerified: false,
+        studentVerificationStatus: 'rejected',
+        studentVerificationData: {
+          ...(u.studentVerificationData || { collegeOrCoaching: '', rollOrIdNumber: '', courseOrExam: '' }),
+          reviewedBy: currentUser?.email || 'Admin',
+          note: reason || 'Verification documents could not be validated',
+        }
+      } : u));
+
+      addAuditLog('reject_student_badge' as any, `Rejected/Revoked Student Badge for ${target?.name || uid}`);
+      toast.info(`Student verification status updated for ${target?.name || 'student'}.`);
+    } catch (err: any) {
+      console.error("Error updating student verification:", err);
+      toast.error("Failed to update student verification status");
+    }
+  };
+
+  const handleApprovePGVerification = async (id: string) => {
+    const target = listings.find(l => l.id === id);
+    try {
+      await updateDoc(doc(db, 'listings', id), {
+        isVerifiedPG: true,
+        pgVerificationStatus: 'verified',
+        'pgVerificationData.verifiedAt': Date.now(),
+        'pgVerificationData.physicalInspectionDone': true,
+        'pgVerificationData.reviewedBy': currentUser?.email || 'Admin',
+      });
+
+      setListings(prev => prev.map(l => l.id === id ? {
+        ...l,
+        isVerifiedPG: true,
+        pgVerificationStatus: 'verified',
+        pgVerificationData: {
+          ...(l.pgVerificationData || {}),
+          verifiedAt: Date.now(),
+          physicalInspectionDone: true,
+          reviewedBy: currentUser?.email || 'Admin',
+        }
+      } : l));
+
+      if (inspectListing && inspectListing.id === id) {
+        setInspectListing(prev => prev ? {
+          ...prev,
+          isVerifiedPG: true,
+          pgVerificationStatus: 'verified',
+          pgVerificationData: {
+            ...(prev.pgVerificationData || {}),
+            verifiedAt: Date.now(),
+            physicalInspectionDone: true,
+            reviewedBy: currentUser?.email || 'Admin',
+          }
+        } : null);
+      }
+
+      addAuditLog('approve_pg_badge' as any, `Issued "Verified PG" Trust Badge to "${target?.title || id}"`);
+      toast.success(`"Verified PG" Badge issued to "${target?.title || 'Listing'}"!`);
+    } catch (err: any) {
+      console.error("Error approving PG verification:", err);
+      toast.error("Failed to approve PG verification: " + (err.message || ''));
+    }
+  };
+
+  const handleRejectPGVerification = async (id: string, reason?: string) => {
+    const target = listings.find(l => l.id === id);
+    try {
+      await updateDoc(doc(db, 'listings', id), {
+        isVerifiedPG: false,
+        pgVerificationStatus: 'rejected',
+        'pgVerificationData.reviewedBy': currentUser?.email || 'Admin',
+        'pgVerificationData.note': reason || 'Verification documents could not be validated',
+      });
+
+      setListings(prev => prev.map(l => l.id === id ? {
+        ...l,
+        isVerifiedPG: false,
+        pgVerificationStatus: 'rejected',
+        pgVerificationData: {
+          ...(l.pgVerificationData || {}),
+          reviewedBy: currentUser?.email || 'Admin',
+          note: reason || 'Verification documents could not be validated',
+        }
+      } : l));
+
+      if (inspectListing && inspectListing.id === id) {
+        setInspectListing(prev => prev ? {
+          ...prev,
+          isVerifiedPG: false,
+          pgVerificationStatus: 'rejected',
+        } : null);
+      }
+
+      addAuditLog('reject_pg_badge' as any, `Rejected/Revoked PG Badge for "${target?.title || id}"`);
+      toast.info(`PG verification rejected/revoked for "${target?.title || 'Listing'}".`);
+    } catch (err: any) {
+      console.error("Error updating PG verification:", err);
+      toast.error("Failed to update PG verification status");
     }
   };
 
@@ -364,6 +545,8 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSwitchToStudentVie
                 onEdit={(id) => navigate(`/edit-listing/${id}`)}
                 onInspect={(l) => setInspectListing(l)}
                 onCreateNew={() => navigate('/add-listing')}
+                onApprovePGVerification={handleApprovePGVerification}
+                onRejectPGVerification={handleRejectPGVerification}
               />
             )}
 
@@ -375,6 +558,8 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSwitchToStudentVie
                 onDeleteUser={handleDeleteUser}
                 onCreateOrLinkUser={handleCreateOrLinkUser}
                 onRefreshUsers={fetchAdminData}
+                onApproveStudentVerification={handleApproveStudentVerification}
+                onRejectStudentVerification={handleRejectStudentVerification}
               />
             )}
 
@@ -432,6 +617,8 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSwitchToStudentVie
           setInspectListing(null);
           navigate(`/edit-listing/${id}`);
         }}
+        onApprovePGVerification={handleApprovePGVerification}
+        onRejectPGVerification={handleRejectPGVerification}
       />
 
     </div>

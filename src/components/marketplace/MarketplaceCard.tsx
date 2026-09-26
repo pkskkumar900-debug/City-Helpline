@@ -4,6 +4,7 @@ import { GlassCard } from '../ui/GlassCard';
 import { MapPin, Phone, MessageCircle, Clock, ShieldCheck, Tag } from 'lucide-react';
 import { motion } from 'motion/react';
 import { APP_CONFIG } from '../../lib/appConfig';
+import { VerifiedStudentBadge } from '../common/TrustBadge';
 
 interface MarketplaceCardProps {
   item: MarketplaceItem;
@@ -150,11 +151,13 @@ export const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ item, onOpenDe
           {/* Footer with Seller info and Quick Action CTAs */}
           <div className="pt-3 border-t border-white/10 mt-auto">
             <div className="flex items-center justify-between text-xs text-gray-400 mb-3">
-              <span className="flex items-center gap-1 font-medium truncate max-w-[150px]">
+              <span className="flex items-center gap-1 font-medium truncate max-w-[140px]">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span className="truncate">{item.sellerName}</span>
               </span>
-              <span className="text-[11px] text-gray-400">Student Verified</span>
+              {item.isStudentVerified && (
+                <VerifiedStudentBadge size="sm" />
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-2">

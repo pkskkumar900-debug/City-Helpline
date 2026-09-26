@@ -9,7 +9,7 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ onSwitchToStudentView }: AdminDashboardProps) {
-  const { currentUser, userProfile, loading } = useAuth();
+  const { currentUser, isAdmin, loading } = useAuth();
 
   if (loading) {
     return (
@@ -21,9 +21,6 @@ export default function AdminDashboard({ onSwitchToStudentView }: AdminDashboard
       </div>
     );
   }
-
-  const isDefaultAdmin = isSuperAdminEmail(currentUser?.email);
-  const isAdmin = userProfile?.role === 'admin' || isDefaultAdmin;
 
   if (!currentUser || !isAdmin) {
     return <Navigate to="/" replace />;

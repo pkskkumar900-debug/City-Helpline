@@ -6,6 +6,7 @@ import {
   Utensils, Sparkles, MessageCircle, Phone, 
   CheckCircle2, BedDouble, Calendar, UserCheck
 } from 'lucide-react';
+import { VerifiedStudentBadge } from '../common/TrustBadge';
 
 export interface RoommateCardProps {
   profile: RoommateProfile;
@@ -64,6 +65,9 @@ export const RoommateCard: React.FC<RoommateCardProps> = ({ profile, onConnect, 
                 <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-cyan-400/15 text-[#00E5FF] border border-cyan-400/30">
                   {profile.gender === 'female' ? '👩 Girls' : profile.gender === 'male' ? '👨 Boys' : 'Any'}
                 </span>
+                {profile.isStudentVerified && (
+                  <VerifiedStudentBadge size="sm" />
+                )}
               </div>
               <p className="text-xs text-cyan-200 font-semibold truncate mt-0.5">
                 {profile.targetExam}

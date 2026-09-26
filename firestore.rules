@@ -14,6 +14,24 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    function hasAdminClaim() {
+      return isAuthenticated() && (
+        ('admin' in request.auth.token && request.auth.token.admin == true) ||
+        ('role' in request.auth.token && request.auth.token.role == 'admin')
+      );
+    }
+
+    function isDatabaseAdmin() {
+      return isAuthenticated() && (
+        exists(/databases/$(database)/documents/roles_admins/$(request.auth.uid)) ||
+        (
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          ('role' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        )
+      );
+    }
+
     function isSuperAdminEmail() {
       return isAuthenticated() && 
         ('email' in request.auth.token) &&
@@ -28,12 +46,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSuperAdminEmail() || (
-        isAuthenticated() && 
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-        ('role' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
-      );
+      return hasAdminClaim() || isDatabaseAdmin() || isSuperAdminEmail();
     }
 
     function hasOnlyAllowedFields(fields) {
@@ -49,7 +62,7 @@ service cloud.firestore {
     // ===============================================================
     
     function isValidUser(data) {
-      return hasOnlyAllowedFields(['uid', 'name', 'email', 'role', 'createdAt', 'photoURL', 'themePreference', 'lastLogin', 'banned', 'phone', 'businessName', 'businessType', 'city', 'address', 'pincode', 'latitude', 'longitude', 'savedListings', 'notifications', 'updatedAt']) &&
+      return hasOnlyAllowedFields(['uid', 'name', 'email', 'role', 'createdAt', 'photoURL', 'themePreference', 'lastLogin', 'banned', 'phone', 'businessName', 'businessType', 'city', 'address', 'pincode', 'latitude', 'longitude', 'savedListings', 'notifications', 'updatedAt', 'isStudentVerified', 'studentVerificationStatus', 'studentVerificationData', 'isOwnerVerified']) &&
              (!('uid' in data) || (data.uid is string && data.uid.size() > 0 && data.uid.size() < 100)) &&
              (!('name' in data) || (data.name is string && data.name.size() > 0 && data.name.size() < 100)) &&
              (!('email' in data) || data.email == '' || (data.email is string && isValidEmail(data.email))) &&
@@ -66,13 +79,17 @@ service cloud.firestore {
              (!('latitude' in data) || data.latitude is number) &&
              (!('longitude' in data) || data.longitude is number) &&
              (!('savedListings' in data) || data.savedListings is list) &&
+             (!('isStudentVerified' in data) || data.isStudentVerified is bool) &&
+             (!('studentVerificationStatus' in data) || data.studentVerificationStatus in ['none', 'pending', 'verified', 'rejected']) &&
+             (!('isOwnerVerified' in data) || data.isOwnerVerified is bool) &&
+             (!('studentVerificationData' in data) || data.studentVerificationData is map) &&
              (!('lastLogin' in data) || data.lastLogin is number || data.lastLogin is timestamp) &&
              (!('createdAt' in data) || data.createdAt is number || data.createdAt is timestamp) &&
              (!('updatedAt' in data) || data.updatedAt is number || data.updatedAt is timestamp);
     }
 
     function isValidListing(data) {
-      return hasOnlyAllowedFields(['title', 'description', 'category', 'city', 'address', 'price', 'contact', 'images', 'status', 'featured', 'authorId', 'authorName', 'createdAt', 'averageRating', 'reviewCount']) &&
+      return hasOnlyAllowedFields(['title', 'description', 'category', 'city', 'address', 'price', 'contact', 'images', 'status', 'featured', 'authorId', 'authorName', 'createdAt', 'averageRating', 'reviewCount', 'isVerifiedPG', 'pgVerificationStatus', 'pgVerificationData']) &&
              data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
              data.description is string && data.description.size() > 0 && data.description.size() < 5000 &&
              data.category is string && data.category.size() > 0 && data.category.size() < 50 &&
@@ -87,7 +104,10 @@ service cloud.firestore {
              data.authorName is string && data.authorName.size() > 0 && data.authorName.size() < 100 &&
              (data.createdAt is number || data.createdAt is timestamp) &&
              (!('averageRating' in data) || (data.averageRating is number && data.averageRating >= 0 && data.averageRating <= 5)) &&
-             (!('reviewCount' in data) || (data.reviewCount is number && data.reviewCount >= 0));
+             (!('reviewCount' in data) || (data.reviewCount is number && data.reviewCount >= 0)) &&
+             (!('isVerifiedPG' in data) || data.isVerifiedPG is bool) &&
+             (!('pgVerificationStatus' in data) || data.pgVerificationStatus in ['none', 'pending', 'verified', 'rejected']) &&
+             (!('pgVerificationData' in data) || data.pgVerificationData is map);
     }
 
     function isValidReview(data) {
@@ -101,7 +121,7 @@ service cloud.firestore {
     }
 
     function isValidMarketplaceItem(data) {
-      return hasOnlyAllowedFields(['title', 'description', 'price', 'originalPrice', 'category', 'condition', 'city', 'area', 'images', 'sellerId', 'sellerName', 'sellerPhone', 'whatsappNumber', 'status', 'featured', 'createdAt']) &&
+      return hasOnlyAllowedFields(['title', 'description', 'price', 'originalPrice', 'category', 'condition', 'city', 'area', 'images', 'sellerId', 'sellerName', 'sellerPhone', 'whatsappNumber', 'status', 'featured', 'createdAt', 'isStudentVerified']) &&
              data.title is string && data.title.size() > 0 && data.title.size() < 150 &&
              data.description is string && data.description.size() > 0 && data.description.size() < 2500 &&
              data.price is number && data.price >= 0 &&
@@ -117,6 +137,7 @@ service cloud.firestore {
              (!('whatsappNumber' in data) || (data.whatsappNumber is string && data.whatsappNumber.size() < 25)) &&
              data.status in ['available', 'sold'] &&
              (!('featured' in data) || data.featured is bool) &&
+             (!('isStudentVerified' in data) || data.isStudentVerified is bool) &&
              (data.createdAt is number || data.createdAt is timestamp);
     }
 
@@ -126,8 +147,29 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if true;
-      allow create: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
-      allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow create: if isAuthenticated() && 
+                    isValidUser(request.resource.data) && 
+                    (
+                      isAdmin() ||
+                      (
+                        request.auth.uid == userId &&
+                        (request.resource.data.role in ['user', 'contributor'] || isSuperAdminEmail()) &&
+                        (!('banned' in request.resource.data) || request.resource.data.banned == false)
+                      )
+                    );
+      allow update: if isAuthenticated() && 
+                    isValidUser(request.resource.data) && 
+                    (
+                      isAdmin() ||
+                      (
+                        request.auth.uid == userId &&
+                        (!('role' in request.resource.data) || request.resource.data.role == resource.data.role) &&
+                        (!('banned' in request.resource.data) || request.resource.data.banned == resource.data.banned) &&
+                        (!('isStudentVerified' in request.resource.data) || request.resource.data.isStudentVerified == resource.data.isStudentVerified || (!('isStudentVerified' in resource.data) && request.resource.data.isStudentVerified == false)) &&
+                        (!('isOwnerVerified' in request.resource.data) || request.resource.data.isOwnerVerified == resource.data.isOwnerVerified || (!('isOwnerVerified' in resource.data) && request.resource.data.isOwnerVerified == false)) &&
+                        (!('studentVerificationStatus' in request.resource.data) || request.resource.data.studentVerificationStatus in ['none', 'pending', resource.data.studentVerificationStatus])
+                      )
+                    );
       allow delete: if isAdmin();
     }
 
@@ -138,7 +180,7 @@ service cloud.firestore {
                   
       allow list: if resource.data.status == 'approved' || 
                   (isAuthenticated() && resource.data.authorId == request.auth.uid) || 
-                  isSuperAdminEmail();
+                  isAdmin();
                   
       allow create: if isAuthenticated() && 
                     isValidListing(request.resource.data) && 
@@ -154,7 +196,9 @@ service cloud.firestore {
                       (
                         isOwner(resource.data.authorId) && 
                         request.resource.data.featured == resource.data.featured &&
-                        (request.resource.data.status == 'pending' || request.resource.data.status == resource.data.status)
+                        (request.resource.data.status == 'pending' || request.resource.data.status == resource.data.status) &&
+                        (!('isVerifiedPG' in request.resource.data) || request.resource.data.isVerifiedPG == resource.data.isVerifiedPG || (!('isVerifiedPG' in resource.data) && request.resource.data.isVerifiedPG == false)) &&
+                        (!('pgVerificationStatus' in request.resource.data) || request.resource.data.pgVerificationStatus in ['none', 'pending', resource.data.pgVerificationStatus])
                       ) || 
                       isAdmin() ||
                       (
@@ -205,6 +249,37 @@ service cloud.firestore {
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
       allow delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    match /conversations/{convId} {
+      allow read: if isAuthenticated() && (request.auth.uid in resource.data.participants || isAdmin());
+      allow create: if isAuthenticated() && (request.auth.uid in request.resource.data.participants || isAdmin());
+      allow update: if isAuthenticated() && (request.auth.uid in resource.data.participants || isAdmin());
+      allow delete: if isAuthenticated() && (request.auth.uid in resource.data.participants || isAdmin());
+
+      match /messages/{msgId} {
+        allow read: if isAuthenticated() && 
+                    (
+                      request.auth.uid in get(/databases/$(database)/documents/conversations/$(convId)).data.participants || 
+                      isAdmin()
+                    );
+        allow create: if isAuthenticated() && 
+                      request.resource.data.senderId == request.auth.uid &&
+                      request.resource.data.text is string && 
+                      request.resource.data.text.size() > 0 && 
+                      request.resource.data.text.size() <= 2000 &&
+                      (
+                        request.auth.uid in get(/databases/$(database)/documents/conversations/$(convId)).data.participants || 
+                        isAdmin()
+                      );
+        allow update: if isAuthenticated() && (resource.data.senderId == request.auth.uid || isAdmin());
+        allow delete: if isAuthenticated() && (resource.data.senderId == request.auth.uid || isAdmin());
+      }
+    }
+
+    match /roles_admins/{adminUid} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
     }
   }
 }

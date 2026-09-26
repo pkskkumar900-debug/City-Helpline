@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { 
   Users, Search, Shield, Ban, Trash2, CheckCircle2, 
   Briefcase, Phone, MapPin, Calendar, ExternalLink, Info,
-  UserPlus, RefreshCw, Copy, Check, X, ShieldAlert, Sparkles
+  UserPlus, RefreshCw, Copy, Check, X, ShieldAlert, Sparkles,
+  GraduationCap, Clock, ShieldCheck, Camera
 } from 'lucide-react';
 import { UserProfile, Role, isSuperAdminEmail } from '../../types';
+import { VerifiedStudentBadge } from '../common/TrustBadge';
 import { toast } from 'sonner';
 
 interface AdminUsersTabProps {
@@ -20,6 +22,8 @@ interface AdminUsersTabProps {
     phone?: string;
   }) => Promise<void>;
   onRefreshUsers?: () => Promise<void>;
+  onApproveStudentVerification?: (uid: string) => void;
+  onRejectStudentVerification?: (uid: string, reason?: string) => void;
 }
 
 export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
@@ -29,10 +33,13 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
   onDeleteUser,
   onCreateOrLinkUser,
   onRefreshUsers,
+  onApproveStudentVerification,
+  onRejectStudentVerification,
 }) => {
-  const [roleFilter, setRoleFilter] = useState<'all' | 'user' | 'contributor' | 'admin'>('all');
+  const [roleFilter, setRoleFilter] = useState<'all' | 'user' | 'contributor' | 'admin' | 'student_pending' | 'student_verified'>('all');
   const [search, setSearch] = useState('');
   const [inspectUser, setInspectUser] = useState<UserProfile | null>(null);
+  const [inspectStudentVerification, setInspectStudentVerification] = useState<UserProfile | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [copiedUid, setCopiedUid] = useState<string | null>(null);
@@ -45,14 +52,27 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
   const [newPhone, setNewPhone] = useState('');
   const [submittingUser, setSubmittingUser] = useState(false);
 
+  const studentPendingCount = users.filter(u => u.studentVerificationStatus === 'pending').length;
+  const studentVerifiedCount = users.filter(u => u.isStudentVerified).length;
+
   const filtered = users.filter((u) => {
-    const matchesRole = roleFilter === 'all' || u.role === roleFilter;
+    let matchesRole = true;
+    if (roleFilter === 'student_pending') {
+      matchesRole = u.studentVerificationStatus === 'pending';
+    } else if (roleFilter === 'student_verified') {
+      matchesRole = !!u.isStudentVerified;
+    } else if (roleFilter !== 'all') {
+      matchesRole = u.role === roleFilter;
+    }
+
     const q = search.toLowerCase();
     const matchesSearch = search === '' ||
       u.name?.toLowerCase().includes(q) ||
       u.email?.toLowerCase().includes(q) ||
       u.city?.toLowerCase().includes(q) ||
       u.businessName?.toLowerCase().includes(q) ||
+      u.studentVerificationData?.collegeOrCoaching?.toLowerCase().includes(q) ||
+      u.studentVerificationData?.rollOrIdNumber?.toLowerCase().includes(q) ||
       u.phone?.includes(q) ||
       u.uid?.toLowerCase().includes(q);
 
@@ -176,6 +196,36 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
           >
             Admins ({adminsCount})
           </button>
+
+          {/* Student Verification Filters */}
+          <button
+            onClick={() => setRoleFilter('student_pending')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+              roleFilter === 'student_pending' 
+                ? 'bg-gradient-to-r from-[#00E5FF]/20 to-[#8A2BE2]/20 text-[#00E5FF] border border-[#00E5FF]/40 shadow-[0_0_15px_rgba(0,229,255,0.25)]' 
+                : 'text-gray-400 hover:text-[#00E5FF]'
+            }`}
+          >
+            <Clock className="w-3.5 h-3.5 text-[#00E5FF]" />
+            <span>ID Review Pending</span>
+            {studentPendingCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-[#00E5FF] text-black">
+                {studentPendingCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setRoleFilter('student_verified')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+              roleFilter === 'student_verified' 
+                ? 'bg-[#8A2BE2]/20 text-purple-300 border border-purple-500/40 shadow-[0_0_15px_rgba(138,43,226,0.25)]' 
+                : 'text-gray-400 hover:text-purple-300'
+            }`}
+          >
+            <GraduationCap className="w-3.5 h-3.5 text-purple-400" />
+            <span>Verified Students ({studentVerifiedCount})</span>
+          </button>
           {bannedCount > 0 && (
             <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 whitespace-nowrap">
               {bannedCount} Banned
@@ -252,8 +302,20 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                         )}
                       </div>
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-bold text-white text-sm truncate">{u.name || 'Unnamed User'}</span>
+                          {u.isStudentVerified && (
+                            <VerifiedStudentBadge size="sm" />
+                          )}
+                          {u.studentVerificationStatus === 'pending' && (
+                            <span
+                              onClick={() => setInspectStudentVerification(u)}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-[#00E5FF]/20 text-[#00E5FF] border border-[#00E5FF]/40 animate-pulse cursor-pointer hover:bg-[#00E5FF]/30 transition-all"
+                              title="Click to review student verification request"
+                            >
+                              <Clock className="w-3 h-3" /> ID Pending
+                            </span>
+                          )}
                           {u.banned && (
                             <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-rose-500/20 text-rose-400 border border-rose-500/30">
                               Banned
@@ -290,19 +352,25 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
 
                   {/* Role Selector */}
                   <td className="py-3.5 px-4">
-                    <select
-                      value={u.role || 'user'}
-                      onChange={(e) => onRoleChange(u.uid, e.target.value as Role)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider border focus:outline-none transition-all [&>option]:bg-[#0B0E14] ${
-                        u.role === 'admin' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
-                        u.role === 'contributor' ? 'bg-[#00E5FF]/20 text-[#00E5FF] border-[#00E5FF]/40' :
-                        'bg-white/5 text-gray-300 border-white/10'
-                      }`}
-                    >
-                      <option value="user">Student / User</option>
-                      <option value="contributor">Contributor (Provider)</option>
-                      <option value="admin">System Admin</option>
-                    </select>
+                    {isSuperAdminEmail(u.email) ? (
+                      <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                        Super Admin
+                      </span>
+                    ) : (
+                      <select
+                        value={u.role || 'user'}
+                        onChange={(e) => onRoleChange(u.uid, e.target.value as Role)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider border focus:outline-none transition-all [&>option]:bg-[#0B0E14] ${
+                          u.role === 'admin' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
+                          u.role === 'contributor' ? 'bg-[#00E5FF]/20 text-[#00E5FF] border-[#00E5FF]/40' :
+                          'bg-white/5 text-gray-300 border-white/10'
+                        }`}
+                      >
+                        <option value="user">Student / User</option>
+                        <option value="contributor">Contributor (Provider)</option>
+                        <option value="admin">System Admin</option>
+                      </select>
+                    )}
                   </td>
 
                   {/* Joined Date */}
@@ -314,6 +382,21 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                   <td className="py-3.5 px-4 text-right">
                     <div className="flex items-center justify-end gap-1.5">
                       
+                      {/* View Student Verification Modal */}
+                      {(u.studentVerificationStatus === 'pending' || u.isStudentVerified || u.studentVerificationData) && (
+                        <button
+                          onClick={() => setInspectStudentVerification(u)}
+                          className={`p-2 rounded-xl transition-colors ${
+                            u.studentVerificationStatus === 'pending'
+                              ? 'text-[#00E5FF] bg-[#00E5FF]/10 hover:bg-[#00E5FF]/20 animate-pulse'
+                              : 'text-purple-400 hover:text-purple-300 hover:bg-purple-500/10'
+                          }`}
+                          title="Review Student Verification Application"
+                        >
+                          <GraduationCap className="w-4 h-4" />
+                        </button>
+                      )}
+
                       {/* View Provider Info Drawer */}
                       {u.role === 'contributor' && (
                         <button
@@ -326,26 +409,38 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                       )}
 
                       {/* Ban / Unban */}
-                      <button
-                        onClick={() => onBanToggle(u.uid, u.banned || false)}
-                        className={`p-2 rounded-xl transition-colors ${
-                          u.banned 
-                            ? 'text-emerald-400 hover:bg-emerald-500/10' 
-                            : 'text-amber-400 hover:bg-amber-500/10'
-                        }`}
-                        title={u.banned ? "Unban Account" : "Ban Account"}
-                      >
-                        <Ban className="w-4 h-4" />
-                      </button>
+                      {isSuperAdminEmail(u.email) ? (
+                        <span className="p-2 rounded-xl text-gray-600 cursor-not-allowed" title="Super Admin cannot be banned">
+                          <Ban className="w-4 h-4" />
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => onBanToggle(u.uid, u.banned || false)}
+                          className={`p-2 rounded-xl transition-colors ${
+                            u.banned 
+                              ? 'text-emerald-400 hover:bg-emerald-500/10' 
+                              : 'text-amber-400 hover:bg-amber-500/10'
+                          }`}
+                          title={u.banned ? "Unban Account" : "Ban Account"}
+                        >
+                          <Ban className="w-4 h-4" />
+                        </button>
+                      )}
 
                       {/* Delete */}
-                      <button
-                        onClick={() => onDeleteUser(u.uid)}
-                        className="p-2 rounded-xl text-gray-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                        title="Delete User Record"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {isSuperAdminEmail(u.email) ? (
+                        <span className="p-2 rounded-xl text-gray-600 cursor-not-allowed" title="Super Admin cannot be deleted">
+                          <Trash2 className="w-4 h-4" />
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => onDeleteUser(u.uid)}
+                          className="p-2 rounded-xl text-gray-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                          title="Delete User Record"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
 
                     </div>
                   </td>
@@ -514,6 +609,180 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                 <p className="text-gray-400">City & Address</p>
                 <p className="text-white mt-0.5">{inspectUser.city ? `${inspectUser.city} (${inspectUser.pincode || ''})` : 'Unassigned'}</p>
                 <p className="text-gray-400 mt-0.5">{inspectUser.address || ''}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Student Verification Inspection & Moderation Modal */}
+      {inspectStudentVerification && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="w-full max-w-lg bg-[#0B0E14] border border-[#00E5FF]/30 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 text-white max-h-[90vh] overflow-y-auto custom-scrollbar">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2.5 rounded-2xl bg-gradient-to-br from-[#00E5FF]/20 to-[#8A2BE2]/20 border border-[#00E5FF]/40 text-[#00E5FF]">
+                  <GraduationCap className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold text-white">Student Verification Review</h3>
+                    {inspectStudentVerification.isStudentVerified && <VerifiedStudentBadge size="sm" />}
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    City Helpline Trust & Aspirant Verification
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setInspectStudentVerification(null)}
+                className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Applicant Profile Bar */}
+            <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center font-bold text-white text-base shrink-0 overflow-hidden">
+                {inspectStudentVerification.photoURL ? (
+                  <img src={inspectStudentVerification.photoURL} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  inspectStudentVerification.name?.charAt(0).toUpperCase() || 'S'
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-white text-sm truncate">{inspectStudentVerification.name || 'Student Aspirant'}</p>
+                <p className="text-gray-400 text-xs truncate">{inspectStudentVerification.email}</p>
+                <p className="text-[11px] text-[#00E5FF] mt-0.5">📞 {inspectStudentVerification.phone || 'No phone'}</p>
+              </div>
+              <div className="shrink-0">
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                  inspectStudentVerification.isStudentVerified
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                    : inspectStudentVerification.studentVerificationStatus === 'pending'
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse'
+                      : inspectStudentVerification.studentVerificationStatus === 'rejected'
+                        ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                        : 'bg-white/10 text-gray-400 border-white/10'
+                }`}>
+                  {inspectStudentVerification.isStudentVerified ? 'Verified' : inspectStudentVerification.studentVerificationStatus === 'pending' ? 'Pending Review' : inspectStudentVerification.studentVerificationStatus === 'rejected' ? 'Rejected' : 'Not Applied'}
+                </span>
+              </div>
+            </div>
+
+            {/* Application Data */}
+            {inspectStudentVerification.studentVerificationData ? (
+              <div className="space-y-3 bg-black/40 p-4 rounded-2xl border border-white/5 text-xs">
+                <div>
+                  <span className="text-gray-400 block mb-0.5 font-medium">Coaching Institute / College / University:</span>
+                  <p className="text-base font-bold text-[#00E5FF]">
+                    {inspectStudentVerification.studentVerificationData.collegeOrCoaching || 'Not provided'}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-white/5">
+                  <div>
+                    <span className="text-gray-400 block mb-0.5 font-medium">Roll No. / Student ID:</span>
+                    <span className="font-mono text-white font-bold bg-white/5 px-2.5 py-1 rounded inline-block">
+                      {inspectStudentVerification.studentVerificationData.rollOrIdNumber || 'Not provided'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 block mb-0.5 font-medium">Exam / Course:</span>
+                    <span className="text-purple-300 font-bold bg-purple-500/10 px-2.5 py-1 rounded inline-block border border-purple-500/20">
+                      {inspectStudentVerification.studentVerificationData.courseOrExam || 'Not specified'}
+                    </span>
+                  </div>
+                </div>
+
+                {inspectStudentVerification.studentVerificationData.idProofUrl && (
+                  <div className="pt-2 border-t border-white/5 space-y-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400 font-medium">Student ID Proof:</span>
+                        {inspectStudentVerification.studentVerificationData.isLiveCameraCaptured ? (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold flex items-center gap-1">
+                            <Camera className="w-3 h-3" /> Live Camera Clicked
+                          </span>
+                        ) : (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 font-semibold flex items-center gap-1">
+                            <ExternalLink className="w-3 h-3" /> Provided via URL Link
+                          </span>
+                        )}
+                      </div>
+                      <a
+                        href={inspectStudentVerification.studentVerificationData.idProofUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-[#00E5FF] hover:underline flex items-center gap-1 font-semibold"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>View Full Size / Link</span>
+                      </a>
+                    </div>
+                    <div className="rounded-xl overflow-hidden border border-white/10 max-h-56 bg-black flex items-center justify-center p-1">
+                      <img 
+                        src={inspectStudentVerification.studentVerificationData.idProofUrl} 
+                        alt="Student ID Card" 
+                        className="max-h-56 object-contain rounded-lg"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                    <div className="p-2 rounded-lg bg-white/[0.03] border border-white/5 text-[11px] text-gray-400">
+                      🔍 <strong>AI vs Real Verification Check:</strong> Verify student photo lighting consistency, official coaching watermark/hologram, aligned fonts, and match roll number format with coaching standard.
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-2 border-t border-white/5 text-[11px] text-gray-500">
+                  <span>Application Submitted: {inspectStudentVerification.studentVerificationData.submittedAt ? new Date(inspectStudentVerification.studentVerificationData.submittedAt).toLocaleString() : 'Recent'}</span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400 italic bg-white/[0.02] p-4 rounded-xl">
+                No formal student verification submission on record for this user.
+              </p>
+            )}
+
+            {/* Moderation Actions */}
+            <div className="flex items-center justify-between gap-3 pt-2 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => setInspectStudentVerification(null)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                Close
+              </button>
+
+              <div className="flex items-center gap-2">
+                {onRejectStudentVerification && (inspectStudentVerification.isStudentVerified || inspectStudentVerification.studentVerificationStatus === 'pending') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onRejectStudentVerification(inspectStudentVerification.uid);
+                      setInspectStudentVerification(null);
+                    }}
+                    className="px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-bold transition-all cursor-pointer"
+                  >
+                    {inspectStudentVerification.isStudentVerified ? 'Revoke Badge' : 'Reject Verification'}
+                  </button>
+                )}
+
+                {onApproveStudentVerification && !inspectStudentVerification.isStudentVerified && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onApproveStudentVerification(inspectStudentVerification.uid);
+                      setInspectStudentVerification(null);
+                    }}
+                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#00E5FF] to-[#8A2BE2] text-black text-xs font-black hover:brightness-110 transition-all shadow-[0_0_15px_rgba(0,229,255,0.4)] cursor-pointer flex items-center gap-1.5"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Approve & Issue "Verified Student" Badge</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>

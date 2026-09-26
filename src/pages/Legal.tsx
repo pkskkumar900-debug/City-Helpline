@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
-  ShieldCheck, FileText, Scale, AlertTriangle, Lock, 
+  ShieldCheck, Scale, AlertTriangle, Lock, 
   Mail, CheckCircle2, Building2, ShoppingBag, PhoneCall,
-  UserCheck, HelpCircle, ExternalLink, ArrowRight, ShieldAlert,
-  Clock, MapPin, Eye, Sparkles, ChevronRight
+  ShieldAlert, Clock, MapPin
 } from 'lucide-react';
 import { PersonalPageHeader } from '../components/layout/PersonalPageHeader';
+import { LanguageSelector } from '../components/common/LanguageSelector';
+import { useLanguage } from '../contexts/LanguageContext';
+import { LEGAL_TRANSLATIONS } from '../lib/translations/legalTranslations';
 
 export type LegalTab = 'privacy' | 'terms' | 'safety' | 'listing-policy' | 'grievance';
 
@@ -18,6 +20,8 @@ interface LegalProps {
 export default function Legal({ defaultTab = 'privacy' }: LegalProps) {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<LegalTab>(defaultTab);
+  const { language } = useLanguage();
+  const loc = LEGAL_TRANSLATIONS[language] || LEGAL_TRANSLATIONS.hinglish;
 
   // Sync tab with route query or state if provided
   useEffect(() => {
@@ -35,19 +39,19 @@ export default function Legal({ defaultTab = 'privacy' }: LegalProps) {
   }, [location.pathname, location.search]);
 
   const navItems: Array<{ id: LegalTab; label: string; icon: React.ComponentType<{ className?: string }>; tag: string }> = [
-    { id: 'privacy', label: 'Privacy Policy', icon: Lock, tag: 'DPDP & IT Act' },
-    { id: 'terms', label: 'Terms of Service', icon: Scale, tag: 'Intermediary Terms' },
-    { id: 'safety', label: 'Student Safety & Anti-Fraud', icon: ShieldAlert, tag: 'Aspirant Protection' },
-    { id: 'listing-policy', label: 'Listing & Owner Rules', icon: Building2, tag: 'Verification Norms' },
-    { id: 'grievance', label: 'Grievance & Legal Officer', icon: Mail, tag: 'Official Redressal' },
+    { id: 'safety', label: loc.tabs.safety, icon: ShieldAlert, tag: 'Must Read' },
+    { id: 'privacy', label: loc.tabs.privacy, icon: Lock, tag: 'DPDP 2023' },
+    { id: 'terms', label: loc.tabs.terms, icon: Scale, tag: 'Zero Brokerage' },
+    { id: 'listing-policy', label: loc.tabs.listingPolicy, icon: Building2, tag: 'Verification' },
+    { id: 'grievance', label: loc.tabs.grievance, icon: Mail, tag: 'Official SLA' },
   ];
 
   const getHeaderInfo = () => {
     switch (activeTab) {
       case 'safety':
         return {
-          title: 'Student Safety & Anti-Fraud Advisory',
-          subtitle: 'Safety checklist, scam protection, verified owner protocols & emergency helplines',
+          title: loc.safety.title,
+          subtitle: loc.safety.subtitle,
           badge: 'Safety First',
           badgeColor: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
           icon: ShieldAlert,
@@ -55,8 +59,8 @@ export default function Legal({ defaultTab = 'privacy' }: LegalProps) {
         };
       case 'terms':
         return {
-          title: 'Terms of Service & Platform Rules',
-          subtitle: 'Zero-brokerage terms, user conduct, code of compliance and intermediary policies',
+          title: loc.terms.title,
+          subtitle: loc.terms.subtitle,
           badge: 'User Terms',
           badgeColor: 'bg-[#00E5FF]/15 text-[#00E5FF] border-[#00E5FF]/30',
           icon: Scale,
@@ -64,8 +68,8 @@ export default function Legal({ defaultTab = 'privacy' }: LegalProps) {
         };
       case 'listing-policy':
         return {
-          title: 'Listing & Verification Policy',
-          subtitle: 'Verification standards, safety norms & guidelines for PG, hostel and mess owners',
+          title: loc.listingPolicy.title,
+          subtitle: loc.listingPolicy.subtitle,
           badge: 'Verification',
           badgeColor: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
           icon: Building2,
@@ -73,8 +77,8 @@ export default function Legal({ defaultTab = 'privacy' }: LegalProps) {
         };
       case 'grievance':
         return {
-          title: 'Grievance Redressal & Legal Officer',
-          subtitle: 'Official escalation cell and contact channel under IT Rules 2021',
+          title: loc.grievance.title,
+          subtitle: loc.grievance.subtitle,
           badge: 'Grievance Cell',
           badgeColor: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
           icon: Mail,
@@ -83,8 +87,8 @@ export default function Legal({ defaultTab = 'privacy' }: LegalProps) {
       case 'privacy':
       default:
         return {
-          title: 'Privacy Policy & Data Protection',
-          subtitle: 'Digital Personal Data Protection (DPDP) Act 2023 & India IT Act compliance',
+          title: loc.privacy.title,
+          subtitle: loc.privacy.subtitle,
           badge: 'DPDP 2023',
           badgeColor: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
           icon: Lock,
@@ -97,7 +101,7 @@ export default function Legal({ defaultTab = 'privacy' }: LegalProps) {
 
   return (
     <div className="min-h-screen bg-[#07090E] text-white pt-2 pb-24 px-4 sm:px-6 lg:px-8">
-      {/* Top Sticky Navigation Header with Back and Cut (X) Button */}
+      {/* Top Navigation Header */}
       <PersonalPageHeader
         title={headerMeta.title}
         subtitle={headerMeta.subtitle}
@@ -109,37 +113,40 @@ export default function Legal({ defaultTab = 'privacy' }: LegalProps) {
         exitUrl="/profile"
       />
 
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="max-w-6xl mx-auto space-y-6">
         
+        {/* Language Selection Banner */}
+        <LanguageSelector variant="banner" />
+
         {/* Header Hero */}
-        <div className="relative rounded-3xl p-8 sm:p-10 bg-gradient-to-br from-white/[0.04] via-white/[0.02] to-transparent border border-white/10 overflow-hidden shadow-2xl">
+        <div className="relative rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-white/[0.04] via-white/[0.02] to-transparent border border-white/10 overflow-hidden shadow-2xl">
           <div className="absolute -right-16 -top-16 w-64 h-64 bg-[#00E5FF]/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -left-16 -bottom-16 w-64 h-64 bg-[#8A2BE2]/10 rounded-full blur-3xl pointer-events-none" />
           
           <div className="relative z-10 max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00E5FF]/15 border border-[#00E5FF]/30 text-[#00E5FF] text-xs font-bold uppercase tracking-wider mb-4 shadow-[0_0_15px_rgba(0,229,255,0.2)]">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00E5FF]/15 border border-[#00E5FF]/30 text-[#00E5FF] text-xs font-bold uppercase tracking-wider mb-3 shadow-[0_0_15px_rgba(0,229,255,0.2)]">
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Trust, Compliance & Student Welfare</span>
+              <span>{loc.badge}</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
-              Legal, Privacy & Platform Policies
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight">
+              {loc.title}
             </h1>
-            <p className="text-sm sm:text-base text-gray-300 mt-3 leading-relaxed">
-              City Helpline is dedicated to zero-brokerage transparent accommodation and educational resource discovery for Indian aspirants. Read our legally binding terms, privacy practices, and student protection guidelines.
+            <p className="text-xs sm:text-sm text-gray-300 mt-2 leading-relaxed">
+              {loc.heroIntro}
             </p>
 
-            <div className="flex flex-wrap items-center gap-4 mt-6 text-xs text-gray-400">
-              <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
+            <div className="flex flex-wrap items-center gap-3 mt-4 text-xs text-gray-400">
+              <span className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-xl border border-white/10">
                 <Clock className="w-3.5 h-3.5 text-[#00E5FF]" />
-                Last Updated: September 2026
+                {loc.lastUpdated}
               </span>
-              <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
+              <span className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-xl border border-white/10">
                 <MapPin className="w-3.5 h-3.5 text-[#8A2BE2]" />
-                Jurisdiction: India
+                {loc.jurisdiction}
               </span>
-              <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
+              <span className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-xl border border-white/10">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                Zero Brokerage Platform
+                {loc.zeroBrokerageBadge}
               </span>
             </div>
           </div>
@@ -155,7 +162,7 @@ export default function Legal({ defaultTab = 'privacy' }: LegalProps) {
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
+                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                   isActive
                     ? 'bg-gradient-to-r from-[#00E5FF]/20 to-[#8A2BE2]/20 text-[#00E5FF] border border-[#00E5FF]/40 shadow-[0_0_15px_rgba(0,229,255,0.25)]'
                     : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
@@ -177,270 +184,7 @@ export default function Legal({ defaultTab = 'privacy' }: LegalProps) {
         <div className="p-6 sm:p-10 rounded-3xl bg-white/[0.02] border border-white/10 shadow-2xl">
           
           {/* ========================================================================= */}
-          {/* 1. PRIVACY POLICY */}
-          {/* ========================================================================= */}
-          {activeTab === 'privacy' && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-8 text-sm text-gray-300 leading-relaxed"
-            >
-              <div className="border-b border-white/10 pb-6">
-                <h2 className="text-2xl font-black text-white flex items-center gap-3">
-                  <Lock className="w-6 h-6 text-[#00E5FF]" />
-                  Privacy Policy & Data Protection
-                </h2>
-                <p className="text-xs text-gray-400 mt-1">
-                  Compliant with the Information Technology Act, 2000 and Digital Personal Data Protection (DPDP) standards.
-                </p>
-              </div>
-
-              {/* Section 1 */}
-              <div className="space-y-3">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] text-xs font-black flex items-center justify-center">1</span>
-                  Introduction & Overview
-                </h3>
-                <p>
-                  City Helpline (<code className="text-[#00E5FF] bg-black/40 px-1.5 py-0.5 rounded">https://app.imprince.me</code>) is an educational community platform designed exclusively to empower students preparing for competitive examinations (including JEE, NEET, UPSC, BPSC, SSC, and State PSCs) to find zero-brokerage PGs, hostels, mess services, study libraries, and peer-to-peer marketplace items.
-                </p>
-                <p>
-                  We are deeply committed to protecting your privacy. This Privacy Policy details the types of information we collect, how it is stored and utilized, your legal rights under Indian Law, and the security protocols implemented.
-                </p>
-              </div>
-
-              {/* Section 2 */}
-              <div className="space-y-3">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] text-xs font-black flex items-center justify-center">2</span>
-                  Information We Collect
-                </h3>
-                <p>We only collect data strictly necessary to facilitate student accommodation and educational resource connectivity:</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                  <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#00E5FF]">Student / User Information</h4>
-                    <ul className="list-disc pl-4 space-y-1 text-xs text-gray-400">
-                      <li>Full Name and Email address (via Firebase Auth / Google OAuth)</li>
-                      <li>City preference or voluntarily detected educational hub (e.g. Kota, Patna, Delhi)</li>
-                      <li>Saved / Bookmarked PG and library listings</li>
-                      <li>Second-hand marketplace items submitted by student sellers</li>
-                    </ul>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#8A2BE2]">Contributor & Property Provider Data</h4>
-                    <ul className="list-disc pl-4 space-y-1 text-xs text-gray-400">
-                      <li>Business name / PG hostel name</li>
-                      <li>Direct contact phone number & WhatsApp contact</li>
-                      <li>Physical property address, monthly room rent, and amenity descriptions</li>
-                      <li>Photographs of rooms, study areas, and meal facilities</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              {/* Section 3 */}
-              <div className="space-y-3">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] text-xs font-black flex items-center justify-center">3</span>
-                  Geolocation & Device Permissions
-                </h3>
-                <p>
-                  To suggest the closest hostels, libraries, and tiffin services, City Helpline offers automated city detection via the browser Geolocation API. This detection is <strong>completely optional</strong>:
-                </p>
-                <ul className="list-disc pl-5 space-y-1.5 text-gray-400 text-xs">
-                  <li>Geolocation coordinates (latitude/longitude) are processed locally to map you to the nearest coaching cluster (such as Indraprastha in Kota, Boring Road in Patna, or Old Rajinder Nagar in Delhi).</li>
-                  <li>We never track your real-time GPS continuous movement in the background.</li>
-                  <li>You may override or reset your city at any time via the top location selector.</li>
-                </ul>
-              </div>
-
-              {/* Section 4 */}
-              <div className="space-y-3">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] text-xs font-black flex items-center justify-center">4</span>
-                  How We Use Your Data
-                </h3>
-                <ul className="list-disc pl-5 space-y-1 text-xs text-gray-400">
-                  <li>To provide, personalize, and improve student search results.</li>
-                  <li>To enable direct, unhindered communication between students and PG owners without middlemen or brokerage commissions.</li>
-                  <li>To authenticate user sessions securely through Google Firebase Authentication.</li>
-                  <li>To prevent fraud, fake listings, duplicate property submissions, and malicious accounts.</li>
-                  <li>To display emergency mental health resources (Tele-MANAS) and student helpline broadcasts.</li>
-                </ul>
-              </div>
-
-              {/* Section 5 */}
-              <div className="space-y-3">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] text-xs font-black flex items-center justify-center">5</span>
-                  Data Sharing & Third-Party Disclosure
-                </h3>
-                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 text-xs leading-relaxed">
-                  <strong className="text-white block mb-1">Zero Commercial Data Monetization:</strong>
-                  We do <strong>NOT</strong> sell, trade, rent, or lease your personal information, contact numbers, or student profiles to private telemarketers, coaching admission brokers, or third-party advertising networks.
-                </div>
-                <p className="text-xs text-gray-400">
-                  Data is only hosted and processed via enterprise-grade Google Cloud Platform and Firebase infrastructure complying with strict encryption protocols (TLS 1.3 in transit and AES-256 at rest).
-                </p>
-              </div>
-
-              {/* Section 6 */}
-              <div className="space-y-3">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] text-xs font-black flex items-center justify-center">6</span>
-                  Your Privacy Rights & Account Deletion
-                </h3>
-                <p>As a student or property contributor, you retain full ownership of your data:</p>
-                <ul className="list-disc pl-5 space-y-1 text-xs text-gray-400">
-                  <li><strong>Update & Edit:</strong> You can edit your profile details, contact numbers, and posted listings at any time from your account profile.</li>
-                  <li><strong>Delete Listing / Item:</strong> Property owners and student sellers can delete their listings instantly.</li>
-                  <li><strong>Account Eradication:</strong> You may request permanent deletion of your account and all associated submissions by writing to <a href="mailto:support@imprince.me" className="text-[#00E5FF] hover:underline font-semibold">support@imprince.me</a>. Requests are processed within 48 hours.</li>
-                </ul>
-              </div>
-
-            </motion.div>
-          )}
-
-          {/* ========================================================================= */}
-          {/* 2. TERMS & CONDITIONS */}
-          {/* ========================================================================= */}
-          {activeTab === 'terms' && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-8 text-sm text-gray-300 leading-relaxed"
-            >
-              <div className="border-b border-white/10 pb-6">
-                <h2 className="text-2xl font-black text-white flex items-center gap-3">
-                  <Scale className="w-6 h-6 text-[#00E5FF]" />
-                  Terms & Conditions of Service
-                </h2>
-                <p className="text-xs text-gray-400 mt-1">
-                  Legally binding agreement between Users, Property Contributors, and City Helpline.
-                </p>
-              </div>
-
-              {/* Section 1 */}
-              <div className="space-y-3">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] text-xs font-black flex items-center justify-center">1</span>
-                  Acceptance of Terms
-                </h3>
-                <p>
-                  By accessing, browsing, or registering on City Helpline (<code className="text-[#00E5FF] bg-black/40 px-1.5 py-0.5 rounded">https://app.imprince.me</code>), you acknowledge that you have read, understood, and agree to be legally bound by these Terms and Conditions. If you do not agree to these terms, you must discontinue using the platform.
-                </p>
-              </div>
-
-              {/* Section 2 */}
-              <div className="space-y-3">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] text-xs font-black flex items-center justify-center">2</span>
-                  Nature of Platform (Information Intermediary)
-                </h3>
-                <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-xs text-gray-300 space-y-2">
-                  <p>
-                    <strong>Intermediary Status:</strong> City Helpline functions strictly as an electronic discovery platform and digital intermediary under Section 79 of the Indian Information Technology Act, 2000.
-                  </p>
-                  <p>
-                    City Helpline is <strong>NOT</strong> a real estate agency, broker, landlord, pg operator, hostel manager, or food catering provider. We connect students directly with independent local property owners and peer students.
-                  </p>
-                </div>
-              </div>
-
-              {/* Section 3 */}
-              <div className="space-y-3">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] text-xs font-black flex items-center justify-center">3</span>
-                  Zero Brokerage Principle
-                </h3>
-                <p>
-                  City Helpline operates on a strict <strong>Zero Brokerage</strong> philosophy:
-                </p>
-                <ul className="list-disc pl-5 space-y-1 text-xs text-gray-400">
-                  <li>No student or parent will ever be charged a commission, token brokerage fee, or finder fee by City Helpline.</li>
-                  <li>If any third-party claiming to represent City Helpline requests brokerage or deposit transfer on telephone or UPI, immediately report them to our Grievance Officer.</li>
-                </ul>
-              </div>
-
-              {/* Section 4 */}
-              <div className="space-y-3">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] text-xs font-black flex items-center justify-center">4</span>
-                  Student Marketplace Terms (Peer-to-Peer)
-                </h3>
-                <p>
-                  Our Student Marketplace allows registered students to list second-hand educational essentials (e.g., NCERT/JEE/NEET coaching study modules, coolers, study lamps, bicycles):
-                </p>
-                <ul className="list-disc pl-5 space-y-1 text-xs text-gray-400">
-                  <li>Sellers must accurately describe the physical condition of goods.</li>
-                  <li>City Helpline does not hold custody of items, process escrow, or provide shipping warranties.</li>
-                  <li><strong>Physical Handover Rule:</strong> Buyers must physically inspect items and verify functioning before handing over cash or UPI payment.</li>
-                  <li>Listing prohibited items (drugs, alcohol, weapons, unauthorized academic pirated software) will lead to immediate account banning and report to law enforcement.</li>
-                </ul>
-              </div>
-
-              {/* Section 5 */}
-              <div className="space-y-3">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] text-xs font-black flex items-center justify-center">5</span>
-                  Limitation of Liability, Safe Harbour & Offline Incident Disclaimer
-                </h3>
-                <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-3">
-                  <div>
-                    <strong className="text-white block font-bold text-sm mb-1">
-                      1. Intermediary Status & Safe Harbour (IT Act, 2000 Section 79):
-                    </strong>
-                    <p className="text-gray-300 leading-relaxed">
-                      City Helpline (<code className="text-[#00E5FF] bg-black/40 px-1 rounded">app.imprince.me</code>) acts purely as an online technological intermediary and directory. The platform, its founder(s), directors, developers, and team members do NOT own, operate, manage, inspect, or police any listed PG, hostel, library, or mess facility.
-                    </p>
-                  </div>
-
-                  <div>
-                    <strong className="text-white block font-bold text-sm mb-1">
-                      2. Complete Disclaimer for Offline Incidents, Accidents & Disputes:
-                    </strong>
-                    <p className="text-gray-300 leading-relaxed">
-                      Any offline physical event, accident, personal injury, health issue, theft, interpersonal altercation, harassment, rental disagreement, refund dispute, or criminal act occurring at or near any property listed on City Helpline is exclusively the civil and criminal liability of the independent property owner, manager, tenant, or individual perpetrator under the Bharatiya Nyaya Sanhita (BNS) / Indian Penal Code (IPC). City Helpline and its founder(s) bear <strong>NO legal, financial, or criminal liability</strong> for actions or omissions occurring offline.
-                    </p>
-                  </div>
-
-                  <div>
-                    <strong className="text-white block font-bold text-sm mb-1">
-                      3. Mandatory Due Diligence by Students & Guardians:
-                    </strong>
-                    <p className="text-gray-300 leading-relaxed">
-                      Students and parents are strictly required to conduct daylight physical visits, verify landlord identification/Aadhaar, inspect safety amenities (CCTV, fire extinguishers, emergency exits, female warden in girls' hostels), and sign written tenancy contracts before transferring any token money or security deposit.
-                    </p>
-                  </div>
-
-                  <div>
-                    <strong className="text-white block font-bold text-sm mb-1">
-                      4. Law Enforcement & Police Cooperation:
-                    </strong>
-                    <p className="text-gray-300 leading-relaxed">
-                      In case of any reported grievance or criminal investigation, City Helpline provides full, prompt cooperation to Indian Police and Cyber Crime cells pursuant to lawful notices under Section 91 CrPC / BNSS, including providing verified owner phone numbers, listing timestamps, and digital logs.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Section 6 */}
-              <div className="space-y-3">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] text-xs font-black flex items-center justify-center">6</span>
-                  Jurisdiction & Governing Law
-                </h3>
-                <p className="text-xs text-gray-400">
-                  These terms are governed by and construed in accordance with the laws of the Republic of India. Any disputes arising out of or related to the platform shall be subject to the exclusive jurisdiction of the competent courts in India.
-                </p>
-              </div>
-
-            </motion.div>
-          )}
-
-          {/* ========================================================================= */}
-          {/* 3. STUDENT SAFETY & ANTI-FRAUD ADVISORY */}
+          {/* 1. STUDENT SAFETY & ANTI-FRAUD ADVISORY */}
           {/* ========================================================================= */}
           {activeTab === 'safety' && (
             <motion.div
@@ -451,47 +195,56 @@ export default function Legal({ defaultTab = 'privacy' }: LegalProps) {
               <div className="border-b border-white/10 pb-6">
                 <h2 className="text-2xl font-black text-white flex items-center gap-3">
                   <ShieldAlert className="w-6 h-6 text-amber-400" />
-                  Student Safety, Scam Protection & Anti-Fraud Advisory
+                  {loc.safety.title}
                 </h2>
                 <p className="text-xs text-gray-400 mt-1">
-                  Practical checklist for aspirants relocating to Kota, Patna, Delhi, Sikar, and other study hubs.
+                  {loc.safety.subtitle}
                 </p>
+              </div>
+
+              {/* Critical Alert Warning Box */}
+              <div className="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-3">
+                <AlertTriangle className="w-6 h-6 text-rose-400 shrink-0 mt-0.5 animate-bounce" />
+                <div>
+                  <h4 className="text-sm font-black text-white">{loc.safety.alertTitle}</h4>
+                  <p className="text-xs text-gray-300 mt-1 leading-relaxed">
+                    {loc.safety.alertDesc}
+                  </p>
+                </div>
               </div>
 
               {/* Golden Safety Rules Card */}
               <div className="p-6 rounded-3xl bg-gradient-to-br from-amber-500/15 via-black/40 to-transparent border border-amber-500/30 space-y-4">
                 <h3 className="text-base font-bold text-amber-300 flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5 text-amber-400" />
-                  The 4 Golden Rules of PG & Hostel Booking
+                  {loc.safety.goldenRulesTitle}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-1.5">
-                    <span className="text-xs font-bold text-[#00E5FF] uppercase tracking-wider">Rule 1: Never Pay Advance Online</span>
-                    <p className="text-xs text-gray-300">
-                      Never transfer "booking token" or "advance gate pass fees" via QR codes or UPI to anyone before physically visiting the room. Genuine PG owners in Kota and Patna will always show you the room first.
-                    </p>
-                  </div>
+                  {loc.safety.rules.map((rule, idx) => (
+                    <div key={idx} className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-1.5">
+                      <span className="text-xs font-bold text-[#00E5FF] uppercase tracking-wider block">
+                        {rule.title}
+                      </span>
+                      <p className="text-xs text-gray-300 leading-relaxed">
+                        {rule.desc}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-                  <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-1.5">
-                    <span className="text-xs font-bold text-[#00E5FF] uppercase tracking-wider">Rule 2: Inspect During Daytime</span>
-                    <p className="text-xs text-gray-300">
-                      Visit during daylight hours. Inspect natural ventilation, mobile network signal reception, water pressure in bathrooms, and power backup during peak summer coaching hours.
-                    </p>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-1.5">
-                    <span className="text-xs font-bold text-[#00E5FF] uppercase tracking-wider">Rule 3: Get Written Rent Receipts</span>
-                    <p className="text-xs text-gray-300">
-                      Always demand written, signed receipts for monthly rent and security deposits clearly stating electricity charges (commercial vs. domestic sub-meter per unit rate).
-                    </p>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-1.5">
-                    <span className="text-xs font-bold text-[#00E5FF] uppercase tracking-wider">Rule 4: Verify Mess Hygiene</span>
-                    <p className="text-xs text-gray-300">
-                      Ask for a 1-day or 2-day paid trial meal at the mess before locking into quarterly or half-yearly meal subscriptions. Verify RO purified water availability.
-                    </p>
-                  </div>
+              {/* Common Scams Recognition */}
+              <div className="space-y-3">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] text-xs font-black flex items-center justify-center">!</span>
+                  {loc.safety.antiFraudTitle}
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {loc.safety.antiFraudPoints.map((pt, idx) => (
+                    <div key={idx} className="p-3.5 rounded-xl bg-white/[0.02] border border-white/10 text-xs text-gray-300">
+                      <p className="leading-relaxed">{pt}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -502,8 +255,8 @@ export default function Legal({ defaultTab = 'privacy' }: LegalProps) {
                     <PhoneCall className="w-6 h-6 animate-pulse" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-white">Student Mental Health & Emergency Lifeline</h3>
-                    <p className="text-xs text-rose-300">Free, confidential 24/7 tele-counseling for academic pressure, exam anxiety and student distress.</p>
+                    <h3 className="text-base font-bold text-white">{loc.safety.helplineTitle}</h3>
+                    <p className="text-xs text-rose-300">{loc.safety.helplineSubtitle}</p>
                   </div>
                 </div>
 
@@ -512,20 +265,209 @@ export default function Legal({ defaultTab = 'privacy' }: LegalProps) {
                     <p className="text-xs text-gray-400">National Tele-MANAS</p>
                     <p className="text-xl font-black text-white mt-1">14416</p>
                     <p className="text-[10px] text-emerald-400 font-semibold mt-0.5">Toll-Free 24x7</p>
+                    <p className="text-[10px] text-gray-400 mt-1">{loc.safety.teleManasDesc}</p>
                   </div>
 
                   <div className="p-3 rounded-2xl bg-black/40 border border-white/10 text-center">
                     <p className="text-xs text-gray-400">National Emergency Support</p>
                     <p className="text-xl font-black text-white mt-1">112</p>
                     <p className="text-[10px] text-emerald-400 font-semibold mt-0.5">Police, Ambulance, Fire</p>
+                    <p className="text-[10px] text-gray-400 mt-1">{loc.safety.emergencyDesc}</p>
                   </div>
 
                   <div className="p-3 rounded-2xl bg-black/40 border border-white/10 text-center">
                     <p className="text-xs text-gray-400">Women & Girl Student Helpline</p>
                     <p className="text-xl font-black text-white mt-1">1090 / 181</p>
                     <p className="text-[10px] text-emerald-400 font-semibold mt-0.5">Safety & Support</p>
+                    <p className="text-[10px] text-gray-400 mt-1">{loc.safety.womenHelplineDesc}</p>
                   </div>
                 </div>
+              </div>
+
+              {/* Pre-Move Checklist */}
+              <div className="space-y-3">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                  {loc.safety.checklistTitle}
+                </h3>
+                <ul className="space-y-2 text-xs text-gray-300">
+                  {loc.safety.checklistItems.map((item, idx) => (
+                    <li key={idx} className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-start gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] mt-1.5 shrink-0" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+            </motion.div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 2. PRIVACY POLICY */}
+          {/* ========================================================================= */}
+          {activeTab === 'privacy' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-8 text-sm text-gray-300 leading-relaxed"
+            >
+              <div className="border-b border-white/10 pb-6">
+                <h2 className="text-2xl font-black text-white flex items-center gap-3">
+                  <Lock className="w-6 h-6 text-[#00E5FF]" />
+                  {loc.privacy.title}
+                </h2>
+                <p className="text-xs text-gray-400 mt-1">
+                  {loc.privacy.subtitle}
+                </p>
+              </div>
+
+              {/* Section 1 */}
+              <div className="space-y-2">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] text-xs font-black flex items-center justify-center">1</span>
+                  {loc.privacy.introTitle}
+                </h3>
+                <p>{loc.privacy.introText}</p>
+              </div>
+
+              {/* Section 2 */}
+              <div className="space-y-3">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] text-xs font-black flex items-center justify-center">2</span>
+                  {loc.privacy.dataCollectTitle}
+                </h3>
+                <p className="text-xs text-gray-400">{loc.privacy.dataCollectIntro}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                  <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#00E5FF]">{loc.privacy.studentDataTitle}</h4>
+                    <ul className="list-disc pl-4 space-y-1 text-xs text-gray-400">
+                      {loc.privacy.studentDataItems.map((item, idx) => (
+                        <li key={idx}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#8A2BE2]">{loc.privacy.ownerDataTitle}</h4>
+                    <ul className="list-disc pl-4 space-y-1 text-xs text-gray-400">
+                      {loc.privacy.ownerDataItems.map((item, idx) => (
+                        <li key={idx}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 3 */}
+              <div className="space-y-2">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] text-xs font-black flex items-center justify-center">3</span>
+                  {loc.privacy.geoTitle}
+                </h3>
+                <p className="text-xs text-gray-300">{loc.privacy.geoText}</p>
+              </div>
+
+              {/* Section 4 */}
+              <div className="space-y-2">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] text-xs font-black flex items-center justify-center">4</span>
+                  {loc.privacy.dataUsageTitle}
+                </h3>
+                <ul className="list-disc pl-5 space-y-1 text-xs text-gray-400">
+                  {loc.privacy.dataUsageItems.map((item, idx) => (
+                    <li key={idx}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Section 5 */}
+              <div className="space-y-2">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] text-xs font-black flex items-center justify-center">5</span>
+                  {loc.privacy.dataSharingTitle}
+                </h3>
+                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 text-xs leading-relaxed">
+                  <strong className="text-white block mb-1">Zero Commercial Data Monetization:</strong>
+                  {loc.privacy.dataSharingHighlight}
+                </div>
+              </div>
+
+              {/* Section 6 */}
+              <div className="space-y-2">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] text-xs font-black flex items-center justify-center">6</span>
+                  {loc.privacy.rightsTitle}
+                </h3>
+                <ul className="list-disc pl-5 space-y-1 text-xs text-gray-400">
+                  {loc.privacy.rightsItems.map((item, idx) => (
+                    <li key={idx}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+
+            </motion.div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 3. TERMS & CONDITIONS */}
+          {/* ========================================================================= */}
+          {activeTab === 'terms' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-8 text-sm text-gray-300 leading-relaxed"
+            >
+              <div className="border-b border-white/10 pb-6">
+                <h2 className="text-2xl font-black text-white flex items-center gap-3">
+                  <Scale className="w-6 h-6 text-[#00E5FF]" />
+                  {loc.terms.title}
+                </h2>
+                <p className="text-xs text-gray-400 mt-1">
+                  {loc.terms.subtitle}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-base font-bold text-white">{loc.terms.acceptTitle}</h3>
+                <p>{loc.terms.acceptText}</p>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-base font-bold text-white">{loc.terms.intermediaryTitle}</h3>
+                <p className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-xs text-gray-300">
+                  {loc.terms.intermediaryText}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-base font-bold text-white">{loc.terms.zeroBrokerageTitle}</h3>
+                <p className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 text-xs">
+                  {loc.terms.zeroBrokerageText}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-base font-bold text-white">{loc.terms.conductTitle}</h3>
+                <ul className="list-disc pl-5 space-y-1 text-xs text-gray-400">
+                  {loc.terms.conductItems.map((item, idx) => (
+                    <li key={idx}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-base font-bold text-white">{loc.terms.ownerObligationsTitle}</h3>
+                <ul className="list-disc pl-5 space-y-1 text-xs text-gray-400">
+                  {loc.terms.ownerObligationsItems.map((item, idx) => (
+                    <li key={idx}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-base font-bold text-white">{loc.terms.liabilityTitle}</h3>
+                <p className="text-xs text-gray-400">{loc.terms.liabilityText}</p>
               </div>
 
             </motion.div>
@@ -543,49 +485,40 @@ export default function Legal({ defaultTab = 'privacy' }: LegalProps) {
               <div className="border-b border-white/10 pb-6">
                 <h2 className="text-2xl font-black text-white flex items-center gap-3">
                   <Building2 className="w-6 h-6 text-[#00E5FF]" />
-                  Property Contributor & Listing Verification Standards
+                  {loc.listingPolicy.title}
                 </h2>
                 <p className="text-xs text-gray-400 mt-1">
-                  Standards required for Hostels, PGs, Mess, and Study Libraries listed on City Helpline.
+                  {loc.listingPolicy.subtitle}
                 </p>
               </div>
 
-              <div className="space-y-4">
-                <h3 className="text-base font-bold text-white">Guidelines for Property Owners & Contributors</h3>
-                
-                <div className="space-y-3 text-xs text-gray-300">
-                  <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="text-white text-sm block mb-1">Authentic Pricing Transparency</strong>
-                      Listings must reflect genuine monthly rent. Hidden mandatory charges or sudden rate hikes upon arrival are grounds for immediate delisting.
+              <div className="space-y-3">
+                <h3 className="text-base font-bold text-white">{loc.listingPolicy.standardsTitle}</h3>
+                <div className="space-y-2">
+                  {loc.listingPolicy.standardsItems.map((item, idx) => (
+                    <div key={idx} className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 flex items-start gap-2 text-xs">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                      <span>{item}</span>
                     </div>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="text-white text-sm block mb-1">Genuine Real Photographs Only</strong>
-                      Property owners must provide authentic photos of the actual rooms, study desks, and washrooms. Stock 3D renders or images copied from hotel sites will be rejected by our moderation queue.
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="text-white text-sm block mb-1">CCTV & Student Safety Norms</strong>
-                      Hostels and PGs are strongly encouraged to maintain 24/7 security personnel, entry log registers, and functional CCTV coverage in common entry areas for student security.
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="text-white text-sm block mb-1">Zero Discrimination Policy</strong>
-                      Listings may specify gender accommodation (Boys Hostel, Girls PG) for safety compliance, but discriminatory restrictions based on caste, religion, or community are strictly prohibited.
-                    </div>
-                  </div>
+                  ))}
                 </div>
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="text-base font-bold text-white text-rose-300">{loc.listingPolicy.bannedPracticesTitle}</h3>
+                <div className="space-y-2">
+                  {loc.listingPolicy.bannedPracticesItems.map((item, idx) => (
+                    <div key={idx} className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-start gap-2 text-xs text-rose-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-400 mt-1.5 shrink-0" />
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-base font-bold text-white">{loc.listingPolicy.photoStandardsTitle}</h3>
+                <p className="text-xs text-gray-400">{loc.listingPolicy.photoStandardsText}</p>
               </div>
 
             </motion.div>
@@ -603,41 +536,41 @@ export default function Legal({ defaultTab = 'privacy' }: LegalProps) {
               <div className="border-b border-white/10 pb-6">
                 <h2 className="text-2xl font-black text-white flex items-center gap-3">
                   <Mail className="w-6 h-6 text-[#00E5FF]" />
-                  Grievance Officer & Legal Contact
+                  {loc.grievance.title}
                 </h2>
                 <p className="text-xs text-gray-400 mt-1">
-                  Designated compliance under Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021.
+                  {loc.grievance.subtitle}
                 </p>
               </div>
 
               <div className="p-6 rounded-3xl bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/10 space-y-4">
-                <h3 className="text-base font-bold text-white">Designated Grievance Redressal Officer</h3>
+                <h3 className="text-base font-bold text-white">{loc.grievance.officerTitle}</h3>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                   <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-1">
                     <span className="text-gray-400">Designated Officer:</span>
-                    <p className="text-white font-bold text-sm">Prince Raj / Legal Team</p>
-                    <p className="text-gray-400">Platform Administrator & Intermediary Compliance</p>
+                    <p className="text-white font-bold text-sm">{loc.grievance.officerName}</p>
+                    <p className="text-gray-400">{loc.grievance.officerRole}</p>
                   </div>
 
-                    <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-1">
+                  <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-1">
                     <span className="text-gray-400">Direct Emails:</span>
                     <p className="text-[#00E5FF] font-bold text-sm">
                       <a href="mailto:Support@imprince.me" className="hover:underline">Support@imprince.me</a>
                     </p>
-                    <p className="text-gray-400 text-xs">App & Tech Support: <a href="mailto:Developer@imprince.me" className="text-[#00E5FF] hover:underline">Developer@imprince.me</a></p>
+                    <p className="text-gray-400 text-xs">Tech: <a href="mailto:Developer@imprince.me" className="text-[#00E5FF] hover:underline">Developer@imprince.me</a></p>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-xs text-gray-400 space-y-2">
-                  <p>
-                    <strong>Turnaround Time (SLA):</strong> In compliance with Rule 3(2) of the Information Technology (Intermediary Guidelines) Rules, 2021:
-                  </p>
-                  <ul className="list-disc pl-5 space-y-1">
-                    <li>Acknowledgment of grievance received: within <strong>24 hours</strong>.</li>
-                    <li>Disposal / Resolution of grievance: within <strong>15 days</strong> (typically resolved within 48 to 72 hours for urgent student safety concerns).</li>
-                  </ul>
+                <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-xs text-gray-400 space-y-1">
+                  <strong className="text-white">{loc.grievance.slaTitle}:</strong>
+                  <p>{loc.grievance.slaText}</p>
                 </div>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 text-xs text-gray-400 space-y-1">
+                <strong className="text-white">{loc.grievance.cyberCoopTitle}</strong>
+                <p>{loc.grievance.cyberCoopText}</p>
               </div>
 
               {/* Fast Feedback / Inquiry Form CTA */}

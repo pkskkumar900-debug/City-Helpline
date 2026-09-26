@@ -4,9 +4,11 @@ import { Building2, LogOut, PlusCircle, ShieldCheck, Search, Home, ShoppingBag, 
 import { LiquidButton } from '../ui/LiquidButton';
 import { isSuperAdminEmail } from '../../types';
 import { UserAvatar } from '../common/UserAvatar';
+import { NavbarChatButton } from './NavbarChatButton';
+import { LanguageSelector } from '../common/LanguageSelector';
 
 export function Navbar() {
-  const { currentUser, userProfile, logout } = useAuth();
+  const { currentUser, userProfile, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -16,8 +18,6 @@ export function Navbar() {
   };
 
   const isActive = (path: string) => location.pathname === path;
-  const isDefaultAdmin = isSuperAdminEmail(currentUser?.email);
-  const isAdmin = userProfile?.role === 'admin' || isDefaultAdmin;
 
   return (
     <nav className="sticky top-0 z-50 glass-nav">
@@ -121,6 +121,12 @@ export function Navbar() {
               <span>+ List Service</span>
             </Link>
 
+            {/* Desktop Premium Chat Icon */}
+            <NavbarChatButton />
+
+            {/* Language Switcher */}
+            <LanguageSelector variant="compact" />
+
             {currentUser ? (
               <>
                 {isAdmin && (
@@ -137,7 +143,7 @@ export function Navbar() {
                   </Link>
                 )}
 
-                <div className="flex items-center gap-3 ml-2 pl-6 border-l border-white/10">
+                <div className="flex items-center gap-3 ml-1 pl-4 border-l border-white/10">
                   <Link to="/profile" className="flex items-center gap-2.5 text-sm text-gray-300 hover:text-white transition-colors group">
                     <UserAvatar
                       photoURL={userProfile?.photoURL || currentUser?.photoURL}
@@ -182,6 +188,9 @@ export function Navbar() {
 
           {/* Mobile Right Action */}
           <div className="flex md:hidden items-center gap-1.5">
+            {/* Mobile Premium Chat Icon (Strictly NO text, pure logo with glowing badge) */}
+            <NavbarChatButton isMobile />
+
             <Link
               to="/help"
               className={`p-1.5 rounded-xl border transition-colors ${

@@ -111,7 +111,8 @@ export function RoommateModal({ isOpen, onClose, existingProfile, onSaved }: Roo
         bio: bio.trim(),
         moveInDate,
         status,
-        photoURL: userProfile?.photoURL || undefined
+        photoURL: userProfile?.photoURL || undefined,
+        isStudentVerified: !!userProfile?.isStudentVerified
       });
 
       toast.success(existingProfile ? 'Roommate profile updated successfully!' : '🎉 You are now listed on the Roommate Finder!');

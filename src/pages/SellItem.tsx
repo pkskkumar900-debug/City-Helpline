@@ -156,7 +156,8 @@ export default function SellItem() {
         ...(whatsapp.trim() ? { whatsappNumber: whatsapp.trim() } : {}),
         status: 'available',
         createdAt: Date.now(),
-        featured: false
+        featured: false,
+        isStudentVerified: !!userProfile?.isStudentVerified
       };
 
       await addDoc(collection(db, 'marketplace_items'), itemPayload);

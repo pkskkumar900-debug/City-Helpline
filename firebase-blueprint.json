@@ -20,7 +20,11 @@
         "photoURL": { "type": "string" },
         "themePreference": { "type": "string", "enum": ["light", "dark", "system"] },
         "savedListings": { "type": "array", "items": { "type": "string" } },
-        "notifications": { "type": "boolean" }
+        "notifications": { "type": "boolean" },
+        "isStudentVerified": { "type": "boolean" },
+        "studentVerificationStatus": { "type": "string", "enum": ["none", "pending", "verified", "rejected"] },
+        "studentVerificationData": { "type": "object" },
+        "isOwnerVerified": { "type": "boolean" }
       },
       "required": ["uid", "name", "email", "role", "createdAt"]
     },
@@ -43,7 +47,10 @@
         "authorName": { "type": "string" },
         "createdAt": { "type": "number" },
         "averageRating": { "type": "number" },
-        "reviewCount": { "type": "number" }
+        "reviewCount": { "type": "number" },
+        "isVerifiedPG": { "type": "boolean" },
+        "pgVerificationStatus": { "type": "string", "enum": ["none", "pending", "verified", "rejected"] },
+        "pgVerificationData": { "type": "object" }
       },
       "required": ["title", "description", "category", "city", "address", "price", "contact", "images", "status", "featured", "authorId", "authorName", "createdAt"]
     },
@@ -111,6 +118,52 @@
         "photoURL": { "type": "string" }
       },
       "required": ["userId", "userName", "userPhone", "city", "locality", "budgetMin", "budgetMax", "roomType", "targetExam", "status", "createdAt"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "In-app direct chat thread between students and listing providers",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "participants": { "type": "array", "items": { "type": "string" } },
+        "participantData": { "type": "object" },
+        "listingContext": { "type": "object" },
+        "lastMessage": { "type": "string" },
+        "lastMessageSenderId": { "type": "string" },
+        "lastMessageTimestamp": { "type": "object" },
+        "unreadCount": { "type": "object" },
+        "createdAt": { "type": "object" },
+        "updatedAt": { "type": "object" }
+      },
+      "required": ["id", "participants", "participantData"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Individual message inside a chat conversation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "conversationId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "object" },
+        "read": { "type": "boolean" }
+      },
+      "required": ["conversationId", "senderId", "senderName", "text"]
+    },
+    "AdminRole": {
+      "title": "AdminRole",
+      "description": "Secure database-backed RBAC role document for administrators",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin"] },
+        "assignedBy": { "type": "string" },
+        "assignedAt": { "type": "number" }
+      },
+      "required": ["uid", "email", "role"]
     }
   },
   "firestore": {
@@ -133,6 +186,18 @@
     "/roommate_profiles/{profileId}": {
       "schema": { "$ref": "#/entities/RoommateProfile" },
       "description": "Student flatmate / roommate profiles"
+    },
+    "/conversations/{convId}": {
+      "schema": { "$ref": "#/entities/Conversation" },
+      "description": "Chat conversations between users"
+    },
+    "/conversations/{convId}/messages/{msgId}": {
+      "schema": { "$ref": "#/entities/ChatMessage" },
+      "description": "Real-time messages in a conversation"
+    },
+    "/roles_admins/{adminUid}": {
+      "schema": { "$ref": "#/entities/AdminRole" },
+      "description": "Secure database RBAC collection for administrators"
     }
   }
 }

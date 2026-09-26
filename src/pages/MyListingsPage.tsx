@@ -4,16 +4,19 @@ import { useAuth } from '../contexts/AuthContext';
 import { collection, query, where, getDocs, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Listing } from '../types';
-import { Building2, PlusCircle, MapPin, Trash2, Edit3, ArrowRight, Eye, CheckCircle2, Clock } from 'lucide-react';
+import { Building2, PlusCircle, MapPin, Trash2, Edit3, ArrowRight, Eye, CheckCircle2, Clock, ShieldCheck, Sparkles } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { PersonalPageHeader } from '../components/layout/PersonalPageHeader';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
+import { VerifiedPGBadge } from '../components/common/TrustBadge';
+import { PGVerificationModal } from '../components/profile/PGVerificationModal';
 
 export default function MyListingsPage() {
   const { currentUser } = useAuth();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedListingForVerification, setSelectedListingForVerification] = useState<Listing | null>(null);
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -108,7 +111,7 @@ export default function MyListingsPage() {
                     </div>
                   )}
 
-                  <div className="absolute top-3 left-3 flex items-center gap-2">
+                  <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5">
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-black/70 backdrop-blur-md text-[#00E5FF] border border-[#00E5FF]/30">
                       {item.category}
                     </span>
@@ -121,6 +124,9 @@ export default function MyListingsPage() {
                     >
                       {item.status === 'approved' ? 'Live' : 'Under Review'}
                     </span>
+                    {item.isVerifiedPG && (
+                      <VerifiedPGBadge size="sm" />
+                    )}
                   </div>
 
                   <div className="absolute top-3 right-3 flex items-center gap-1.5">
@@ -153,7 +159,30 @@ export default function MyListingsPage() {
                     </p>
                   </div>
 
-                  <div className="pt-4 mt-4 border-t border-white/10 flex items-center justify-between">
+                  <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-xs">
+                    {item.isVerifiedPG ? (
+                      <span className="text-[11px] text-emerald-400 font-bold flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Verified PG Badge Active</span>
+                      </span>
+                    ) : item.pgVerificationStatus === 'pending' ? (
+                      <span className="text-[11px] text-amber-300 font-medium flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 animate-spin" />
+                        <span>Verification In Review</span>
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedListingForVerification(item)}
+                        className="text-[11px] font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 hover:underline cursor-pointer"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>Apply for Verified PG Badge &rarr;</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="pt-3 mt-3 border-t border-white/10 flex items-center justify-between">
                     <div>
                       <p className="text-[10px] uppercase font-bold text-gray-400">Monthly Rent</p>
                       <p className="text-base font-black text-[#00E5FF]">
@@ -192,6 +221,22 @@ export default function MyListingsPage() {
             <span>Add Accommodation</span>
           </Link>
         </GlassCard>
+      )}
+
+      {selectedListingForVerification && (
+        <PGVerificationModal
+          listing={selectedListingForVerification}
+          onClose={() => setSelectedListingForVerification(null)}
+          onSuccess={() => {
+            setListings((prev) =>
+              prev.map((l) =>
+                l.id === selectedListingForVerification.id
+                  ? { ...l, pgVerificationStatus: 'pending' }
+                  : l
+              )
+            );
+          }}
+        />
       )}
     </div>
   );

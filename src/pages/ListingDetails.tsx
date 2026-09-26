@@ -1,20 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { doc, getDoc, collection, query, where, getDocs, addDoc, orderBy, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { Listing, Review, isSuperAdminEmail } from '../types';
-import { MapPin, Phone, User, Star, Calendar, MessageCircle, ArrowLeft, Heart, Share2, Check } from 'lucide-react';
+import { MapPin, Phone, User, Star, Calendar, MessageCircle, ArrowLeft, Heart, Share2, Check, MessageSquareText, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { APP_CONFIG } from '../lib/appConfig';
+import { getOrCreateConversation } from '../lib/chatService';
+import { toast } from 'sonner';
+import { VerifiedPGBadge } from '../components/common/TrustBadge';
+import { PGVerificationModal } from '../components/profile/PGVerificationModal';
 
 export default function ListingDetails() {
   const { id } = useParams<{ id: string }>();
-  const { currentUser, userProfile } = useAuth();
+  const navigate = useNavigate();
+  const { currentUser, userProfile, isAdmin } = useAuth();
   
   const [listing, setListing] = useState<Listing | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [startingChat, setStartingChat] = useState(false);
+  const [showPGModal, setShowPGModal] = useState(false);
   
   // Review form state
   const [rating, setRating] = useState(5);
@@ -33,7 +40,6 @@ export default function ListingDetails() {
           const data = { id: docSnap.id, ...docSnap.data() } as Listing;
           
           const isAuthor = currentUser && currentUser.uid === data.authorId;
-          const isAdmin = userProfile?.role === 'admin' || isSuperAdminEmail(currentUser?.email);
           
           if (data.status === 'approved' || isAuthor || isAdmin) {
             setListing(data);
@@ -163,6 +169,46 @@ export default function ListingDetails() {
     }
   };
 
+  const handleStartChat = async () => {
+    if (!listing) return;
+    if (!currentUser) {
+      toast.info("Please login to chat with the provider");
+      navigate('/login');
+      return;
+    }
+    if (currentUser.uid === listing.authorId) {
+      toast.info("This is your own listing!");
+      return;
+    }
+
+    setStartingChat(true);
+    try {
+      const convId = await getOrCreateConversation(
+        currentUser,
+        userProfile,
+        {
+          uid: listing.authorId,
+          name: listing.authorName,
+          role: 'contributor',
+        },
+        {
+          id: listing.id,
+          title: listing.title,
+          price: listing.price,
+          category: listing.category,
+          image: listing.images?.[0] || '',
+          city: listing.city,
+        }
+      );
+      navigate(`/messages/${convId}`);
+    } catch (e: any) {
+      console.error("Chat navigation error:", e);
+      toast.error("Could not initiate in-app chat. Please try again.");
+    } finally {
+      setStartingChat(false);
+    }
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -196,7 +242,7 @@ export default function ListingDetails() {
                 <div className="w-full h-full flex items-center justify-center text-gray-500">No Image Available</div>
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-[#0B0F1A]/90 via-[#0B0F1A]/20 to-transparent"></div>
-              <div className="absolute top-6 left-6 flex gap-3">
+              <div className="absolute top-6 left-6 flex flex-wrap gap-2">
                 <span className="bg-[#00E5FF]/20 backdrop-blur-md text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-[0_0_15px_rgba(0,229,255,0.3)] border border-[#00E5FF]/50 uppercase tracking-wider">
                   {listing.category}
                 </span>
@@ -204,6 +250,9 @@ export default function ListingDetails() {
                   <span className="bg-yellow-500/20 backdrop-blur-md text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-[0_0_15px_rgba(234,179,8,0.3)] border border-yellow-400/50 uppercase tracking-wider">
                     Featured
                   </span>
+                )}
+                {listing.isVerifiedPG && (
+                  <VerifiedPGBadge size="md" />
                 )}
               </div>
               {currentUser && (
@@ -220,7 +269,35 @@ export default function ListingDetails() {
 
             {/* Details */}
             <div className="p-8 lg:p-12 flex flex-col justify-center bg-[rgba(255,255,255,0.02)] backdrop-blur-sm">
-              <h1 className="text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-white to-gray-400 mb-6 tracking-tight drop-shadow-sm">{listing.title}</h1>
+              <div className="flex flex-wrap items-center gap-3 mb-3">
+                <h1 className="text-3xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-white to-gray-400 tracking-tight drop-shadow-sm">{listing.title}</h1>
+                {listing.isVerifiedPG && (
+                  <VerifiedPGBadge size="lg" />
+                )}
+              </div>
+
+              {/* Owner / Landlord Badge Apply Action */}
+              {(currentUser && (currentUser.uid === listing.authorId || isAdmin)) && (
+                <div className="mb-6 p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-300">
+                      {listing.isVerifiedPG ? (
+                        <span className="text-emerald-400 font-bold">✓ This PG has Official Verification</span>
+                      ) : listing.pgVerificationStatus === 'pending' ? (
+                        <span className="text-amber-400 font-bold">⏳ Verification is Under Review</span>
+                      ) : (
+                        <span>Get your PG verified with official trust badge</span>
+                      )}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setShowPGModal(true)}
+                    className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-400 to-[#00E5FF] text-black font-bold text-xs hover:brightness-110 transition-all cursor-pointer shrink-0"
+                  >
+                    {listing.isVerifiedPG ? 'View PG Verification' : listing.pgVerificationStatus === 'pending' ? 'Review Details' : 'Apply for Verified PG Badge'}
+                  </button>
+                </div>
+              )}
               
               <div className="flex flex-wrap items-center gap-4 text-sm text-gray-300 mb-10">
                 <div className="flex items-center bg-[rgba(255,255,255,0.05)] px-4 py-2 rounded-full border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] backdrop-blur-md">
@@ -266,38 +343,55 @@ export default function ListingDetails() {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+                {/* Real-Time In-App Chat Button */}
+                <button
+                  type="button"
+                  onClick={handleStartChat}
+                  disabled={startingChat}
+                  className="flex-1 min-w-[160px] flex items-center justify-center gap-2.5 bg-gradient-to-r from-[#00E5FF]/20 to-[#8A2BE2]/20 hover:from-[#00E5FF]/30 hover:to-[#8A2BE2]/30 text-white border border-[#00E5FF]/40 hover:border-[#00E5FF]/70 font-bold py-3.5 px-5 rounded-2xl transition-all shadow-[0_0_20px_rgba(0,229,255,0.25)] hover:shadow-[0_0_30px_rgba(0,229,255,0.4)] hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 cursor-pointer"
+                >
+                  {startingChat ? (
+                    <Loader2 className="h-5 w-5 text-[#00E5FF] animate-spin" />
+                  ) : (
+                    <MessageSquareText className="h-5 w-5 text-[#00E5FF]" />
+                  )}
+                  <span>Chat with Provider</span>
+                </button>
+
                 <a
                   href={`tel:${listing.contact}`}
-                  className="flex-1 flex items-center justify-center gap-3 bg-[rgba(0,229,255,0.1)] hover:bg-[rgba(0,229,255,0.2)] text-[#00E5FF] border border-[#00E5FF]/30 font-bold py-4 px-6 rounded-2xl transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_0_20px_rgba(0,229,255,0.2)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_0_30px_rgba(0,229,255,0.4)] hover:-translate-y-1 backdrop-blur-md"
+                  className="flex-1 min-w-[130px] flex items-center justify-center gap-2.5 bg-[rgba(0,229,255,0.08)] hover:bg-[rgba(0,229,255,0.18)] text-[#00E5FF] border border-[#00E5FF]/30 font-bold py-3.5 px-5 rounded-2xl transition-all hover:-translate-y-0.5 active:scale-95"
                 >
-                  <Phone className="h-5 w-5" />
-                  Call Now
+                  <Phone className="h-4 w-4" />
+                  <span>Call Now</span>
                 </a>
+
                 <a
                   href={`https://wa.me/${listing.contact.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${listing.authorName}, I saw your listing "${listing.title}" on City Helpline (${APP_CONFIG.getListingUrl(listing.id)}). Is it still available?`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-3 bg-[rgba(16,185,129,0.1)] hover:bg-[rgba(16,185,129,0.2)] text-emerald-400 border border-emerald-400/30 font-bold py-4 px-6 rounded-2xl transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_0_30px_rgba(16,185,129,0.4)] hover:-translate-y-1 backdrop-blur-md"
+                  className="flex-1 min-w-[130px] flex items-center justify-center gap-2.5 bg-[rgba(16,185,129,0.08)] hover:bg-[rgba(16,185,129,0.18)] text-emerald-400 border border-emerald-400/30 font-bold py-3.5 px-5 rounded-2xl transition-all hover:-translate-y-0.5 active:scale-95"
                 >
-                  <MessageCircle className="h-5 w-5" />
-                  WhatsApp
+                  <MessageCircle className="h-4 w-4" />
+                  <span>WhatsApp</span>
                 </a>
+
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="sm:w-auto px-5 py-4 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-white font-bold flex items-center justify-center gap-2 transition-all hover:-translate-y-1 cursor-pointer"
+                  className="px-4 py-3.5 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-white font-bold flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 active:scale-95 cursor-pointer"
                   title="Share Listing Link"
                 >
                   {copiedLink ? (
                     <>
-                      <Check className="h-5 w-5 text-emerald-400" />
-                      <span className="text-emerald-400">Copied!</span>
+                      <Check className="h-4 w-4 text-emerald-400" />
+                      <span className="text-emerald-400 text-xs">Copied!</span>
                     </>
                   ) : (
                     <>
-                      <Share2 className="h-5 w-5 text-[#00E5FF]" />
-                      <span>Share</span>
+                      <Share2 className="h-4 w-4 text-[#00E5FF]" />
+                      <span className="text-xs">Share</span>
                     </>
                   )}
                 </button>
@@ -422,6 +516,16 @@ export default function ListingDetails() {
           </div>
         </motion.div>
       </div>
+
+      {showPGModal && listing && (
+        <PGVerificationModal
+          listing={listing}
+          onClose={() => setShowPGModal(false)}
+          onSuccess={() => {
+            setListing(prev => prev ? { ...prev, pgVerificationStatus: 'pending' } : null);
+          }}
+        />
+      )}
     </motion.div>
   );
 }

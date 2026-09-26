@@ -14,7 +14,7 @@ import { Building2 } from 'lucide-react';
 
 export default function EditListing() {
   const { id } = useParams<{ id: string }>();
-  const { currentUser, userProfile } = useAuth();
+  const { currentUser, userProfile, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -45,8 +45,7 @@ export default function EditListing() {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const data = docSnap.data() as Listing;
-          const isDefaultAdmin = isSuperAdminEmail(currentUser?.email);
-          if (currentUser?.uid !== data.authorId && userProfile?.role !== 'admin' && !isDefaultAdmin) {
+          if (currentUser?.uid !== data.authorId && !isAdmin) {
             navigate('/');
             return;
           }

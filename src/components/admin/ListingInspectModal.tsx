@@ -2,9 +2,11 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   X, CheckCircle, XCircle, Star, Phone, MapPin, 
-  IndianRupee, Building, User, Calendar, ExternalLink, Edit
+  IndianRupee, Building, User, Calendar, ExternalLink, Edit,
+  ShieldCheck, Zap, Building2, CheckCircle2, AlertTriangle
 } from 'lucide-react';
 import { Listing } from '../../types';
+import { VerifiedPGBadge } from '../common/TrustBadge';
 
 interface ListingInspectModalProps {
   listing: Listing | null;
@@ -13,6 +15,8 @@ interface ListingInspectModalProps {
   onReject: (id: string) => void;
   onToggleFeatured: (id: string, current: boolean) => void;
   onEdit: (id: string) => void;
+  onApprovePGVerification?: (id: string) => void;
+  onRejectPGVerification?: (id: string) => void;
 }
 
 export const ListingInspectModal: React.FC<ListingInspectModalProps> = ({
@@ -22,6 +26,8 @@ export const ListingInspectModal: React.FC<ListingInspectModalProps> = ({
   onReject,
   onToggleFeatured,
   onEdit,
+  onApprovePGVerification,
+  onRejectPGVerification,
 }) => {
   if (!listing) return null;
 
@@ -140,6 +146,97 @@ export const ListingInspectModal: React.FC<ListingInspectModalProps> = ({
               <p className="text-sm text-gray-200 whitespace-pre-line leading-relaxed">
                 {listing.description}
               </p>
+            </div>
+
+            {/* Verified PG Trust & Daylight Inspection Section */}
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-400/30 space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-400/30">
+                    <Building2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-bold text-white">Verified PG & Hostel Verification</h4>
+                      {listing.isVerifiedPG && <VerifiedPGBadge size="sm" />}
+                    </div>
+                    <p className="text-xs text-gray-400">
+                      Zero Brokerage • Daylight Physical Inspection • Declared Sub-meter Rate
+                    </p>
+                  </div>
+                </div>
+
+                <span className={`px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider border ${
+                  listing.isVerifiedPG 
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                    : listing.pgVerificationStatus === 'pending'
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse'
+                      : listing.pgVerificationStatus === 'rejected'
+                        ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                        : 'bg-white/10 text-gray-400 border-white/10'
+                }`}>
+                  {listing.isVerifiedPG ? 'Verified PG Active' : listing.pgVerificationStatus === 'pending' ? 'Verification Pending Review' : listing.pgVerificationStatus === 'rejected' ? 'Application Rejected' : 'Not Applied'}
+                </span>
+              </div>
+
+              {listing.pgVerificationData ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-black/30 p-3.5 rounded-xl border border-white/5">
+                  <div>
+                    <span className="text-gray-400 block mb-0.5 font-medium">Electricity Consumer / CA No.:</span>
+                    <span className="font-mono text-white font-bold bg-white/5 px-2 py-0.5 rounded">
+                      {listing.pgVerificationData.electricityConsumerNumber || 'Not provided'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 block mb-0.5 font-medium">Declared Electricity Rate:</span>
+                    <span className="text-emerald-300 font-bold">
+                      ₹{listing.pgVerificationData.subMeterRateDeclared || 8} per unit
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 block mb-0.5 font-medium">Caretaker / Contact:</span>
+                    <span className="text-white font-semibold">
+                      {listing.pgVerificationData.caretakerName || listing.authorName} ({listing.pgVerificationData.caretakerPhone || listing.contact})
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 block mb-0.5 font-medium">Submitted Date:</span>
+                    <span className="text-gray-300">
+                      {listing.pgVerificationData.submittedAt ? new Date(listing.pgVerificationData.submittedAt).toLocaleDateString('en-IN') : 'Recent'}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400 italic">
+                  No separate verification documents submitted yet by the landlord.
+                </p>
+              )}
+
+              {/* Admin PG Verification Actions */}
+              {(onApprovePGVerification || onRejectPGVerification) && (
+                <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-emerald-500/20">
+                  {onRejectPGVerification && (listing.isVerifiedPG || listing.pgVerificationStatus === 'pending') && (
+                    <button
+                      type="button"
+                      onClick={() => onRejectPGVerification(listing.id)}
+                      className="px-3.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-bold transition-all cursor-pointer"
+                    >
+                      {listing.isVerifiedPG ? 'Revoke Verified PG Badge' : 'Reject Verification Request'}
+                    </button>
+                  )}
+
+                  {onApprovePGVerification && !listing.isVerifiedPG && (
+                    <button
+                      type="button"
+                      onClick={() => onApprovePGVerification(listing.id)}
+                      className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-emerald-400 to-[#00E5FF] text-black text-xs font-black hover:brightness-110 transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] cursor-pointer flex items-center gap-1.5"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Approve & Issue Verified PG Badge</span>
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Timestamps & Technical details */}

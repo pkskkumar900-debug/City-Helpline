@@ -8,10 +8,7 @@ import { UserAvatar } from '../common/UserAvatar';
 export function BottomNav() {
   const location = useLocation();
   const path = location.pathname;
-  const { currentUser, userProfile } = useAuth();
-  
-  const isDefaultAdmin = isSuperAdminEmail(currentUser?.email);
-  const isAdmin = userProfile?.role === 'admin' || isDefaultAdmin;
+  const { currentUser, userProfile, isAdmin } = useAuth();
 
   const navItems = [
     { icon: Home, label: 'Home', path: '/' },

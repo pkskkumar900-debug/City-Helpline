@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MarketplaceItem } from '../../types';
 import { GlassCard } from '../ui/GlassCard';
 import { 
   X, MapPin, Phone, MessageCircle, ShieldAlert, CheckCircle, 
   Trash2, AlertTriangle, Sparkles, User, Calendar, ExternalLink,
-  Share2, Check
+  Share2, Check, MessageSquareText, Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../contexts/AuthContext';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { APP_CONFIG } from '../../lib/appConfig';
+import { getOrCreateConversation } from '../../lib/chatService';
+import { toast } from 'sonner';
 
 interface MarketplaceDetailModalProps {
   item: MarketplaceItem | null;
@@ -25,10 +28,12 @@ export const MarketplaceDetailModal: React.FC<MarketplaceDetailModalProps> = ({
   onItemUpdated,
   onItemDeleted
 }) => {
+  const navigate = useNavigate();
   const { currentUser, userProfile } = useAuth();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isUpdating, setIsUpdating] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [startingChat, setStartingChat] = useState(false);
 
   if (!item) return null;
 
@@ -73,6 +78,48 @@ export const MarketplaceDetailModal: React.FC<MarketplaceDetailModalProps> = ({
 
   const handleCall = () => {
     window.location.href = `tel:${item.sellerPhone}`;
+  };
+
+  const handleStartChat = async () => {
+    if (!item) return;
+    if (!currentUser) {
+      toast.info("Please login to chat with seller");
+      onClose();
+      navigate('/login');
+      return;
+    }
+    if (currentUser.uid === item.sellerId) {
+      toast.info("This is your own marketplace item!");
+      return;
+    }
+
+    setStartingChat(true);
+    try {
+      const convId = await getOrCreateConversation(
+        currentUser,
+        userProfile,
+        {
+          uid: item.sellerId,
+          name: item.sellerName,
+          role: 'user',
+        },
+        {
+          id: item.id,
+          title: item.title,
+          price: item.price,
+          category: item.category,
+          image: item.images?.[0] || '',
+          city: item.city,
+        }
+      );
+      onClose();
+      navigate(`/messages/${convId}`);
+    } catch (e: any) {
+      console.error("Chat error:", e);
+      toast.error("Could not start chat");
+    } finally {
+      setStartingChat(false);
+    }
   };
 
   const handleToggleSold = async () => {
@@ -267,14 +314,26 @@ export const MarketplaceDetailModal: React.FC<MarketplaceDetailModalProps> = ({
                       </div>
                     </div>
 
-                    <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <button
+                        onClick={handleStartChat}
+                        disabled={item.status === 'sold' || startingChat}
+                        className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#00E5FF]/20 to-[#8A2BE2]/20 hover:from-[#00E5FF]/30 hover:to-[#8A2BE2]/30 text-white border border-[#00E5FF]/40 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 shadow-[0_0_15px_rgba(0,229,255,0.2)]"
+                      >
+                        {startingChat ? (
+                          <Loader2 className="w-4 h-4 text-[#00E5FF] animate-spin" />
+                        ) : (
+                          <MessageSquareText className="w-4 h-4 text-[#00E5FF]" />
+                        )}
+                        <span>In-App Chat</span>
+                      </button>
                       <button
                         onClick={handleWhatsApp}
                         disabled={item.status === 'sold'}
                         className="py-2.5 px-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
                       >
                         <MessageCircle className="w-4 h-4 fill-current" />
-                        <span>Chat WhatsApp</span>
+                        <span>WhatsApp</span>
                       </button>
                       <button
                         onClick={handleCall}

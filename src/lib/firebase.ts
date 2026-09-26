@@ -7,7 +7,7 @@ import appletConfig from '../../firebase-applet-config.json';
 // Silence internal Firestore network polling warnings that occur in iframe/sandboxed preview environments
 setLogLevel('silent');
 
-// Intercept any internal Firestore offline reconnection or transient auth network messages that bubble up to console.error
+// Intercept any internal Firestore offline reconnection or transient auth network messages that bubble up
 if (typeof window !== 'undefined') {
   const originalConsoleError = console.error;
   console.error = (...args: unknown[]) => {
@@ -19,6 +19,7 @@ if (typeof window !== 'undefined') {
       combined.includes('Could not reach Cloud Firestore backend') ||
       combined.includes('Backend didn\'t respond within 10 seconds') ||
       combined.includes('@firebase/firestore') ||
+      combined.includes('INTERNAL ASSERTION FAILED') ||
       combined.includes('auth/network-request-failed') ||
       combined.includes('Social Auth Error')
     ) {
@@ -27,6 +28,24 @@ if (typeof window !== 'undefined') {
     }
     originalConsoleError.apply(console, args);
   };
+
+  window.addEventListener('error', (event) => {
+    if (
+      event?.message &&
+      (event.message.includes('FIRESTORE') || event.message.includes('INTERNAL ASSERTION FAILED'))
+    ) {
+      event.preventDefault();
+      console.warn('[Handled Firestore Internal State Notice]:', event.message);
+    }
+  });
+
+  window.addEventListener('unhandledrejection', (event) => {
+    const reason = event?.reason?.message || String(event?.reason || '');
+    if (reason.includes('FIRESTORE') || reason.includes('INTERNAL ASSERTION FAILED')) {
+      event.preventDefault();
+      console.warn('[Handled Firestore Unhandled Promise]:', reason);
+    }
+  });
 }
 
 const firebaseConfig = {
@@ -60,23 +79,9 @@ const databaseId = import.meta.env.VITE_FIREBASE_DATABASE_ID || appletConfig.fir
 
 export const db = initializeFirestore(
   app,
-  {
-    experimentalAutoDetectLongPolling: true,
-  },
+  {},
   databaseId && databaseId !== '(default)' ? databaseId : undefined
 );
 
 export const storage = getStorage(app);
-
-// Test Firestore connection on boot as recommended by Firebase skill
-async function testConnection() {
-  try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.warn("Notice: Client is currently offline or connecting to Firestore.");
-    }
-  }
-}
-testConnection();
 

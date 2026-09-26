@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { GlassCard } from './ui/GlassCard';
+import { VerifiedPGBadge } from './common/TrustBadge';
 
 interface ListingCardProps {
   listing: Listing;
@@ -69,7 +70,7 @@ export function ListingCard({ listing }: ListingCardProps) {
             </span>
           </div>
 
-          <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-10">
+          <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-10 flex flex-col gap-1.5 items-start">
             <div className="flex items-center bg-[rgba(255,255,255,0.06)] backdrop-blur-md px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-lg border border-white/10">
               <Star className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-yellow-400 fill-yellow-400 mr-1 sm:mr-1.5" />
               <span className="text-white text-xs font-bold">
@@ -79,6 +80,9 @@ export function ListingCard({ listing }: ListingCardProps) {
                 <span className="text-gray-400 text-[10px] ml-1.5">({listing.reviewCount})</span>
               )}
             </div>
+            {listing.isVerifiedPG && (
+              <VerifiedPGBadge size="sm" />
+            )}
           </div>
 
           {currentUser && (
