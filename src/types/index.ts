@@ -26,6 +26,8 @@ export interface UserProfile {
   email: string;
   role: Role;
   createdAt: number;
+  lastLogin?: any;
+  updatedAt?: number;
   savedListings?: string[];
   photoURL?: string;
   themePreference?: 'light' | 'dark' | 'system';

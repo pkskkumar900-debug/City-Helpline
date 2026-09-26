@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth, db } from '../lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser, signOut } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { UserProfile } from '../types';
+import { doc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
+import { UserProfile, isSuperAdminEmail } from '../types';
 
 interface AuthContextType {
   currentUser: FirebaseUser | null;
@@ -48,8 +48,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               localStorage.setItem('userProfile', JSON.stringify(data));
             }
           } else {
-            setUserProfile(null);
-            localStorage.removeItem('userProfile');
+            // Auto-provision user profile in Firestore if missing so user is never orphaned in Auth
+            const cleanName = user.displayName || (user.email ? user.email.split('@')[0] : 'User');
+            const cleanEmail = user.email || '';
+            const initialProfile: UserProfile = {
+              uid: user.uid,
+              name: cleanName,
+              email: cleanEmail,
+              photoURL: user.photoURL || '',
+              role: isSuperAdminEmail(cleanEmail) ? 'admin' : 'user',
+              banned: false,
+              createdAt: Date.now() as any,
+              lastLogin: Date.now() as any,
+              updatedAt: Date.now(),
+            };
+
+            setDoc(docRef, {
+              ...initialProfile,
+              createdAt: serverTimestamp(),
+              lastLogin: serverTimestamp(),
+            }, { merge: true }).catch((err) => {
+              console.warn("Notice: auto-provisioning profile notice:", err);
+            });
+
+            setUserProfile(initialProfile);
+            localStorage.setItem('userProfile', JSON.stringify(initialProfile));
           }
           setLoading(false);
         }, (error) => {

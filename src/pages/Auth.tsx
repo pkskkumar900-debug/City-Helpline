@@ -267,7 +267,22 @@ export default function Auth() {
       
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       if (!userDoc.exists()) {
-        // First Time User
+        // First Time User: Immediately persist baseline profile to Firestore
+        const cleanName = user.displayName || (user.email ? user.email.split('@')[0] : 'User');
+        const cleanEmail = user.email || '';
+        const baseProfile: any = {
+          uid: user.uid,
+          name: cleanName,
+          email: cleanEmail,
+          photoURL: user.photoURL || '',
+          role: isSuperAdminEmail(cleanEmail) ? 'admin' : 'user',
+          banned: false,
+          createdAt: serverTimestamp(),
+          lastLogin: serverTimestamp(),
+          updatedAt: Date.now(),
+        };
+        await setDoc(doc(db, 'users', user.uid), baseProfile, { merge: true });
+
         setPendingUser(user);
         setShowRoleModal(true);
       } else {

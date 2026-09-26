@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  collection, query, getDocs, doc, updateDoc, deleteDoc, orderBy 
+  collection, query, getDocs, doc, updateDoc, deleteDoc, orderBy, setDoc, serverTimestamp 
 } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { Listing, UserProfile, MarketplaceItem, Role, isSuperAdminEmail } from '../../types';
@@ -68,10 +68,42 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSwitchToStudentVie
       const listingsSnap = await getDocs(listingsQuery);
       setListings(listingsSnap.docs.map(d => ({ id: d.id, ...d.data() })) as Listing[]);
 
-      // 2. Fetch Users
-      const usersQuery = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
-      const usersSnap = await getDocs(usersQuery);
-      setUsers(usersSnap.docs.map(d => ({ uid: d.id, ...d.data() })) as UserProfile[]);
+      // 2. Fetch Users: query ALL documents from 'users' collection without orderBy
+      // (Firestore orderBy drops any document where the ordered field is missing/undefined)
+      const usersSnap = await getDocs(collection(db, 'users'));
+      const userList = usersSnap.docs.map(d => {
+        const data = d.data();
+        return {
+          uid: d.id,
+          ...data,
+          createdAt: data.createdAt || data.updatedAt || data.lastLogin || null,
+        } as UserProfile;
+      });
+
+      // Safely sort in JavaScript
+      userList.sort((a, b) => {
+        const getMs = (val: any) => {
+          if (!val) return 0;
+          if (typeof val === 'number') return val;
+          if (typeof val.toMillis === 'function') return val.toMillis();
+          if (typeof val.seconds === 'number') return val.seconds * 1000;
+          return 0;
+        };
+        const timeA = getMs(a.createdAt) || getMs(a.updatedAt) || getMs(a.lastLogin);
+        const timeB = getMs(b.createdAt) || getMs(b.updatedAt) || getMs(b.lastLogin);
+        return timeB - timeA;
+      });
+      setUsers(userList);
+
+      // Auto-heal: If any existing document in Firestore lacks createdAt, repair it
+      for (const u of userList) {
+        if (!u.createdAt && u.uid) {
+          updateDoc(doc(db, 'users', u.uid), {
+            createdAt: serverTimestamp(),
+            updatedAt: Date.now(),
+          }).catch(() => {});
+        }
+      }
 
       // 3. Fetch Marketplace Items
       try {
@@ -189,6 +221,46 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSwitchToStudentVie
     }
   };
 
+  const handleCreateOrLinkUser = async (userData: {
+    uid: string;
+    email: string;
+    name?: string;
+    role?: Role;
+    phone?: string;
+  }) => {
+    try {
+      const cleanUid = userData.uid.trim();
+      const cleanEmail = userData.email.trim();
+      if (!cleanUid) {
+        toast.error("User UID is required");
+        return;
+      }
+      if (!cleanEmail) {
+        toast.error("User Email is required");
+        return;
+      }
+      const newDoc: any = {
+        uid: cleanUid,
+        email: cleanEmail,
+        name: userData.name?.trim() || cleanEmail.split('@')[0] || 'User',
+        role: userData.role || (isSuperAdminEmail(cleanEmail) ? 'admin' : 'user'),
+        banned: false,
+        createdAt: serverTimestamp(),
+        lastLogin: serverTimestamp(),
+        updatedAt: Date.now(),
+      };
+      if (userData.phone) newDoc.phone = userData.phone.trim();
+
+      await setDoc(doc(db, 'users', cleanUid), newDoc, { merge: true });
+      addAuditLog('create_user' as any, `Registered user "${newDoc.email}" into Firestore`);
+      toast.success(`User ${newDoc.email} registered in Firestore!`);
+      await fetchAdminData();
+    } catch (err: any) {
+      console.error("Error creating/linking user:", err);
+      toast.error(err.message || "Failed to link user");
+    }
+  };
+
   // Handlers for Marketplace
   const handleToggleMarketStatus = async (id: string, current: 'available' | 'sold') => {
     const nextStatus = current === 'available' ? 'sold' : 'available';
@@ -301,6 +373,8 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSwitchToStudentVie
                 onRoleChange={handleRoleChange}
                 onBanToggle={handleBanToggle}
                 onDeleteUser={handleDeleteUser}
+                onCreateOrLinkUser={handleCreateOrLinkUser}
+                onRefreshUsers={fetchAdminData}
               />
             )}
 
