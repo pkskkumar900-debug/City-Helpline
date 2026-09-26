@@ -120,37 +120,35 @@ async function startServer() {
       let replyText = '';
       let usedModel = 'gemini-3.8-flash';
 
-      // Use officially supported Gemini 3.8 Flash with resilient fallback
-      try {
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
-          contents,
-          config: {
-            systemInstruction: SYSTEM_INSTRUCTION,
-            temperature: 0.7,
-          },
-        });
-        if (response.text && response.text.trim()) {
-          replyText = response.text;
-          usedModel = 'gemini-3.8-flash';
-        }
-      } catch (modelError: any) {
-        console.warn('Gemini 3.8 Flash error, attempting gemini-flash-latest fallback:', modelError?.message || modelError);
+      // Cascading model fallback sequence requested by user:
+      // 1. gemini-3.8-flash (Primary high-intelligence model)
+      // 2. gemini-3.6-flash (First fallback)
+      // 3. gemini-3.5-flash-lite (Second lightweight fallback)
+      // 4. gemini-flash-latest (Final safety fallback alias)
+      const CANDIDATE_MODELS = [
+        'gemini-3.8-flash',
+        'gemini-3.6-flash',
+        'gemini-3.5-flash-lite',
+        'gemini-flash-latest',
+      ];
+
+      for (const modelName of CANDIDATE_MODELS) {
         try {
-          const fallbackResponse = await ai.models.generateContent({
-            model: 'gemini-flash-latest',
+          const response = await ai.models.generateContent({
+            model: modelName,
             contents,
             config: {
               systemInstruction: SYSTEM_INSTRUCTION,
               temperature: 0.7,
             },
           });
-          if (fallbackResponse.text && fallbackResponse.text.trim()) {
-            replyText = fallbackResponse.text;
-            usedModel = 'gemini-flash-latest';
+          if (response.text && response.text.trim()) {
+            replyText = response.text;
+            usedModel = modelName;
+            break;
           }
-        } catch (fbErr: any) {
-          console.warn('All Gemini model attempts failed:', fbErr?.message || fbErr);
+        } catch (modelError: any) {
+          console.warn(`Model ${modelName} error, falling back to next model:`, modelError?.message || modelError);
         }
       }
 

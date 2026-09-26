@@ -119,28 +119,22 @@ export default async function handler(req: any, res: any) {
     let replyText = '';
     let usedModel = 'gemini-3.8-flash';
 
-    // Primary: gemini-3.8-flash (Standard Text Q&A)
-    try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
-        contents,
-        config: {
-          systemInstruction: SYSTEM_INSTRUCTION,
-          temperature: 0.7,
-        },
-      });
+    // Cascading model fallback sequence requested by user:
+    // 1. gemini-3.8-flash (Primary high-intelligence model)
+    // 2. gemini-3.6-flash (First fallback)
+    // 3. gemini-3.5-flash-lite (Second lightweight fallback)
+    // 4. gemini-flash-latest (Final safety fallback alias)
+    const CANDIDATE_MODELS = [
+      'gemini-3.8-flash',
+      'gemini-3.6-flash',
+      'gemini-3.5-flash-lite',
+      'gemini-flash-latest',
+    ];
 
-      if (response.text && response.text.trim()) {
-        replyText = response.text;
-        usedModel = 'gemini-3.8-flash';
-      }
-    } catch (primaryError: any) {
-      console.warn('Gemini 3.8 Flash attempt error, trying fallback:', primaryError?.message || primaryError);
-      
-      // Fallback: gemini-flash-latest
+    for (const modelName of CANDIDATE_MODELS) {
       try {
-        const fallbackResponse = await ai.models.generateContent({
-          model: 'gemini-flash-latest',
+        const response = await ai.models.generateContent({
+          model: modelName,
           contents,
           config: {
             systemInstruction: SYSTEM_INSTRUCTION,
@@ -148,14 +142,18 @@ export default async function handler(req: any, res: any) {
           },
         });
 
-        if (fallbackResponse.text && fallbackResponse.text.trim()) {
-          replyText = fallbackResponse.text;
-          usedModel = 'gemini-flash-latest';
+        if (response.text && response.text.trim()) {
+          replyText = response.text;
+          usedModel = modelName;
+          break;
         }
-      } catch (fallbackError: any) {
-        console.error('All Gemini model attempts failed:', fallbackError?.message || fallbackError);
-        throw fallbackError;
+      } catch (err: any) {
+        console.warn(`Model ${modelName} error, falling back to next candidate:`, err?.message || err);
       }
+    }
+
+    if (!replyText) {
+      throw new Error('All Gemini model candidates failed to return a response.');
     }
 
     res.status(200).json({
