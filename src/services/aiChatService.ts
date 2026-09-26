@@ -209,6 +209,15 @@ export async function sendChatMessage(
           suggestions: dynamicSuggestions,
         };
       }
+    } else {
+      const errData = await res.json().catch(() => null);
+      if (errData && errData.reply) {
+        return {
+          text: errData.reply,
+          suggestions: ['Find verified rooms', 'How to avoid advance scams?', 'Student budget breakdown'],
+        };
+      }
+      console.warn(`Backend /api/chat returned status ${res.status}:`, errData?.error || 'Unknown error');
     }
   } catch (err) {
     console.warn('Backend /api/chat unreachable, falling back to local student knowledge base:', err);

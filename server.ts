@@ -118,12 +118,12 @@ async function startServer() {
       });
 
       let replyText = '';
-      let usedModel = 'gemini-3.6-flash';
+      let usedModel = 'gemini-3.8-flash';
 
-      // Exclusively use Gemini 3.6 Flash as requested
+      // Use officially supported Gemini 3.8 Flash with resilient fallback
       try {
         const response = await ai.models.generateContent({
-          model: 'gemini-3.6-flash',
+          model: 'gemini-3.8-flash',
           contents,
           config: {
             systemInstruction: SYSTEM_INSTRUCTION,
@@ -132,10 +132,26 @@ async function startServer() {
         });
         if (response.text && response.text.trim()) {
           replyText = response.text;
-          usedModel = 'gemini-3.6-flash';
+          usedModel = 'gemini-3.8-flash';
         }
       } catch (modelError: any) {
-        console.warn('Gemini 3.6 Flash error:', modelError?.message || modelError);
+        console.warn('Gemini 3.8 Flash error, attempting gemini-flash-latest fallback:', modelError?.message || modelError);
+        try {
+          const fallbackResponse = await ai.models.generateContent({
+            model: 'gemini-flash-latest',
+            contents,
+            config: {
+              systemInstruction: SYSTEM_INSTRUCTION,
+              temperature: 0.7,
+            },
+          });
+          if (fallbackResponse.text && fallbackResponse.text.trim()) {
+            replyText = fallbackResponse.text;
+            usedModel = 'gemini-flash-latest';
+          }
+        } catch (fbErr: any) {
+          console.warn('All Gemini model attempts failed:', fbErr?.message || fbErr);
+        }
       }
 
       if (!replyText) {
