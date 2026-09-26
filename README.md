@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <strong>A hyper-local student ecosystem platform connecting students and aspirants with verified PGs, Hostels, Mess services, Study Libraries, Second-Hand Marketplace, and Monthly Budget Intelligence across India.</strong>
+  <strong>A hyper-local student ecosystem platform connecting students and coaching aspirants with verified PGs, Hostels, Mess facilities, Study Libraries, Second-Hand Marketplace, Roommate Discovery, and Monthly Budget Intelligence across India.</strong>
 </p>
 
 <p align="center">
@@ -14,93 +14,143 @@
   <a href="#-tech-stack"><img src="https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"></a>
   <a href="#-tech-stack"><img src="https://img.shields.io/badge/Vite-6.2-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"></a>
   <a href="#-tech-stack"><img src="https://img.shields.io/badge/TailwindCSS-v4.1-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS"></a>
-  <a href="#-tech-stack"><img src="https://img.shields.io/badge/Firebase-v12.11-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase"></a>
+  <a href="#-tech-stack"><img src="https://img.shields.io/badge/Firebase-v12.19.0-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase"></a>
+  <a href="#-tech-stack"><img src="https://img.shields.io/badge/Google%20GenAI-Gemini%203.8%20Flash-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Google GenAI"></a>
 </p>
 
 ---
 
 ## 📌 Overview
 
-**City Helpline** is a full-stack web application designed to solve common challenges students face when moving to education and coaching hubs (such as Kota, Patna, Delhi, Sikar, Lucknow, and Pune). Finding affordable accommodation, quality food, and essential study infrastructure often involves high brokerages and unverified listings.
+**City Helpline** is a comprehensive full-stack web application engineered to eliminate the stress, high brokerages, and misinformation students face when relocating to premier educational and coaching hubs across India (including Kota, Patna, Delhi NCR, Sikar, Prayagraj, Lucknow, Indore, Pune, and Nawada).
 
-City Helpline simplifies this transition through:
-- **Zero Brokerage Listings**: Verified PGs, hostels, tiffin/mess services, and 24x7 study libraries.
-- **Student Budget Calculator**: Tools to forecast and manage monthly living expenses based on city cost benchmarks.
-- **Peer-to-Peer Marketplace**: A dedicated platform for students to buy and sell pre-owned study essentials (books, notes, tables, coolers, and cycles).
+Finding affordable accommodation, hygienic food, and reliable study infrastructure often involves middleman fees and unverified listings. City Helpline solves this with:
+- **Zero-Brokerage Verified Listings**: Verified PGs, hostels, mess/tiffin services, and 24x7 study libraries with direct owner contact.
+- **AI Mitra (Intelligent Student Advisor)**: A localized AI assistant powered by Google Gemini with 4-tier cascading fallback for hostel guidance, student living benchmarks, and mental health support.
+- **Direct In-App Messaging**: Real-time 1-on-1 chat between students, property owners, and marketplace sellers.
+- **Trust & Verification Badges**: "Verified Student" and "Verified PG" credential checking to eliminate scams and unreasonable electricity tariffs.
+- **Student Budget Estimator**: Intelligent expense calculator tailored to living costs in Indian coaching hubs.
+- **Peer-to-Peer Marketplace**: Buy and sell pre-owned academic essentials (books, notes, tables, coolers, bicycles).
+- **Roommate Matching**: Connect with compatible study partners based on competitive exam goals and lifestyle.
+- **Bilingual Interface**: Full Hindi and English localization for seamless student accessibility.
 
 ---
 
 ## ✨ Key Features
 
-### 🔍 1. Hyper-Local Discovery & Filtering
-- **Multi-Category Exploration**: Instant search and filtering across categories including *PGs, Hostels, Mess & Tiffin Services, Libraries, Coaching Institutes, and Study Rooms*.
-- **Geolocation & City Selection**: Browser geolocation detection with reverse-geocoding, plus manual state and city selection across major student hubs.
+### 🔍 1. Hyper-Local Discovery & Smart Filtering
+- **Multi-Category Exploration**: Instant search and filtering across *PGs, Hostels, Mess & Tiffin Services, Libraries, Coaching Institutes, and Study Rooms*.
+- **Geolocation & Target Cities**: Automatic browser geolocation detection with reverse-geocoding, plus pre-mapped city hierarchies across major Indian student hubs.
 - **Instant Search**: Real-time client-side search across listings by title, address, description, and amenities.
+- **Zero-Brokerage Guarantee**: Direct contact with owners via phone call, WhatsApp, or integrated in-app messaging.
 
-### 💰 2. Student Budget Estimator (`/budget`)
-- **Flexible Modes**:
-  - **Manual Entry**: Input rent, food, library pass, commute, laundry, and pocket money.
-  - **Custom Expenses**: Add customized line items (e.g., gym, mobile recharge, medicines) with dynamic chart integration.
-  - **Guided Options & Target Budget**: Auto-balance monthly costs against set budget caps.
-- **City Living Benchmarks**: Pre-calibrated monthly expenditure indices for major student hubs (Kota, Patna, Delhi, Sikar, Pune, Indore, Jaipur, etc.).
-- **Visual Analytics**: Interactive SVG donut chart showing breakdown percentages and affordability status.
-- **Export & Share**: Generate formatted WhatsApp summaries for parents/roommates and print or save PDF statements.
+### 🤖 2. City Helpline AI Mitra (`/ai-chat`)
+- **Dedicated Student AI Guide**: Official AI mentor ("सिटी हेल्पलाइन एआई मित्र") communicating in natural Hinglish, Hindi, or English.
+- **Cascading Multi-Model Fallback**:
+  1. `gemini-3.8-flash` (Primary high-intelligence model)
+  2. `gemini-3.6-flash` (First fallback)
+  3. `gemini-3.5-flash-lite` (Lightweight secondary fallback)
+  4. `gemini-flash-latest` (Final safety alias)
+- **Local Hub Intelligence**: Deep local knowledge of coaching districts (Patna's Boring Road & Musallahpur Hat, Kota's Landmark City & Rajiv Gandhi Nagar, Delhi's Mukherjee Nagar & Kalu Sarai, Nawada, Sikar, Prayagraj, etc.).
+- **Anti-Fraud & Scam Advisory**: Alerts students against advance token scams and enforces electricity tariff awareness (standard sub-meter rate ₹7–₹10/unit).
+- **24/7 Mental Health Support Integration**: Empathy-first counseling with direct referral to the Government of India Tele-MANAS helpline (**14416** / **1800-891-4416**).
+- **Dual Interfaces**: Access via the floating quick-action assistant (`AiFloatingAssistant`) or the full dedicated chat interface (`AiChatPage`).
 
-### 🛍️ 3. Student Second-Hand Marketplace (`/marketplace`)
-- **Direct Peer-to-Peer Deals**: Buy and sell pre-owned academic items without broker fees or commission.
-- **Categories**: Books & handwritten notes, study furniture, desert coolers, bicycles, and electronics.
-- **Instant Contact**: Direct 1-tap WhatsApp and phone connectivity with sellers.
-- **Post Item (`/sell-item`)**: Simple listing workflow with image uploads, item condition tags, and price negotiation options.
+### 💬 3. Direct In-App Messaging (`/messages`)
+- **Real-Time 1-on-1 Chat**: Secure conversation threads between students and property owners or marketplace sellers.
+- **Listing Context Embedded**: Conversations retain active listing metadata (room title, price, category, photo) for clear negotiations.
+- **Unread Counters & Glowing Badges**: Real-time unread badge counts in desktop navbar and mobile bottom navigation (`NavbarChatButton`).
+- **Participant Privacy**: Communication occurs within the platform without requiring personal phone number disclosure.
 
-### 🛡️ 4. Role-Based Access Control (RBAC)
-- **Student / General User (`user`)**: Browse listings, save favorites, write reviews, post marketplace items, and calculate budgets.
-- **Contributor (`contributor`)**: Create and manage service listings with photos, amenities, room specifications, and contact information.
-- **Administrator (`admin`)**: Moderate submissions (Pending, Approved, Rejected, Featured), monitor system health, and manage user roles.
+### 🛡️ 4. Student & PG Trust Verification System
+- **Verified Student Badge (`VerifiedStudentBadge`)**:
+  - Live camera photo capture or student ID upload.
+  - Institution/coaching verification (roll number, target exam).
+  - Prominent verified badge displayed across marketplace cards and user profiles.
+- **Verified PG Badge (`PGVerificationModal`)**:
+  - Property electricity consumer / K-number verification.
+  - Declared sub-meter electricity tariff guarantee (₹7–₹10/unit).
+  - Mandatory daylight room photo certification and student ambassador physical inspection agreement.
 
-### ⚡ 5. Media & Storage Pipeline
-- **Cloudinary Integration**: Fast client-side image uploads directly to Cloudinary CDN via secure unsigned upload presets, ensuring optimized media delivery.
-- **Firebase Firestore**: Real-time NoSQL data synchronization with robust role-enforced security rules.
+### 🛍️ 5. Student Second-Hand Marketplace (`/marketplace`)
+- **Peer-to-Peer Exchange**: Buy and sell pre-owned study essentials directly without commissions or platform charges.
+- **Tailored Academic Categories**:
+  - 📚 *Books & Handwritten Notes* (JEE, NEET, UPSC, SSC, Banking, GATE)
+  - 🪑 *Study Furniture* (Tables, ergonomic chairs, bookshelves)
+  - ❄️ *Coolers & Fans* (Desert coolers, high-speed fans)
+  - 🚲 *Cycles & Bikes* (Standard/geared cycles for coaching commute)
+  - 🔌 *Electronics & Appliances* (Study lamps, calculators, kettles)
+- **Direct Multi-Channel Contact**: Instant in-app chat, 1-tap WhatsApp chat, and phone dialer.
+- **Simple Selling Flow (`/sell-item`)**: Cloudinary image upload, condition tags (*Brand New, Like New, Good, Fair*), price negotiation flag, and location tagging.
+
+### 🤝 6. Roommate Matching (`/roommates`)
+- **Find Study Roommates**: Connect with like-minded students targeting the same competitive exams.
+- **Compatibility Filters**: Filter by target examination (JEE, NEET, UPSC, State PCS, SSC, CA), budget range, dietary preference (Veg / Non-Veg), study schedule, and lifestyle habits.
+
+### 💰 7. Student Monthly Budget Estimator (`/budget`)
+- **Flexible Calculation Modes**:
+  - **Manual Entry**: Input rent, food/mess, library pass, commute, laundry, and pocket money.
+  - **Custom Expenses**: Add dynamic custom items (gym, recharge, medicine, milk/fruits) with instant color-coded chart inclusion.
+  - **Guided Options & Target Budget**: Auto-balance monthly expenses to match target budget limits based on city benchmarks.
+- **City Living Benchmarks**: Calibrated monthly expenditure indexes for Kota, Patna, Delhi, Sikar, Prayagraj, Lucknow, Pune, Indore, and Jaipur.
+- **Visual Analytics**: Interactive SVG donut chart showing expense category percentages and affordability ratings.
+- **Multi-Channel Sharing**: Formatted WhatsApp budget statements for parents/roommates, clipboard copy, and printable/downloadable statements.
+
+### 🌐 8. Bilingual Localization (Hindi / English)
+- **LanguageProvider (`LanguageContext`)**: Global context supporting English and Hindi.
+- **Compact Language Selector**: Header and mobile controls for instant language switching across help, verification, and navigation.
 
 ---
 
 ## 🏗️ System Architecture
 
 ```text
-┌─────────────────────────────────────────────────────────────┐
-│                    City Helpline Client                     │
-│               React 19 • TypeScript • Vite                  │
-└──────────────┬──────────────────┬─────────────────┬─────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          City Helpline Client                           │
+│              React 19 • TypeScript • Vite • Tailwind CSS v4             │
+└──────────────┬──────────────────┬─────────────────┬─────────────────────┘
                │                  │                 │
                ▼                  ▼                 ▼
-     ┌──────────────────┐ ┌──────────────┐ ┌──────────────────┐
-     │  Firebase Auth   │ │  Cloudinary  │ │ Budget Estimator │
-     │  OAuth / Email   │ │   Image CDN  │ │ & SVG Donut Calc │
-     └─────────┬────────┘ └───────┬──────┘ └──────────────────┘
-               │                  │
-               ▼                  ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   Cloud Firestore Database                  │
-│  • /users/{userId}              → User profiles & RBAC      │
-│  • /listings/{listingId}        → PGs, Mess, Libraries      │
-│  • /reviews/{reviewId}          → Listing ratings & reviews │
-│  • /marketplace_items/{itemId}  → Student marketplace posts │
-└─────────────────────────────────────────────────────────────┘
+     ┌──────────────────┐ ┌──────────────┐ ┌──────────────────────────────┐
+     │  Firebase Auth   │ │  Cloudinary  │ │       AI Mitra Engine        │
+     │  OAuth / Email   │ │   Image CDN  │ │   @google/genai (Gemini)     │
+     └─────────┬────────┘ └───────┬──────┘ └──────────────┬───────────────┘
+               │                  │                       │
+               │                  │                       ▼
+               │                  │        ┌──────────────────────────────┐
+               │                  │        │  Vercel Serverless / Express │
+               │                  │        │  /api/chat • 4-tier fallback │
+               │                  │        └──────────────┬───────────────┘
+               ▼                  ▼                       │
+┌─────────────────────────────────────────────────────────▼───────────────┐
+│                        Cloud Firestore Database                         │
+│  • /users/{userId}                       → User profiles, RBAC, auth    │
+│  • /listings/{listingId}                 → PGs, Hostels, Mess, Library  │
+│  • /reviews/{reviewId}                   → Atomic ratings & reviews     │
+│  • /marketplace_items/{itemId}           → Student buy & sell posts     │
+│  • /conversations/{convId}               → 1-on-1 direct chat threads   │
+│  • /conversations/{convId}/messages      → Real-time messages           │
+│  • /roles_admins/{adminUid}              → Authoritative admin records  │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## 💻 Tech Stack
 
-| Layer | Technology | Purpose |
-| :--- | :--- | :--- |
-| **Frontend** | React 19, TypeScript | Reactive UI architecture and strict type safety |
-| **Build Tooling** | Vite 6 | Fast build pipeline and Hot Module Replacement (HMR) |
-| **Styling & UI** | Tailwind CSS v4 | Utility-first responsive design and glassmorphism |
-| **Animations** | Motion (Framer) | Smooth layout entry and transition animations |
-| **Database** | Cloud Firestore | Real-time NoSQL data store with strict security rules |
-| **Authentication** | Firebase Authentication | Google OAuth, GitHub OAuth, and Email/Password |
-| **Media Hosting** | Cloudinary REST API | Unsigned image uploads and CDN delivery |
-| **Icons & Feedback** | Lucide React, Sonner | Modern iconography and non-blocking toast notifications |
+| Layer | Technology | Version | Purpose |
+| :--- | :--- | :--- | :--- |
+| **Frontend** | React | `^19.0.0` | Reactive component architecture & hooks |
+| **Language** | TypeScript | `~5.8.2` | Strict end-to-end type safety |
+| **Build Tooling** | Vite | `^6.2.0` | Fast build pipeline and Hot Module Replacement (HMR) |
+| **Styling & UI** | Tailwind CSS | `@tailwindcss/vite` | Modern utility-first styling & glassmorphism |
+| **Animations** | Motion (Framer) | `^12.23.24` | 60fps spring transitions & layout animations |
+| **Database** | Cloud Firestore | `12.19.0` | Real-time NoSQL data store with security rules |
+| **Authentication** | Firebase Auth | `12.19.0` | Google OAuth, GitHub OAuth, Email/Password |
+| **AI Integration** | Google Gen AI SDK | `@google/genai` | Multi-tier cascading Gemini model orchestration |
+| **Backend / API** | Express / Vercel Functions | Node.js / Serverless | `/api/chat` and `/api/health` endpoints |
+| **Media Hosting** | Cloudinary REST API | Unsigned Preset | Client-side photo uploads & optimized CDN delivery |
+| **Icons & Feedback**| Lucide React, Sonner | Latest | Modern vector iconography & toast alerts |
 
 ---
 
@@ -108,81 +158,112 @@ City Helpline simplifies this transition through:
 
 ```text
 City-Helpline/
+├── api/
+│   ├── chat.ts                  # Vercel serverless AI chat handler (Gemini fallback)
+│   └── health.ts                # Serverless health check endpoint
 ├── index.html                   # HTML entry point with OpenGraph meta tags
 ├── package.json                 # Dependencies and build scripts
-├── tsconfig.json                # TypeScript configuration
+├── server.ts                    # Express development server with rate-limiting & chat API
+├── tsconfig.json                # TypeScript compiler configuration
+├── vercel.json                  # Vercel deployment routing configuration
 ├── vite.config.ts               # Vite bundler configuration
-├── firestore.rules              # Firestore database security rules
-├── firebase-blueprint.json      # Schema definitions
+├── firestore.rules              # Cloud Firestore security rules
+├── firebase-blueprint.json      # Firestore collection schema blueprints
 ├── metadata.json                # Application metadata
 ├── src/
 │   ├── main.tsx                 # Application root entry point
-│   ├── App.tsx                  # Router configuration and global layouts
-│   ├── index.css                # Global styles, variables, and theme classes
+│   ├── App.tsx                  # Main router, route guards, and global layout
+│   ├── index.css                # Global styling, liquid glassmorphism, animations
 │   ├── types/
-│   │   └── index.ts             # Domain interfaces (User, Listing, Review, Marketplace)
+│   │   └── index.ts             # Domain interfaces (User, Listing, Review, Chat, Marketplace)
 │   ├── contexts/
-│   │   ├── AuthContext.tsx      # Authentication state and role management
-│   │   └── LocationContext.tsx  # User geolocation and selected city state
+│   │   ├── AuthContext.tsx      # Auth state, session, and role-based permissions
+│   │   ├── LocationContext.tsx  # Geolocation and selected city state
+│   │   └── LanguageContext.tsx  # Bilingual localization provider (EN / HI)
+│   ├── hooks/
+│   │   └── useUnreadChatCount.ts# Real-time unread messages listener hook
 │   ├── lib/
-│   │   ├── firebase.ts          # Firebase SDK initialization
-│   │   ├── storage.ts           # Cloudinary upload handler
-│   │   ├── budgetBenchmarks.ts  # City living indices and calculations
-│   │   ├── marketplaceData.ts   # Marketplace starter catalog and categories
-│   │   ├── locationService.ts   # Geolocation and reverse-geocoding utilities
-│   │   ├── firestoreError.ts    # Friendly Firestore error parsing
-│   │   ├── constants.ts         # Categories and state-city database
-│   │   └── utils.ts             # Utility functions
+│   │   ├── appConfig.ts         # Global app constants and configuration
+│   │   ├── authError.ts         # User-friendly Firebase auth error mapping
+│   │   ├── budgetBenchmarks.ts  # City expenditure indices & budget algorithms
+│   │   ├── chatService.ts       # Firestore 1-on-1 chat operations & message dispatch
+│   │   ├── constants.ts         # Categories & State-City relational database
+│   │   ├── emergencyData.ts     # National student helplines & emergency contacts
+│   │   ├── firebase.ts          # Firebase SDK initialization & auth providers
+│   │   ├── firestoreError.ts    # Firestore error parsing utility
+│   │   ├── locationService.ts   # Geolocation & reverse-geocoding service
+│   │   ├── marketplaceData.ts   # Marketplace starter catalog & category metadata
+│   │   ├── roommateService.ts   # Roommate profile matching & Firestore queries
+│   │   ├── storage.ts           # Cloudinary unsigned upload client handler
+│   │   ├── translations/        # Multi-language dictionary files
+│   │   └── utils.ts             # General utility functions (cn class merger)
 │   ├── components/
+│   │   ├── AccountSettings.tsx  # Profile, contact, and security settings
 │   │   ├── ListingCard.tsx      # Service listing preview card
-│   │   ├── AccountSettings.tsx  # User account settings modal
-│   │   ├── location/
-│   │   │   ├── LocationPromptBanner.tsx # Geolocation prompt
-│   │   │   ├── LocationSelectorModal.tsx# City and state picker modal
-│   │   │   └── NavbarLocationButton.tsx # Active city button in navbar
-│   │   ├── marketplace/
-│   │   │   ├── MarketplaceCard.tsx        # Item listing card with quick action CTAs
-│   │   │   └── MarketplaceDetailModal.tsx # Full-view item details modal
-│   │   ├── budget/
-│   │   │   ├── BudgetChart.tsx            # SVG Donut chart component
-│   │   │   ├── RecommendedServices.tsx    # Live Firestore matching services
-│   │   │   └── BudgetShareModal.tsx       # Share and export statement dialog
+│   │   ├── admin/
+│   │   │   ├── AdminConsole.tsx       # Multi-tab admin moderation command center
+│   │   │   ├── AdminListingsTab.tsx   # Listing approval/rejection moderation
+│   │   │   ├── AdminUsersTab.tsx      # User governance and verification review
+│   │   │   └── ListingInspectModal.tsx# Deep listing inspection dialog
+│   │   ├── ai/
+│   │   │   └── AiFloatingAssistant.tsx# Kinetic floating AI Mitra button & modal
+│   │   ├── common/
+│   │   │   ├── InstallAppPrompt.tsx   # PWA installation banner
+│   │   │   ├── LanguageSelector.tsx   # Hindi/English language toggle
+│   │   │   ├── TrustBadge.tsx         # Verified Student & Verified PG trust badges
+│   │   │   └── UserAvatar.tsx         # Standardized avatar with fallback
 │   │   ├── layout/
-│   │   │   ├── Navbar.tsx       # Desktop navigation bar
-│   │   │   ├── BottomNav.tsx    # Mobile navigation bar
-│   │   │   └── ProtectedRoute.tsx# Role-guarded route wrapper
+│   │   │   ├── Navbar.tsx             # Desktop glassmorphic navigation bar
+│   │   │   ├── NavbarChatButton.tsx   # Chat action button with unread counter
+│   │   │   ├── BottomNav.tsx          # Mobile navigation bar with active indicators
+│   │   │   └── ProtectedRoute.tsx     # Role-aware route guard
+│   │   ├── marketplace/
+│   │   │   ├── MarketplaceCard.tsx        # Item card with quick-contact actions
+│   │   │   └── MarketplaceDetailModal.tsx # Full item details & in-app chat trigger
+│   │   ├── profile/
+│   │   │   ├── StudentVerificationModal.tsx # Student ID & camera verification modal
+│   │   │   └── PGVerificationModal.tsx      # PG electricity bill verification modal
+│   │   ├── roommate/
+│   │   │   ├── RoommateCard.tsx       # Student roommate compatibility card
+│   │   │   └── RoommateModal.tsx      # Roommate details & connect modal
+│   │   ├── budget/
+│   │   │   ├── BudgetChart.tsx        # SVG donut visualizer component
+│   │   │   ├── RecommendedServices.tsx# Budget-matched service recommendations
+│   │   │   └── BudgetShareModal.tsx   # WhatsApp share & statement export
 │   │   └── ui/
-│   │       ├── GlassCard.tsx        # Glassmorphic card container
-│   │       ├── LiquidGlassCard.tsx  # Ambient gradient border card
-│   │       ├── LiquidButton.tsx     # Animated primary button
-│   │       ├── LiquidInput.tsx      # Styled input component
-│   │       ├── LiquidCheckbox.tsx   # Custom animated checkbox
-│   │       └── SearchableSelect.tsx # Searchable dropdown selector
+│   │       ├── GlassCard.tsx          # Backdrop-blur container
+│   │       ├── LiquidGlassCard.tsx    # Specular ambient border card
+│   │       ├── LiquidButton.tsx       # Primary gradient button
+│   │       └── SearchableSelect.tsx   # Grouped searchable dropdown
 │   └── pages/
-│       ├── Home.tsx             # Landing page with hero search and featured sections
-│       ├── Search.tsx           # Directory search with multi-facet filters
-│       ├── ListingDetails.tsx   # Service details, gallery, and reviews
-│       ├── BudgetCalculator.tsx # 3-mode student budget estimator
-│       ├── Marketplace.tsx      # Second-hand marketplace feed
-│       ├── SellItem.tsx         # Post marketplace item form
-│       ├── AddListing.tsx       # Create new service listing form
-│       ├── EditListing.tsx      # Update existing listing form
-│       ├── AdminDashboard.tsx   # Moderation desk and user management
-│       ├── Profile.tsx          # User profile and bookmarked listings
-│       └── Auth.tsx             # Login and signup authentication view
+│       ├── Home.tsx             # Landing experience, hero search, category links
+│       ├── Search.tsx           # Multi-facet search directory with filters
+│       ├── ListingDetails.tsx   # Detailed specs, photo gallery, reviews, contact
+│       ├── AiChatPage.tsx       # Fullscreen AI Mitra chat experience
+│       ├── MessagesPage.tsx     # In-app real-time messaging interface
+│       ├── RoommatesPage.tsx    # Roommate finder & study partner matching
+│       ├── BudgetCalculator.tsx # Student budget planner & expense visualizer
+│       ├── Marketplace.tsx      # Second-hand marketplace directory
+│       ├── SellItem.tsx         # Post marketplace item with photo upload
+│       ├── AddListing.tsx       # Service provider listing submission form
+│       ├── EditListing.tsx      # Listing update & photo gallery manager
+│       ├── AdminDashboard.tsx   # Administrative overview desk
+│       ├── Help.tsx             # Help center, FAQs, safety guidelines
+│       ├── Legal.tsx            # Terms of service, privacy policy, disclaimers
+│       ├── Profile.tsx          # User profile, verified badges, saved listings
+│       └── Auth.tsx             # Unified login/signup with dual-slider UI
 ```
 
 ---
 
 ## 🔒 Security Architecture
 
-All data operations in Cloud Firestore are protected by strict security rules defined in `firestore.rules`:
-
-- **Authentication Required**: Write operations require a valid Firebase Auth session.
-- **Owner Access Control**: Users can only edit or delete listings, marketplace items, and profiles they own.
-- **Admin Governance**: Administrative operations (such as approving listings or modifying roles) require admin credentials.
-- **Input Validation**: Strict schema boundaries are enforced on string lengths, allowed properties, price boundaries, and rating ranges.
-- **Listing Moderation**: Submitted listings default to `'pending'` status and become publicly visible only after approval.
+Cloud Firestore is protected by comprehensive rules defined in `firestore.rules`:
+- **Authentication Required**: Write operations require a validated Firebase Auth session (`request.auth != null`).
+- **Owner Access Control**: Users can only update or delete listings, marketplace posts, and profile documents that they own.
+- **Admin Governance**: Sensitive moderation operations (approving listings, verifying badges, assigning roles) require verified admin credentials (`hasAdminClaim()`, `isDatabaseAdmin()`, or super admin configuration).
+- **Strict Schema Boundaries**: String lengths, required fields, and valid enum values are strictly enforced by schema validators (`isValidListing`, `isValidUser`, `isValidMarketplaceItem`).
+- **Conversation Confidentiality**: Access to `/conversations/{convId}` and nested messages is restricted strictly to conversation participants and administrators.
 
 ---
 
@@ -200,24 +281,27 @@ npm install
 ```
 
 ### 2. Environment Configuration
-Copy `.env.example` to create your local `.env` file:
+Create a `.env` file in the project root:
 ```bash
 cp .env.example .env
 ```
 
 Configure your environment variables:
 ```env
-# Cloudinary Configuration
+# Cloudinary Media Configuration
 VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
 VITE_CLOUDINARY_UPLOAD_PRESET=cityhelpline_upload
 
 # Firebase Web Configuration
-VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_API_KEY=your_firebase_api_key
 VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=your_project_id
 VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+VITE_FIREBASE_APP_ID=your_firebase_app_id
+
+# Google Gemini AI Configuration (for AI Mitra)
+GEMINI_API_KEY=your_gemini_api_key
 ```
 
 ### 3. Run Locally
@@ -228,11 +312,12 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### 4. Build for Production
+To compile and bundle for production deployment:
 ```bash
 npm run build
 ```
 
-To run type checking and lint validation:
+To run type checking and linting:
 ```bash
 npm run lint
 ```
